@@ -1,0 +1,8 @@
+{
+    "html.format.wrapLineLength": 400,
+    "editor.defaultFormatter": "vscode.html-language-features",
+    "html.format.extraLiners": "head, body, /html",
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
+    }
+}
