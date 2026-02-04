@@ -9,264 +9,9 @@
     <!-- Emulating @require libraries -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/umd/index.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/style.min.css">
 
-    <!-- Mock ReactFlow for development purposes -->
-    <script>
-        // Mock ReactFlow library for development
-        window.reactflow = (function() {
-            const ReactFlow = {};
-
-            // Mock hooks
-            ReactFlow.useNodesState = function(initialNodes) {
-                const [nodes, setNodes] = React.useState(initialNodes);
-
-                // Custom hook for drag handling
-                const handleDragStart = React.useCallback((nodeId, e) => {
-                    const startX = e.clientX;
-                    const startY = e.clientY;
-
-                    const node = nodes.find(n => n.id === nodeId);
-                    if (!node) return;
-
-                    const startPos = { ...node.position };
-
-                    const handleMouseMove = (moveEvent) => {
-                        const dx = moveEvent.clientX - startX;
-                        const dy = moveEvent.clientY - startY;
-
-                        setNodes(prevNodes =>
-                            prevNodes.map(n =>
-                                n.id === nodeId
-                                    ? { ...n, position: { x: startPos.x + dx, y: startPos.y + dy } }
-                                    : n
-                            )
-                        );
-                    };
-
-                    const handleMouseUp = () => {
-                        document.removeEventListener('mousemove', handleMouseMove);
-                        document.removeEventListener('mouseup', handleMouseUp);
-                    };
-
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
-                }, [nodes, setNodes]);
-
-                const onNodesChange = React.useCallback((changes) => {
-                    setNodes(prevNodes => {
-                        return prevNodes.map(node => {
-                            const change = changes.find(c => c.id === node.id);
-                            if (change && change.type === 'position' && change.position) {
-                                return {...node, position: change.position};
-                            }
-                            return node;
-                        });
-                    });
-                }, []);
-
-                return [nodes, setNodes, onNodesChange, handleDragStart];
-            };
-
-            ReactFlow.useEdgesState = function(initialEdges) {
-                const [edges, setEdges] = React.useState(initialEdges);
-                const onEdgesChange = React.useCallback((changes) => {
-                    setEdges(prevEdges => {
-                        // Simple implementation of edge changes
-                        return prevEdges;
-                    });
-                }, []);
-                return [edges, setEdges, onEdgesChange];
-            };
-
-            // Mock components
-            ReactFlow.ReactFlow = function(props) {
-                // Get the drag handler from context or props
-                const dragHandler = props.onNodeDrag || (() => {});
-
-                // Return a simple div representing the flow chart
-                return React.createElement('div', {
-                    style: {
-                        width: '100%',
-                        height: '100%',
-                        border: '1px solid #ccc',
-                        backgroundColor: '#fafafa',
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }
-                },
-                    // Render background
-                    React.createElement(ReactFlow.Background, {variant: 'dots'}),
-                    // Render edges as simple lines between nodes first (so they appear behind nodes)
-                    React.createElement('svg', {
-                        style: {
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            pointerEvents: 'none',
-                            zIndex: 5
-                        }
-                    },
-                        // Map through edges to draw connections
-                        props.edges && props.edges.map(edge => {
-                            // Find source and target nodes to draw connection
-                            const sourceNode = props.nodes ? props.nodes.find(n => n.id === edge.source) : null;
-                            const targetNode = props.nodes ? props.nodes.find(n => n.id === edge.target) : null;
-
-                            if (sourceNode && targetNode) {
-                                const startX = sourceNode.position.x + (sourceNode.width || 120);
-                                const startY = sourceNode.position.y + (sourceNode.height || 60) / 2;
-                                const endX = targetNode.position.x;
-                                const endY = targetNode.position.y + (targetNode.height || 60) / 2;
-
-                                return React.createElement('g', {key: `group-${edge.id}`},
-                                    React.createElement('line', {
-                                        x1: startX,
-                                        y1: startY,
-                                        x2: endX,
-                                        y2: endY,
-                                        stroke: edge.style?.stroke || '#456',
-                                        strokeWidth: edge.style?.strokeWidth || 2,
-                                        markerEnd: "url(#arrowhead)"  // Add arrowheads if available
-                                    }),
-                                    React.createElement('text', {
-                                        x: (startX + endX) / 2,
-                                        y: (startY + endY) / 2 - 10,
-                                        fill: edge.labelBgStyle?.color || '#456',
-                                        fontSize: '10px',
-                                        textAnchor: 'middle'
-                                    }, edge.label)
-                                );
-                            }
-                            return null;
-                        }),
-                        // Add arrowhead marker definition
-                        React.createElement('defs', null,
-                            React.createElement('marker', {
-                                id: "arrowhead",
-                                markerWidth: 10,
-                                markerHeight: 7,
-                                refX: 9,
-                                refY: 3.5,
-                                orient: "auto"
-                            },
-                                React.createElement('polygon', {
-                                    points: "0 0, 10 3.5, 0 7",
-                                    fill: "#456"
-                                })
-                            )
-                        )
-                    ),
-                    // Render nodes on top
-                    props.nodes && props.nodes.map(node =>
-                        React.createElement('div', {
-                            key: node.id,
-                            style: {
-                                position: 'absolute',
-                                left: node.position.x,
-                                top: node.position.y,
-                                width: node.width || 120,
-                                height: node.height || 60,
-                                backgroundColor: node.style?.backgroundColor || '#fff',
-                                border: `2px solid ${node.style?.borderColor || '#ccc'}`,
-                                color: node.style?.color || '#000',
-                                borderRadius: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '12px',
-                                zIndex: 10,
-                                padding: '5px',
-                                textAlign: 'center',
-                                fontWeight: 'bold',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                cursor: 'move',  // Indicate that the node is draggable
-                                userSelect: 'none'  // Prevent text selection while dragging
-                            },
-                            onMouseDown: (e) => dragHandler(node.id, e)  // Enable dragging
-                        }, node.data?.label)
-                    )
-                );
-            };
-
-            ReactFlow.Controls = function(props) {
-                return React.createElement('div', {
-                    style: {
-                        position: 'absolute',
-                        bottom: '10px',
-                        right: '10px',
-                        zIndex: 100,
-                        backgroundColor: 'white',
-                        padding: '5px',
-                        borderRadius: '4px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }
-                }, 'Controls');
-            };
-
-            ReactFlow.MiniMap = function(props) {
-                return React.createElement('div', {
-                    style: {
-                        position: 'absolute',
-                        bottom: '10px',
-                        left: '10px',
-                        zIndex: 100,
-                        backgroundColor: 'white',
-                        padding: '5px',
-                        borderRadius: '4px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }
-                }, 'MiniMap');
-            };
-
-            ReactFlow.Background = function(props) {
-                return React.createElement('div', {
-                    style: {
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundImage: props.variant === 'dots' ?
-                            'radial-gradient(circle, #ccc 1px, transparent 1px)' :
-                            'linear-gradient(#ccc 1px, transparent 1px), linear-gradient(90deg, #ccc 1px, transparent 1px)',
-                        backgroundSize: props.variant === 'dots' ? '20px 20px' : '20px 20px',
-                        zIndex: 1
-                    }
-                });
-            };
-
-            // Mock utility functions
-            ReactFlow.addEdge = function(params, edges) {
-                // Simple implementation
-                return [...edges, {
-                    id: `e-${params.source}-${params.target}`,
-                    source: params.source,
-                    target: params.target,
-                    ...params
-                }];
-            };
-
-            ReactFlow.applyEdgeChanges = function(changes, edges) {
-                // Simple implementation
-                return edges;
-            };
-
-            ReactFlow.applyNodeChanges = function(changes, nodes) {
-                // Simple implementation
-                return nodes;
-            };
-
-            // Constants
-            ReactFlow.BackgroundVariant = {
-                dots: 'dots',
-                lines: 'lines'
-            };
-
-            return ReactFlow;
-        })();
-    </script>
     
     <style>
         /* Original CSS styles from the user script */
@@ -339,6 +84,12 @@
             font-size: 12px;
             transition: all 0.2s;
         }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         .dev-button.reset {
             background: #28a745;
             color: white;
@@ -392,13 +143,20 @@
             <div class="workflow-container" id="emulated-workflow">
                 <!-- This simulates the EvaTeam workflow interface -->
                 <div class="tab-buttons">
-                    <button class="tab-button active">Схема</button>
-                    <button class="tab-button">Задачи</button>
-                    <button class="tab-button">История</button>
+                    <button class="tab-button active" onclick="switchTab('enhanced')">Схема</button>
+                    <button class="tab-button" onclick="switchTab('original')">Исходная схема</button>
                 </div>
-                
-                <div class="react-flow-container" id="react-flow-container">
-                    <!-- ReactFlow will be rendered here -->
+
+                <div id="enhanced-tab" class="tab-content" style="display:block;">
+                    <div class="react-flow-container" id="react-flow-container">
+                        <!-- ReactFlow will be rendered here -->
+                    </div>
+                </div>
+
+                <div id="original-tab" class="tab-content" style="display:none;">
+                    <div class="workflow-container" id="original-workflow-container" style="height: 500px; overflow: auto;">
+                        <!-- Original workflow will be displayed here -->
+                    </div>
                 </div>
                 
                 <div style="margin-top: 15px;">
@@ -411,6 +169,10 @@
         
         <div class="section">
             <h2>Debug Console</h2>
+            <div style="display:flex; gap: 10px; margin-bottom: 10px;">
+                <button class="dev-button info" onclick="copyLogToClipboard()">Copy Log to Clipboard</button>
+                <button class="dev-button clear" onclick="clearConsole()">Clear Console</button>
+            </div>
             <div class="console" id="debug-console">
                 <!-- Debug messages will appear here -->
             </div>
@@ -433,12 +195,80 @@
         function clearConsole() {
             document.getElementById('debug-console').innerHTML = '';
         }
-        
+
+        function copyLogToClipboard() {
+            const consoleEl = document.getElementById('debug-console');
+            const textToCopy = consoleEl.innerText || consoleEl.textContent;
+
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    log('Log copied to clipboard!');
+                })
+                .catch(err => {
+                    log('Failed to copy log: ', err);
+                    // Fallback: create a temporary textarea to copy text
+                    const textArea = document.createElement('textarea');
+                    textArea.value = textToCopy;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        log('Log copied to clipboard (fallback method)!');
+                    } catch (err) {
+                        log('Fallback copy also failed: ', err);
+                    }
+                    document.body.removeChild(textArea);
+                });
+        }
+
         function showInfo() {
             log('Development mode active. React and ReactFlow libraries loaded.');
             log(`React loaded: ${typeof window.React !== 'undefined'}`);
             log(`ReactDOM loaded: ${typeof window.ReactDOM !== 'undefined'}`);
             log(`ReactFlow loaded: ${typeof window.reactflow !== 'undefined'}`);
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).style.display = 'block';
+
+            // Add active class to the corresponding button
+            const buttons = document.querySelectorAll('.tab-button');
+            for (let i = 0; i < buttons.length; i++) {
+                const button = buttons[i];
+                if (button.onclick.toString().includes(`'${tabName}'`)) {
+                    button.classList.add('active');
+                    break;
+                }
+            }
+
+            // If switching to enhanced tab and it's empty, render the flow
+            if (tabName === 'enhanced') {
+                const container = document.getElementById('react-flow-container');
+                if (container.children.length === 0) {
+                    const workflowData = getSampleWorkflowData();
+                    renderReactFlowComponent(container, workflowData);
+                }
+            }
+
+            // If switching to original tab, populate with original workflow
+            if (tabName === 'original') {
+                const container = document.getElementById('original-workflow-container');
+                // Populate with the original workflow HTML from our sample
+                const sampleHTML = createSampleWorkflowHTML();
+                container.innerHTML = '';
+                container.appendChild(sampleHTML.cloneNode(true));
+            }
         }
         
         // Function to extract workflow data from HTML elements (similar to the extension)
@@ -468,8 +298,8 @@
                 const leftMatch = el.style.left ? el.style.left.match(/(\d+\.?\d*)px/) : null;
                 const topMatch = el.style.top ? el.style.top.match(/(\d+\.?\d*)px/) : null;
 
-                const x = leftMatch ? parseFloat(leftMatch[1]) : (index * 200);
-                const y = topMatch ? parseFloat(topMatch[1]) : 100;
+                const x = leftMatch ? parseFloat(leftMatch[1]) : (index * 20);
+                const y = topMatch ? parseFloat(topMatch[1]) : (index * 100);
 
                 // Create a default width/height for nodes
                 const width = 120;
@@ -639,23 +469,23 @@
             const container = document.createElement('div');
             container.className = 'chart-container';
             container.innerHTML = `
-                <div id="node_start" class="node-element" style="position:absolute; left: 0px; top: 100px; width: 120px; height: 60px; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                <div id="node_start" class="node-element" style="position:absolute; left: 300px; top: 50px; width: 120px; height: 60px; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
                     <span>Начало</span>
                 </div>
-                <div id="CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b" class="node-element" style="position:absolute; left: 200px; top: 100px; width: 120px; height: 60px; background-color: #cce5ff; border: 1px solid #99ccff; color: #004085; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                <div id="CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b" class="node-element" style="position:absolute; left: 300px; top: 150px; width: 120px; height: 60px; background-color: #cce5ff; border: 1px solid #99ccff; color: #004085; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
                     <span>Анализ запроса</span>
                 </div>
-                <div id="CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b" class="node-element" style="position:absolute; left: 400px; top: 100px; width: 120px; height: 60px; background-color: #ffeaa7; border: 1px solid #fdcb6e; color: #2d3436; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                <div id="CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b" class="node-element" style="position:absolute; left: 300px; top: 250px; width: 120px; height: 60px; background-color: #ffeaa7; border: 1px solid #fdcb6e; color: #2d3436; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
                     <span>Разработка</span>
                 </div>
-                <div id="all0" class="node-element" style="position:absolute; left: 600px; top: 100px; width: 120px; height: 60px; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                <div id="all0" class="node-element" style="position:absolute; left: 300px; top: 350px; width: 120px; height: 60px; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
                     <span>Завершение</span>
                 </div>
 
                 <!-- Edge overlays (transitions) -->
-                <div class="jtk-overlay n2n-transition" jtk-overlay-id="node_start-CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b" style="position: absolute; left: 120px; top: 120px;">Начать анализ</div>
-                <div class="jtk-overlay n2n-transition" jtk-overlay-id="CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b-CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b" style="position: absolute; left: 320px; top: 120px;">Перейти к разработке</div>
-                <div class="jtk-overlay n2n-transition" jtk-overlay-id="CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b-all0" style="position: absolute; left: 520px; top: 120px;">Завершить</div>
+                <div class="jtk-overlay n2n-transition" jtk-overlay-id="node_start-CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b" style="position: absolute; left: 360px; top: 110px;">Начать анализ</div>
+                <div class="jtk-overlay n2n-transition" jtk-overlay-id="CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b-CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b" style="position: absolute; left: 360px; top: 210px;">Перейти к разработке</div>
+                <div class="jtk-overlay n2n-transition" jtk-overlay-id="CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b-all0" style="position: absolute; left: 360px; top: 310px;">Завершить</div>
             `;
             return container;
         }
@@ -688,8 +518,8 @@
         function renderReactFlowComponent(container, workflowData) {
             log('Rendering ReactFlow component...');
 
-            // Use our mock ReactFlow
-            const ReactFlow = window.reactflow;
+            // Determine which React Flow object is available
+            const ReactFlow = window.reactflow || window.ReactFlow || window.REACT_FLOW;
             const React = window.React;
             const ReactDOM = window.ReactDOM;
 
@@ -717,16 +547,21 @@
                     nodes: nodes,
                     edges: edges,
                     onNodeDrag: handleDragStart,  // Pass the drag handler
-                    onNodesChange: (changes) => setNodes((nds) => ReactFlow.applyNodeChanges(changes, nds)),
+                    onNodesChange: onNodesChange,
                     onEdgesChange: onEdgesChange,
                     onConnect: onConnect,
                     fitView: true,
-                    attributionPosition: 'bottom-left'
+                    attributionPosition: 'bottom-left',
+                    defaultEdgeOptions: {
+                        type: 'smoothstep', // Use smoothstep edges with arrows
+                        markerEnd: { type: 'arrowclosed', width: 10, height: 10 }, // Add arrowheads
+                        style: { strokeWidth: 2 } // Set stroke width
+                    }
                 },
                     React.createElement(ReactFlow.Controls, null),
                     React.createElement(ReactFlow.MiniMap, null),
                     React.createElement(ReactFlow.Background, {
-                        variant: ReactFlow.BackgroundVariant.dots
+                        variant: ReactFlow.BackgroundVariant?.dots || 'dots'
                     })
                 );
             }
@@ -752,8 +587,23 @@
                 const isReactLoaded = typeof window.React !== 'undefined';
                 const isReactDOMLoaded = typeof window.ReactDOM !== 'undefined';
 
-                // Our mock ReactFlow is already defined in the script tag
-                const isReactFlowLoaded = typeof window.reactflow !== 'undefined';
+                // Check for ReactFlow in various possible locations
+                const isReactFlowLoaded = typeof window.reactflow !== 'undefined' ||
+                                          typeof window.ReactFlow !== 'undefined' ||
+                                          typeof window.REACT_FLOW !== 'undefined';
+
+                // Debug: log what's available in the window object related to ReactFlow
+                if (retries === 50) { // Only log once at the beginning
+                    log('Debug: Available ReactFlow objects:');
+                    log(`  window.reactflow: ${typeof window.reactflow}`);
+                    log(`  window.ReactFlow: ${typeof window.ReactFlow}`);
+                    log(`  window.REACT_FLOW: ${typeof window.REACT_FLOW}`);
+                    log(`  window keys with 'flow': ${Object.keys(window).filter(k => k.toLowerCase().includes('flow')).join(', ')}`);
+                    log(`  Full window.ReactFlow object: ${!!window.ReactFlow}`);
+                    if (window.ReactFlow) {
+                        log(`  ReactFlow keys: ${Object.keys(window.ReactFlow).join(', ')}`);
+                    }
+                }
 
                 log(`Checking library status - React: ${isReactLoaded}, ReactDOM: ${isReactDOMLoaded}, ReactFlow: ${isReactFlowLoaded}. Retries left: ${retries}`);
 
@@ -800,6 +650,9 @@
                 const workflowData = getSampleWorkflowData();
                 renderReactFlowComponent(container, workflowData);
             }, 1000); // Delay to ensure libraries are loaded
+
+            // Initialize the first tab as active
+            switchTab('enhanced');
         });
     </script>
 </body>
