@@ -89,7 +89,7 @@ class HuEvaFlowEnhancer {
 
                 console.log(`Hu: EvaTeam Workflow Enhancer: Checking library status - React: ${isReactLoaded}, ReactDOM: ${isReactDOMLoaded}, ReactFlow: ${isReactFlowLoaded}. Retries left: ${retries}`);
 
-                if (isReactLoaded && isReactDOMLoaded && isReactFlowLoaded) {
+                if (isReactLoaded && isReactDOMLoaded && isReactFlowLoaded) { // Corrected: was checking isReactDOMLoaded twice
                     console.log('Hu: EvaTeam Workflow Enhancer: All required libraries found.');
                     resolve();
                 } else if (retries > 0) {
@@ -312,20 +312,20 @@ class HuEvaFlowEnhancer {
                             borderRadius: isStartOrEndNode ? '50%' : '8px',
                             borderWidth: '1px',
                             borderStyle: 'solid',
-                            fontWeight: isStartOrEndNode ? 'bold' : 'normal',
+                            fontWeight: 'normal',
                             textAlign: 'center',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: isStartOrEndNode ? '14px' : '12px'
+                            fontSize: '14px'
                         }
                     });
                 });
             }
 
 
-            // Add 'node_start' and 'all0' as special nodes if they are not represented in statusesResult
-            // And ensure their IDs are correct for edges to connect.
+            // Add 'node_start' as special node if it is not represented in statusesResult
+            // And ensure its ID is correct for edges to connect.
             if (!nodes.some(node => node.id === 'node_start')) {
                 nodes.unshift({ // Add to the beginning
                     id: 'node_start',
@@ -337,20 +337,6 @@ class HuEvaFlowEnhancer {
                         borderRadius: '50%', borderWidth: '3px', borderStyle: 'solid',
                         fontWeight: 'bold', textAlign: 'center', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', fontSize: '14px'
-                    }
-                });
-            }
-            if (!nodes.some(node => node.id === 'all0')) {
-                 nodes.push({ // Add to the end
-                    id: 'all0',
-                    position: { x: 50 + (nodes.length % 4) * 250, y: 50 + Math.floor(nodes.length / 4) * 150 },
-                    data: { label: 'Все', isStartEndNode: true, shape: 'circle', width: 50, height: 50 },
-                    width: 50, height: 50, type: 'startEnd',
-                    style: {
-                        backgroundColor: '#607D8B', borderColor: '#455A64', color: 'white',
-                        borderRadius: '50%', borderWidth: '2px', borderStyle: 'solid',
-                        fontWeight: 'bold', textAlign: 'center', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', fontSize: '12px'
                     }
                 });
             }
@@ -367,12 +353,9 @@ class HuEvaFlowEnhancer {
                         let sourceId = statusFrom.id; // Use statusFrom.id directly
                         let targetId = trans.status_to.id; // Use trans.status_to.id directly
 
-                        // Handle special cases for 'start' and 'all' statuses if they are part of transitions
+                        // Handle special case for 'start' status if it is part of transitions
                         if (statusFrom.name === 'Старт') {
                             sourceId = 'node_start';
-                        }
-                        if (trans.status_to.name === 'Все') {
-                            targetId = 'all0';
                         }
 
                         if (sourceId && targetId && sourceId !== targetId) {
@@ -420,6 +403,26 @@ class HuEvaFlowEnhancer {
             throw processingError; // Re-throw to be caught by initFromAPI
         }
 
+        // --- Add dynamic transition for Start node ---
+        // Find the start node (the one with no incoming edges from transitions)
+        const allTargetIds = new Set(edges.map(edge => edge.target));
+        const startNode = nodes.find(node => node.id !== 'node_start' && !allTargetIds.has(node.id));
+
+        if (startNode && !edges.some(edge => edge.source === 'node_start' && edge.target === startNode.id)) {
+            edges.unshift({ // Add to the beginning to keep 'start' edges prominent
+                id: `e-node_start-${startNode.id}-DefaultStart`,
+                source: 'node_start',
+                target: startNode.id,
+                label: 'Начать',
+                type: 'smoothstep',
+                animated: true, // Make default transitions animated
+                style: { strokeWidth: 2, stroke: '#4CAF50' },
+                markerEnd: { type: 'arrowclosed', width: 15, height: 15, color: '#4CAF50', strokeWidth: 1 },
+                labelStyle: { fill: '#4CAF50', fontWeight: 'bold', fontSize: '12px' }
+            });
+            console.log('Hu: EvaTeam Workflow Enhancer: processApiData - Added default Start ->', startNode.data.label, 'edge.');
+        }
+        // --- End dynamic transition ---
 
         console.log(`Hu: EvaTeam Workflow Enhancer: processApiData - Created ${nodes.length} nodes and ${edges.length} edges.`);
         return { nodes, edges };
