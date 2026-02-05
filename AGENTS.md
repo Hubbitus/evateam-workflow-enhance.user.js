@@ -205,3 +205,6 @@ function WorkflowEnhancerApp() {
 - Graceful degradation when libraries are missing
 - Target DOM element validation
 - Fallback to original display
+
+# Important notes
+- `make build` should be run *only* for the release, do not call it in normal development mode!

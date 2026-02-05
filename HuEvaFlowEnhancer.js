@@ -335,23 +335,60 @@ class HuEvaFlowEnhancer {
             x = Math.max(x, 50);
             y = Math.max(y, 50);
 
-            // Create a default width/height for nodes
-            const width = 120;
-            const height = 60;
+            // Create default width/height for nodes
+            const isStartOrEndNode = (id === 'node_start' || id === 'all0');
 
-            nodes.push({
+            // Special sizing for start/end nodes - 1.2x height, circular
+            let width = 120; // Regular width
+            let height = 60;
+            let shape = 'rect'; // Default shape
+
+            if (id === 'node_start') {
+                // Make it square for circular shape (ReactFlow handles circular via borderRadius)
+                width = height; // Use height for both dimensions
+                shape = 'circle';
+            }
+            if (id === 'all0') { // 'all' statuses
+                shape = 'circle';
+                height = 50;
+            }
+
+            const nodeData = {
                 id: id,
                 position: { x, y },
-                data: { label: label },
+                data: {
+                    label: label,
+                    isStartEndNode: isStartOrEndNode,
+                    shape: shape,
+                    width: width,
+                    height: height
+                },
                 width: width,
                 height: height,
                 className: Array.from(el.classList).join(' '),
                 style: {
-                    backgroundColor: el.style.backgroundColor || '#fff',
+                    backgroundColor: el.style.backgroundColor || (isStartOrEndNode ? '#4CAF50' : '#fff'),
                     borderColor: el.style.borderColor || '#ccc',
-                    color: el.style.color || '#000'
+                    color: el.style.color || '#000',
+                    borderRadius: isStartOrEndNode ? '50%' : '8px', // Circular for start/end nodes
+                    borderWidth: isStartOrEndNode ? '3px' : '1px',
+                    borderStyle: 'solid',
+                    fontWeight: isStartOrEndNode ? 'bold' : 'normal',
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: isStartOrEndNode ? '14px' : '12px'
                 }
-            });
+            };
+
+            // Set node type for start/end nodes to use custom component
+            if (isStartOrEndNode) {
+                nodeData.type = 'startEnd';
+                console.log(`Hu: EvaTeam Workflow Enhancer: Created start/end node: ${id} (${label})`);
+            }
+
+            nodes.push(nodeData);
 
             // Debug: Log node creation details
             // console.log(`Hu: EvaTeam Workflow Enhancer: Node created:`, {
@@ -416,6 +453,11 @@ class HuEvaFlowEnhancer {
 
             console.log(`Hu: EvaTeam Workflow Enhancer: Processing edge element, overlayId: "${overlayId}", label: "${label}"`);
 
+            // Log all overlayId patterns for debugging
+            if (overlayId.includes('node_start') || overlayId.includes('all0')) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found start/end related overlayId: "${overlayId}"`);
+            }
+
             if (!overlayId || !label) {
                 console.log(`Hu: EvaTeam Workflow Enhancer: Skipping edge element - missing overlayId or label`);
                 return;
@@ -428,9 +470,41 @@ class HuEvaFlowEnhancer {
             // Try different patterns that might exist in the actual HTML
             // Format might be: CmfTrans:...CmfStatus:... (concatenated) or node_start-CmfStatus:... (with dash)
 
-            // Pattern 1: IDs separated by a dash (common in our example)
+            // Pattern 1: Direct connections like "node_startCmfStatus:..." or "all0CmfStatus:..."
+            if (overlayId.startsWith('node_startCmfStatus:') || overlayId.startsWith('all0CmfStatus:')) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found direct connection pattern: ${overlayId}`);
+                const parts = overlayId.split('CmfStatus:');
+                if (parts.length === 2) {
+                    if (overlayId.startsWith('node_start')) {
+                        sourceId = 'node_start';
+                    } else if (overlayId.startsWith('all0')) {
+                        sourceId = 'all0';
+                    }
+                    targetId = 'CmfStatus:' + parts[1];
+                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Parsed direct start/end connection: ${sourceId} -> ${targetId}`);
+                } else {
+                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Failed to parse direct connection, parts length: ${parts.length}`);
+                }
+            }
+
+            // Pattern 2: Direct connections with dashes: "node_start-CmfStatus:..." or "all0-CmfStatus:..."
+            else if ((overlayId.startsWith('node_start-CmfStatus:') || overlayId.startsWith('all0-CmfStatus:')) && !overlayId.includes('CmfTrans:')) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found dash-separated start/end pattern: ${overlayId}`);
+                const parts = overlayId.split('-CmfStatus:');
+                if (parts.length === 2) {
+                    if (parts[0] === 'node_start') {
+                        sourceId = 'node_start';
+                    } else if (parts[0] === 'all0') {
+                        sourceId = 'all0';
+                    }
+                    targetId = 'CmfStatus:' + parts[1];
+                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Parsed dash-separated start/end connection: ${sourceId} -> ${targetId}`);
+                }
+            }
+
+            // Pattern 2: IDs separated by a dash (common in our example)
             // But we need to check if it's really a separator, not just UUID dashes
-            if (overlayId.includes('-') && !overlayId.includes('CmfStatus:') && !overlayId.includes('CmfTrans:')) {
+            else if (overlayId.includes('-') && !overlayId.includes('CmfStatus:') && !overlayId.includes('CmfTrans:')) {
                 const parts = overlayId.split('-');
                 if (parts.length >= 2) {
                     // Look for known patterns in the parts
@@ -443,6 +517,7 @@ class HuEvaFlowEnhancer {
                             if (parts[i] === 'node' && i + 1 < parts.length && parts[i + 1].startsWith('_')) {
                                 // This is 'node_start' pattern
                                 sourceId = parts[i] + parts[i + 1];
+                                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found node_start pattern: ${sourceId}`);
                                 if (i + 2 < parts.length) {
                                     // Try to reconstruct the target ID
                                     targetId = parts[i + 2];
@@ -459,6 +534,7 @@ class HuEvaFlowEnhancer {
                             } else if (parts[i] === 'all' && i + 1 < parts.length && /^\d+$/.test(parts[i + 1])) {
                                 // This is 'all0' pattern
                                 sourceId = parts[i] + parts[i + 1];
+                                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found all0 pattern: ${sourceId}`);
                                 if (i + 2 < parts.length) {
                                     targetId = parts[i + 2];
                                     for (let j = i + 3; j < parts.length; j++) {
@@ -618,6 +694,19 @@ class HuEvaFlowEnhancer {
                 console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Final IDs - source: "${sourceId}", target: "${targetId}"`);
             }
 
+            // Final check: if we found start/end patterns, make sure they're preserved
+            if (overlayId.includes('node_start') || overlayId.includes('all0')) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - OverlayId contained start/end pattern but final IDs: source="${sourceId}", target="${targetId}"`);
+            }
+
+            // Additional debug for special start/end nodes
+            if (sourceId && (sourceId.includes('node_start') || sourceId.includes('all0'))) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Source contains start/end node: "${sourceId}"`);
+            }
+            if (targetId && (targetId.includes('node_start') || targetId.includes('all0'))) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Target contains start/end node: "${targetId}"`);
+            }
+
             // Fix ID mapping - ensure both source and target IDs exist as nodes
             // If source is CmfTrans, try to find corresponding CmfStatus node
             let fixedSourceId = sourceId;
@@ -629,8 +718,7 @@ class HuEvaFlowEnhancer {
                 // which status this transition originates from based on UUID relationships
                 const transUuid = sourceId.replace('CmfTrans:', '');
 
-                // Strategy: Find the status with the most similar UUID (heuristic)
-                // This works because in EvaTeam, related statuses often have similar UUIDs
+                // Regular CmfTrans mapping to status
                 let bestMatch = null;
                 let bestScore = Infinity;
 
@@ -672,26 +760,90 @@ class HuEvaFlowEnhancer {
                 fixedTargetId = `CmfStatus:${uuid}`;
             }
 
+            // Special handling for target connections to start/end nodes
+            if (targetId && (targetId.includes('node_start') || targetId.includes('all0'))) {
+                fixedTargetId = targetId;
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Target is start/end node: ${targetId}`);
+            }
+
+            // Additional debug for direct connections to start/end
+            if (sourceId && (sourceId.includes('node_start') || sourceId.includes('all0'))) {
+                fixedSourceId = sourceId;
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Source is start/end node: ${sourceId}`);
+            }
+
             // Check if both fixed IDs exist in our nodes
             const nodeIds = nodes.map(n => n.id);
             const sourceExists = nodeIds.includes(fixedSourceId);
             const targetExists = nodeIds.includes(fixedTargetId);
 
+            // Debug: Check specifically for start/end nodes
+            if (fixedSourceId && (fixedSourceId === 'node_start' || fixedSourceId === 'all0')) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Source is start/end node: ${fixedSourceId}, exists: ${sourceExists}`);
+            }
+            if (fixedTargetId && (fixedTargetId === 'node_start' || fixedTargetId === 'all0')) {
+                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Target is start/end node: ${fixedTargetId}, exists: ${targetExists}`);
+            }
+
             if (fixedSourceId && fixedTargetId && sourceExists && targetExists && fixedSourceId !== fixedTargetId) {
                 const edgeId = `e-${fixedSourceId}-${fixedTargetId}-${label.replace(/\s/g, '_')}`;
                 if (!uniqueEdgeIds.has(edgeId)) {
+                    // Get optimal connection positions
+                    const sourceNode = nodes.find(n => n.id === fixedSourceId);
+                    const targetNode = nodes.find(n => n.id === fixedTargetId);
+
+                    let sourcePosition = 'right';
+                    let targetPosition = 'left';
+
+                    if (sourceNode && targetNode) {
+                        // For start/end nodes, force top/bottom connections only
+                        if (sourceNode.type === 'startEnd' || sourceNode.data?.isStartEndNode) {
+                            // For circular source nodes, prefer top/bottom based on relative position
+                            const dy = targetNode.position.y - sourceNode.position.y;
+                            sourcePosition = dy > 0 ? 'bottom' : 'top';
+                            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Forced source position for circular node: ${sourcePosition}`);
+                        } else {
+                            sourcePosition = this.getOptimalConnectionPosition(sourceNode, targetNode, 'source');
+                        }
+
+                        if (targetNode.type === 'startEnd' || targetNode.data?.isStartEndNode) {
+                            // For circular target nodes, prefer top/bottom based on relative position
+                            const dy = sourceNode.position.y - targetNode.position.y;
+                            targetPosition = dy > 0 ? 'top' : 'bottom';
+                            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Forced target position for circular node: ${targetPosition}`);
+                        } else {
+                            targetPosition = this.getOptimalConnectionPosition(targetNode, sourceNode, 'target');
+                        }
+                    }
+
                     edges.push({
                         id: edgeId,
                         source: fixedSourceId,
                         target: fixedTargetId,
+                        sourcePosition: sourcePosition,
+                        targetPosition: targetPosition,
                         label: label,
                         type: 'smoothstep',
                         animated: false,
-                        style: { strokeWidth: 2, stroke: '#666' },
-                        labelStyle: { fill: '#333', fontWeight: 'bold' },
+                        style: {
+                            strokeWidth: 2,
+                            stroke: '#666',
+                            strokeDasharray: label.toLowerCase().includes('reopen') ? '5,5' : 'none'
+                        },
+                        labelStyle: {
+                            fill: '#333',
+                            fontWeight: 'bold',
+                            fontSize: '12px'
+                        },
                         labelBgPadding: [8, 4],
                         labelBgBorderRadius: 4,
-                        labelBgStyle: { fill: '#fff', color: '#333', fillOpacity: 0.9, stroke: '#ccc', strokeWidth: 1 },
+                        labelBgStyle: {
+                            fill: '#fff',
+                            color: '#333',
+                            fillOpacity: 0.9,
+                            stroke: '#ccc',
+                            strokeWidth: 1
+                        },
                         markerEnd: {
                             type: 'arrowclosed',
                             width: 15,
@@ -744,8 +896,38 @@ class HuEvaFlowEnhancer {
         const finalEdges = [];
         const validNodeIds = new Set(nodes.map(n => n.id));
 
+        // Calculate optimal connection positions for all nodes
+        this.calculateOptimalConnectionPositions(nodes);
+
         edges.forEach(edge => {
             if (validNodeIds.has(edge.source) && validNodeIds.has(edge.target)) {
+                // Add optimal connection positions to the edge
+                const sourceNode = nodes.find(n => n.id === edge.source);
+                const targetNode = nodes.find(n => n.id === edge.target);
+
+                if (sourceNode && targetNode) {
+                    edge.sourcePosition = this.getOptimalConnectionPosition(sourceNode, targetNode, 'source');
+                    edge.targetPosition = this.getOptimalConnectionPosition(targetNode, sourceNode, 'target');
+                    // For start/end nodes, force top/bottom connections only
+                    if (sourceNode.type === 'startEnd' || sourceNode.data?.isStartEndNode) {
+                        // For circular source nodes, prefer top/bottom based on relative position
+                        const dy = targetNode.position.y - sourceNode.position.y;
+                        edge.sourcePosition = dy > 0 ? 'bottom' : 'top';
+                        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Final validation: Forced source position for circular node: ${edge.sourcePosition}`);
+                    } else {
+                        edge.sourcePosition = this.getOptimalConnectionPosition(sourceNode, targetNode, 'source');
+                    }
+
+                    if (targetNode.type === 'startEnd' || targetNode.data?.isStartEndNode) {
+                        // For circular target nodes, prefer top/bottom based on relative position
+                        const dy = sourceNode.position.y - targetNode.position.y;
+                        edge.targetPosition = dy > 0 ? 'top' : 'bottom';
+                        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Final validation: Forced target position for circular node: ${edge.targetPosition}`);
+                    } else {
+                        edge.targetPosition = this.getOptimalConnectionPosition(targetNode, sourceNode, 'target');
+                    }
+                }
+
                 finalEdges.push(edge);
             } else {
                 console.log(`Hu: EvaTeam Workflow Enhancer: ⚠️ Removing invalid edge: ${edge.source} -> ${edge.target}`);
@@ -753,6 +935,18 @@ class HuEvaFlowEnhancer {
         });
 
         console.log(`Hu: EvaTeam Workflow Enhancer: Final validation - ${finalEdges.length} valid edges from ${edges.length} total`);
+
+        // Debug: Check connections involving start/end nodes
+        const startEndEdges = finalEdges.filter(edge =>
+            edge.source === 'node_start' || edge.source === 'all0' ||
+            edge.target === 'node_start' || edge.target === 'all0'
+        );
+
+        if (startEndEdges.length > 0) {
+            console.log(`Hu: EvaTeam Workflow Enhancer: Found ${startEndEdges.length} edges involving start/end nodes:`, startEndEdges);
+        } else {
+            console.log(`Hu: EvaTeam Workflow Enhancer: ⚠️ No edges found involving start/end nodes!`);
+        }
 
         return { nodes, edges: finalEdges };
     }
@@ -773,6 +967,84 @@ class HuEvaFlowEnhancer {
             return;
         }
 
+        // Create custom node components
+        const StartEndNode = ({ data }) => {
+            return React.createElement('div', {
+                className: 'react-flow__node-start-end',
+                style: {
+                    width: data.width,
+                    height: data.height,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                    color: 'white',
+                    border: '3px solid #2E7D32',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    position: 'relative'
+                }
+            }, [
+                // Add handles for connections - only top and bottom for top-bottom positioning
+                React.createElement(ReactFlow.Handle, {
+                    type: 'source',
+                    position: 'top',
+                    id: 'source-top',
+                    style: {
+                        background: '#2E7D32',
+                        width: '8px',
+                        height: '8px',
+                        border: '2px solid white'
+                    }
+                }),
+                React.createElement(ReactFlow.Handle, {
+                    type: 'source',
+                    position: 'bottom',
+                    id: 'source-bottom',
+                    style: {
+                        background: '#2E7D32',
+                        width: '8px',
+                        height: '8px',
+                        border: '2px solid white'
+                    }
+                }),
+                React.createElement(ReactFlow.Handle, {
+                    type: 'target',
+                    position: 'top',
+                    id: 'target-top',
+                    style: {
+                        background: '#2E7D32',
+                        width: '8px',
+                        height: '8px',
+                        border: '2px solid white'
+                    }
+                }),
+                React.createElement(ReactFlow.Handle, {
+                    type: 'target',
+                    position: 'bottom',
+                    id: 'target-bottom',
+                    style: {
+                        background: '#2E7D32',
+                        width: '8px',
+                        height: '8px',
+                        border: '2px solid white'
+                    }
+                }),
+                React.createElement('div', {
+                    style: {
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        pointerEvents: 'none'
+                    }
+                }, data.label)
+            ]);
+        };
+
         // Create the ReactFlow component
         function EnhancedWorkflowApp() {
             const [nodes, setNodes, onNodesChange] = ReactFlow.useNodesState(workflowData.nodes);
@@ -783,6 +1055,11 @@ class HuEvaFlowEnhancer {
                 [setEdges]
             );
 
+            // Define node types
+            const nodeTypes = React.useMemo(() => ({
+                startEnd: StartEndNode
+            }), []);
+
             return React.createElement(ReactFlow.ReactFlow, {
                 nodes: nodes,
                 edges: edges,
@@ -792,6 +1069,7 @@ class HuEvaFlowEnhancer {
                 fitView: true,
                 attributionPosition: 'bottom-left',
                 connectionMode: ReactFlow.ConnectionMode.Loose,
+                nodeTypes: nodeTypes,
                 defaultEdgeOptions: {
                     type: 'smoothstep',
                     style: { strokeWidth: 2, stroke: '#666' },
@@ -901,6 +1179,30 @@ class HuEvaFlowEnhancer {
             position: relative;
         `;
 
+        // Add CSS for circular start/end nodes
+        const style = document.createElement('style');
+        style.textContent = `
+            #enhanced-workflow-container .react-flow__node-start-end {
+                border-radius: 50% !important;
+                background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+                color: white !important;
+                border: 3px solid #2E7D32 !important;
+                font-weight: bold !important;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+            }
+
+            #enhanced-workflow-container .react-flow__node-start-end .react-flow__node-label {
+                color: white !important;
+                font-size: 14px !important;
+                font-weight: bold !important;
+            }
+        `;
+        enhancedViewContainer.appendChild(style);
+
         // Add the enhanced view container to the jsPlumb element
         jsPlumbElement.appendChild(enhancedViewContainer);
 
@@ -936,6 +1238,80 @@ class HuEvaFlowEnhancer {
 
         // Render the ReactFlow component in the container
         this.renderReactFlowComponent(enhancedViewContainer, workflowData);
+    }
+
+    /**
+     * Calculate optimal connection positions for all nodes based on minimum distance
+     * This method is now simplified since getOptimalConnectionPosition does the heavy lifting
+     */
+    calculateOptimalConnectionPositions(nodes) {
+        // Initialize with default positions - individual edges will be optimized later
+        nodes.forEach(node => {
+            if (node.type === 'startEnd' || node.data?.isStartEndNode) {
+                // For circular nodes, use top/bottom by default
+                node.sourcePosition = 'bottom';
+                node.targetPosition = 'top';
+            } else {
+                // For regular nodes, use left/right by default
+                node.sourcePosition = 'right';
+                node.targetPosition = 'left';
+            }
+        });
+
+        console.log(`Hu: EvaTeam Workflow Enhancer: Initialized connection positions for ${nodes.length} nodes`);
+    }
+
+    /**
+     * Get optimal connection position for a specific connection based on minimum distance
+     */
+    getOptimalConnectionPosition(node, connectedNode, connectionType) {
+        // Node dimensions (approximate, can be adjusted)
+        const nodeWidth = node.width || 120;
+        const nodeHeight = node.height || 60;
+
+        // Calculate center points of the node
+        const nodeCenterX = node.position.x + nodeWidth / 2;
+        const nodeCenterY = node.position.y + nodeHeight / 2;
+
+        // Connected node center
+        const connectedCenterX = connectedNode.position.x + (connectedNode.width || 120) / 2;
+        const connectedCenterY = connectedNode.position.y + (connectedNode.height || 60) / 2;
+
+        // Calculate distances from each possible connection point to the target center
+        const distances = {
+            left: Math.sqrt(
+                Math.pow(node.position.x - connectedCenterX, 2) +
+                Math.pow(nodeCenterY - connectedCenterY, 2)
+            ),
+            right: Math.sqrt(
+                Math.pow((node.position.x + nodeWidth) - connectedCenterX, 2) +
+                Math.pow(nodeCenterY - connectedCenterY, 2)
+            ),
+            top: Math.sqrt(
+                Math.pow(nodeCenterX - connectedCenterX, 2) +
+                Math.pow(node.position.y - connectedCenterY, 2)
+            ),
+            bottom: Math.sqrt(
+                Math.pow(nodeCenterX - connectedCenterX, 2) +
+                Math.pow((node.position.y + nodeHeight) - connectedCenterY, 2)
+            )
+        };
+
+        // Find the position with minimum distance
+        let optimalPosition = 'right';
+        let minDistance = distances.right;
+
+        Object.keys(distances).forEach(position => {
+            if (distances[position] < minDistance) {
+                minDistance = distances[position];
+                optimalPosition = position;
+            }
+        });
+
+        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Connection distances for ${node.id} -> ${connectedNode.id}:`, distances);
+        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Optimal position: ${optimalPosition} (distance: ${minDistance.toFixed(2)})`);
+
+        return optimalPosition;
     }
 
     /**
