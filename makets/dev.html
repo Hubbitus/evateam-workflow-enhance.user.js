@@ -11,8 +11,9 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/umd/index.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/style.min.css">
+    <script src="../HuEvaFlowEnhancer.js"></script>
 
-    
+
     <style>
         /* Original CSS styles from the user script */
         .dev-header {
@@ -102,7 +103,7 @@
             background: #17a2b8;
             color: white;
         }
-        
+
         /* Additional styles for development UI */
         body {
             font-family: Arial, sans-serif;
@@ -128,7 +129,7 @@
             <h1>EvaTeam Workflow Enhancer - Development Mode</h1>
             <p>Emulated Tampermonkey script environment for easier debugging</p>
         </div>
-        
+
         <div class="dev-panel">
             <h2>Development Controls</h2>
             <div class="dev-controls">
@@ -137,14 +138,14 @@
                 <button class="dev-button info" onclick="showInfo()">Show Info</button>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>Emulated Workflow Dialog</h2>
             <div class="workflow-container" id="emulated-workflow">
                 <!-- This simulates the EvaTeam workflow interface -->
                 <div class="tab-buttons">
-                    <button class="tab-button active" onclick="switchTab('enhanced')">Схема</button>
-                    <button class="tab-button" onclick="switchTab('original')">Исходная схема</button>
+                    <button class="tab-button active" onclick="switchTab('enhanced')">Enhanced</button>
+                    <button class="tab-button" onclick="switchTab('original')">Original</button>
                 </div>
 
                 <div id="enhanced-tab" class="tab-content" style="display:block;">
@@ -158,24 +159,22 @@
                         <!-- Original workflow will be displayed here -->
                     </div>
                 </div>
-                
+
                 <div style="margin-top: 15px;">
                     <button id="improve-schema-button" class="dev-button" style="background:#28a745;color:white;padding:10px 20px;font-size:16px;">
-                        Улучшить схему
+                        Improve Schema
                     </button>
                 </div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>Debug Console</h2>
             <div style="display:flex; gap: 10px; margin-bottom: 10px;">
                 <button class="dev-button info" onclick="copyLogToClipboard()">Copy Log to Clipboard</button>
                 <button class="dev-button clear" onclick="clearConsole()">Clear Console</button>
             </div>
-            <div class="console" id="debug-console">
-                <!-- Debug messages will appear here -->
-            </div>
+            <div class="console" id="debug-console"><!-- Debug messages will appear here --></div>
         </div>
     </div>
 
@@ -186,12 +185,12 @@
             consoleEl.innerHTML += `${new Date().toISOString()} - ${message}\n`;
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
-        
+
         function resetDemo() {
             log('Resetting demo...');
             // Reset any demo state here
         }
-        
+
         function clearConsole() {
             document.getElementById('debug-console').innerHTML = '';
         }
@@ -225,7 +224,7 @@
             log('Development mode active. React and ReactFlow libraries loaded.');
             log(`React loaded: ${typeof window.React !== 'undefined'}`);
             log(`ReactDOM loaded: ${typeof window.ReactDOM !== 'undefined'}`);
-            log(`ReactFlow loaded: ${typeof window.reactflow !== 'undefined'}`);
+            log(`ReactFlow loaded: ${typeof window.ReactFlow !== 'undefined' || typeof window.reactflow !== 'undefined' || typeof window.REACT_FLOW !== 'undefined'}`);
         }
 
         function switchTab(tabName) {
@@ -252,336 +251,30 @@
                 }
             }
 
-            // If switching to enhanced tab and it's empty, render the flow
-            if (tabName === 'enhanced') {
-                const container = document.getElementById('react-flow-container');
-                if (container.children.length === 0) {
-                    const workflowData = getSampleWorkflowData();
-                    renderReactFlowComponent(container, workflowData);
-                }
-            }
-
             // If switching to original tab, populate with original workflow
             if (tabName === 'original') {
                 const container = document.getElementById('original-workflow-container');
-                // Populate with the original workflow HTML from our sample
-                const sampleHTML = createSampleWorkflowHTML();
-                container.innerHTML = '';
-                container.appendChild(sampleHTML.cloneNode(true));
-            }
-        }
-        
-        // Function to extract workflow data from HTML elements (similar to the extension)
-        function extractWorkflowDataFromHTML(element) {
-            const nodes = [];
-            const edges = [];
+                // Show loading indicator
+                container.innerHTML = '<div style="padding: 20px; text-align: center;">Loading original schema...</div>';
 
-            // Find the chart container
-            const chartContainer = element.querySelector('.chart-container') || element;
-            if (!chartContainer) {
-                log('Chart container not found.');
-                return { nodes, edges };
-            }
-
-            // Extract nodes
-            const nodeElements = chartContainer.querySelectorAll('div[id^="node_"], div[id^="CmfStatus:"], div.box.circle, .node-element');
-            nodeElements.forEach((el, index) => {
-                const id = el.id || el.getAttribute('data-statusid') || `node_${index}`;
-                if (!id) return;
-
-                // Try to find the label in various possible locations
-                let label = '';
-                const labelEl = el.querySelector('.node') || el.querySelector('.status-label') || el.querySelector('span') || el;
-                label = (labelEl ? labelEl.textContent : el.textContent).trim();
-
-                // Extract position from style
-                const leftMatch = el.style.left ? el.style.left.match(/(\d+\.?\d*)px/) : null;
-                const topMatch = el.style.top ? el.style.top.match(/(\d+\.?\d*)px/) : null;
-
-                const x = leftMatch ? parseFloat(leftMatch[1]) : (index * 20);
-                const y = topMatch ? parseFloat(topMatch[1]) : (index * 100);
-
-                // Create a default width/height for nodes
-                const width = 120;
-                const height = 60;
-
-                nodes.push({
-                    id: id,
-                    position: { x, y },
-                    data: { label: label },
-                    width: width,
-                    height: height,
-                    className: Array.from(el.classList).join(' '),
-                    style: {
-                        backgroundColor: el.style.backgroundColor || '#fff',
-                        borderColor: el.style.borderColor || '#ccc',
-                        color: el.style.color || '#000'
-                    }
-                });
-            });
-
-            // Extract edges
-            const edgeLabelElements = chartContainer.querySelectorAll('.jtk-overlay.n2n-transition, .edge-label, .transition');
-            log(`Found ${edgeLabelElements.length} edge elements to process`);
-            const uniqueEdgeIds = new Set();
-
-            edgeLabelElements.forEach((el, index) => {
-                const overlayId = el.getAttribute('jtk-overlay-id') || el.id;
-                const label = el.textContent.trim();
-
-                log(`Processing edge element ${index}: overlayId="${overlayId}", label="${label}"`);
-
-                if (!overlayId || !label) {
-                    log(`  Skipping: missing overlayId or label`);
-                    return;
-                }
-
-                let sourceId = null;
-                let targetId = null;
-
-                // Extract source and target from the overlay ID
-                // Format: sourceId-targetId (e.g., node_start-CmfStatus:...)
-                // We need to split on the first dash that separates two complete IDs
-
-                // Look for specific patterns in the overlayId
-                // Common patterns: node_start, CmfStatus:UUID, all0, etc.
-
-                // First, try to match the pattern: some_id-some_other_id
-                // where each id could be node_start, CmfStatus:UUID, all0, etc.
-
-                // A more targeted approach: find the first dash that comes after a colon followed by hex characters
-                // This should separate CmfStatus:UUID-CmfStatus:UUID correctly
-                const parts = overlayId.split('-');
-
-                if (parts.length >= 2) {
-                    // We need to intelligently determine where to split
-                    // The pattern is usually: known_id-known_id
-                    // where known_id can be: node_start, CmfStatus:UUID, all0
-
-                    // Check if the first part is a complete known ID
-                    if (parts[0] === 'node' && parts.length > 1 && parts[1].startsWith('_')) {
-                        // This is 'node_start' pattern
-                        sourceId = parts[0] + parts[1]; // node_start
-                        targetId = parts.slice(2).join('-'); // everything else
-                    } else if (parts[0] === 'all' && parts.length > 1 && /^\d+$/.test(parts[1])) {
-                        // This is 'all0' pattern
-                        sourceId = parts[0] + parts[1]; // all0
-                        targetId = parts.slice(2).join('-'); // everything else
-                    } else if (parts[0].startsWith('CmfStatus:')) {
-                        // This is CmfStatus:UUID pattern
-                        // We need to find where the first UUID ends and the second ID begins
-                        // A UUID typically has the format: 8-4-4-4-12 hex characters separated by '-'
-                        // So we look for the pattern where after the first CmfStatus:UUID,
-                        // there's another ID starting with a known prefix like 'CmfStatus:' or 'all' or 'node'
-
-                        // Let's try to find the position where the second ID starts
-                        // We'll look for the first part after the first complete ID
-                        let secondIdIndex = 1; // Start looking from the second part
-
-                        // Check if any subsequent part starts with known prefixes
-                        // But we need to be careful not to match 'all' inside a UUID
-                        secondIdIndex = parts.length; // Default: no second ID found
-
-                        for (let i = 1; i < parts.length; i++) {
-                            // Check for CmfStatus: prefix
-                            if (parts[i].startsWith('CmfStatus:')) {
-                                // Found the start of the second ID
-                                secondIdIndex = i;
-                                break;
-                            }
-                            // Check for 'all' followed by digits (like 'all0')
-                            // But only if it's not part of a longer UUID segment
-                            else if (parts[i] === 'all' && i + 1 < parts.length && /^\d+$/.test(parts[i + 1])) {
-                                // Check if the previous part looks like the end of a UUID
-                                // A UUID part typically consists of hex characters
-                                const prevPart = parts[i-1];
-                                // If prevPart looks like hex and next part is digits, then this is likely 'all0'
-                                if (/^[0-9a-fA-F]+$/.test(prevPart)) {
-                                    secondIdIndex = i;
-                                    break;
-                                }
-                            }
-                            // Also check if a part starts with 'all' and the rest are digits (like 'all0' in one piece)
-                            else if (parts[i].startsWith('all') && /^\d+$/.test(parts[i].substring(3))) {
-                                // This is a complete ID like 'all0'
-                                secondIdIndex = i;
-                                break;
-                            }
-                            // Check for 'node' followed by underscore (like 'node_start')
-                            else if (parts[i] === 'node' && i + 1 < parts.length && parts[i + 1].startsWith('_')) {
-                                secondIdIndex = i;
-                                break;
-                            }
-                        }
-
-                        // Reconstruct the first ID
-                        sourceId = parts[0];
-                        for (let i = 1; i < secondIdIndex; i++) {
-                            sourceId += '-' + parts[i];
-                        }
-
-                        // Reconstruct the second ID
-                        targetId = parts[secondIdIndex];
-                        for (let i = secondIdIndex + 1; i < parts.length; i++) {
-                            targetId += '-' + parts[i];
-                        }
-                    } else {
-                        // Default: split at first dash
-                        sourceId = parts[0];
-                        targetId = parts.slice(1).join('-');
-                    }
-
-                    log(`  Using parts split: ${sourceId} -> ${targetId}`);
-                } else {
-                    log(`  Could not parse source/target from "${overlayId}"`);
-                }
-
-                if (sourceId && targetId) {
-                    const edgeId = `e-${sourceId}-${targetId}-${label.replace(/\s/g, '_')}`;
-                    if (!uniqueEdgeIds.has(edgeId)) {
-                        log(`Creating edge: ${sourceId} -> ${targetId} (${label})`);
-                        edges.push({
-                            id: edgeId,
-                            source: sourceId,
-                            target: targetId,
-                            label: label,
-                            type: 'default',
-                            animated: false,
-                            style: { strokeWidth: 2, stroke: '#456' },
-                            labelBgPadding: [8, 4],
-                            labelBgBorderRadius: 4,
-                            labelBgStyle: { fill: '#fff', color: '#456', fillOpacity: 0.7 },
-                        });
-                        uniqueEdgeIds.add(edgeId);
-                    } else {
-                        log(`  Skipping duplicate edge: ${edgeId}`);
-                    }
-                } else {
-                    log(`  Could not create edge due to missing source or target`);
-                }
-            });
-
-            return { nodes, edges };
-        }
-
-        // Function to create sample HTML structure that mimics the EvaTeam interface
-        function createSampleWorkflowHTML() {
-            const container = document.createElement('div');
-            container.className = 'chart-container';
-            container.innerHTML = `
-                <div id="node_start" class="node-element" style="position:absolute; left: 300px; top: 50px; width: 120px; height: 60px; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                    <span>Начало</span>
-                </div>
-                <div id="CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b" class="node-element" style="position:absolute; left: 300px; top: 150px; width: 120px; height: 60px; background-color: #cce5ff; border: 1px solid #99ccff; color: #004085; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                    <span>Анализ запроса</span>
-                </div>
-                <div id="CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b" class="node-element" style="position:absolute; left: 300px; top: 250px; width: 120px; height: 60px; background-color: #ffeaa7; border: 1px solid #fdcb6e; color: #2d3436; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                    <span>Разработка</span>
-                </div>
-                <div id="all0" class="node-element" style="position:absolute; left: 300px; top: 350px; width: 120px; height: 60px; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                    <span>Завершение</span>
-                </div>
-
-                <!-- Edge overlays (transitions) -->
-                <div class="jtk-overlay n2n-transition" jtk-overlay-id="node_start-CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b" style="position: absolute; left: 360px; top: 110px;">Начать анализ</div>
-                <div class="jtk-overlay n2n-transition" jtk-overlay-id="CmfStatus:97bff9d0-659a-11f0-8b7b-ee37db4b230b-CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b" style="position: absolute; left: 360px; top: 210px;">Перейти к разработке</div>
-                <div class="jtk-overlay n2n-transition" jtk-overlay-id="CmfStatus:97f7a04c-659a-11f0-8b7b-ee37db4b230b-all0" style="position: absolute; left: 360px; top: 310px;">Завершить</div>
-            `;
-            return container;
-        }
-
-        // Function that simulates parsing HTML to extract workflow data (like in the extension)
-        function getSampleWorkflowData() {
-            log('Parsing HTML to extract workflow data...');
-
-            // Create sample HTML structure that mimics the EvaTeam interface
-            const sampleHTML = createSampleWorkflowHTML();
-
-            // Parse the HTML structure to extract workflow data
-            const workflowData = extractWorkflowDataFromHTML(sampleHTML);
-
-            log(`Parsed ${workflowData.nodes.length} nodes and ${workflowData.edges.length} edges from HTML`);
-
-            // Log the nodes and edges for debugging
-            workflowData.nodes.forEach(node => {
-                log(`Node: ${node.id} at (${node.position.x}, ${node.position.y}) - ${node.data.label}`);
-            });
-
-            workflowData.edges.forEach(edge => {
-                log(`Edge: ${edge.id} from ${edge.source} to ${edge.target} - ${edge.label}`);
-            });
-
-            return workflowData;
-        }
-
-        // Function to render the ReactFlow component
-        function renderReactFlowComponent(container, workflowData) {
-            log('Rendering ReactFlow component...');
-
-            // Determine which React Flow object is available
-            const ReactFlow = window.reactflow || window.ReactFlow || window.REACT_FLOW;
-            const React = window.React;
-            const ReactDOM = window.ReactDOM;
-
-            if (!ReactFlow) {
-                log('ERROR: ReactFlow library not found!');
-                return;
-            }
-
-            // Create the ReactFlow component
-            function EnhancedWorkflowApp() {
-                const [nodes, setNodes, onNodesChange, handleDragStart] = ReactFlow.useNodesState(workflowData.nodes);
-                const [edges, setEdges] = ReactFlow.useEdgesState(workflowData.edges);
-
-                const onConnect = React.useCallback(
-                    (params) => setEdges((eds) => ReactFlow.addEdge(params, eds)),
-                    [setEdges]
-                );
-
-                const onEdgesChange = React.useCallback(
-                    (changes) => setEdges((eds) => ReactFlow.applyEdgeChanges(changes, eds)),
-                    [setEdges]
-                );
-
-                return React.createElement(ReactFlow.ReactFlow, {
-                    nodes: nodes,
-                    edges: edges,
-                    onNodeDrag: handleDragStart,  // Pass the drag handler
-                    onNodesChange: onNodesChange,
-                    onEdgesChange: onEdgesChange,
-                    onConnect: onConnect,
-                    fitView: true,
-                    attributionPosition: 'bottom-left',
-                    defaultEdgeOptions: {
-                        type: 'smoothstep', // Use smoothstep edges with arrows
-                        markerEnd: { type: 'arrowclosed', width: 10, height: 10 }, // Add arrowheads
-                        style: { strokeWidth: 2 } // Set stroke width
-                    }
-                },
-                    React.createElement(ReactFlow.Controls, null),
-                    React.createElement(ReactFlow.MiniMap, null),
-                    React.createElement(ReactFlow.Background, {
-                        variant: ReactFlow.BackgroundVariant?.dots || 'dots'
+                // Fetch the content of the as-is file
+                fetch('./maket.as-is.html')
+                    .then(response => response.text())
+                    .then(htmlContent => {
+                        // Put the raw HTML content directly into the container
+                        container.innerHTML = htmlContent;
                     })
-                );
-            }
-
-            try {
-                // Render the component in the container using createRoot (React 18+)
-                const root = ReactDOM.createRoot(container);
-                root.render(React.createElement(EnhancedWorkflowApp));
-                log('ReactFlow component rendered successfully!');
-            } catch (error) {
-                log('Error rendering ReactFlow component: ' + error.message);
-                // Fallback: render a simple representation
-                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Ошибка при загрузке ReactFlow. Проверьте зависимости.</div>';
+                    .catch(error => {
+                        container.innerHTML = `<div style="padding: 20px; color: red;">Error loading original schema: ${error.message}</div>`;
+                        log('Error loading original workflow: ' + error.message);
+                    });
             }
         }
 
         // Main initialization function - this emulates the Tampermonkey script startup
         function initializeDevEnvironment() {
             log('Initializing EvaTeam Workflow Enhancer Development Environment...');
-            
+
             // Wait for libraries to load
             function waitForLibraries(callback, retries = 50, delay = 200) {
                 const isReactLoaded = typeof window.React !== 'undefined';
@@ -617,23 +310,21 @@
                     callback();
                 }
             }
-            
+
             waitForLibraries(() => {
                 log('Libraries loaded, initializing UI...');
-                
-                // Add event listener to the "Улучшить схему" button
+
+                // Add event listener to the "Improve Schema" button
                 const improveButton = document.getElementById('improve-schema-button');
                 improveButton.addEventListener('click', function() {
-                    log('Улучшить схему button clicked!');
-                    
-                    // Get sample workflow data
-                    const workflowData = getSampleWorkflowData();
-                    
-                    // Render ReactFlow in the container
-                    const container = document.getElementById('react-flow-container');
-                    renderReactFlowComponent(container, workflowData);
+                    log('Improve Schema button clicked!');
+
+                    // In the development environment, we now use the enhancer class
+                    // which handles the workflow data extraction and visualization
+                    // The button click functionality is now handled by the HuEvaFlowEnhancer class
+                    alert('In development mode, the "Improve Schema" button functionality is integrated into the HuEvaFlowEnhancer class');
                 });
-                
+
                 // Show initial info
                 showInfo();
             });
@@ -644,16 +335,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeDevEnvironment();
 
-            // Automatically render the workflow diagram on page load for development convenience
-            setTimeout(function() {
-                const container = document.getElementById('react-flow-container');
-                const workflowData = getSampleWorkflowData();
-                renderReactFlowComponent(container, workflowData);
-            }, 1000); // Delay to ensure libraries are loaded
-
             // Initialize the first tab as active
             switchTab('enhanced');
-        });
+
+            // Load the HTML content from the as-is file and initialize the enhancer with it
+            fetch('./maket.as-is.html')
+                .then(response => response.text())
+                .then(htmlContent => {
+                    // Initialize the enhancer with the HTML content
+                    const enhancer = new HuEvaFlowEnhancer();
+                    enhancer.initialize();
+                    enhancer.initFromHTML(htmlContent);
+                })
+                .catch(error => {
+                    console.error('Error loading HTML content for development:', error);
+                });
+            }
+        );
     </script>
 </body>
 </html>

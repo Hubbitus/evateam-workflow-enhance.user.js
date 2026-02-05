@@ -1,16 +1,16 @@
-# Руководство по отладке EvaTeam Workflow Enhancer
+# EvaTeam Workflow Enhancer Debugging Guide
 
-Этот файл содержит полезные команды и техники для отладки и тестирования EvaTeam Workflow Enhancer.
+This file contains useful commands and techniques for debugging and testing the EvaTeam Workflow Enhancer.
 
-## Консольные команды
+## Console Commands
 
-### Очистка всех сохраненных макетов
+### Clear all saved layouts
 ```javascript
 Object.keys(localStorage).filter(key => key.startsWith('evateam_workflow_layout_')).forEach(key => localStorage.removeItem(key));
 console.log('Hu: EvaTeam Workflow Enhancer: All saved layouts cleared');
 ```
 
-### Просмотр всех сохраненных макетов
+### View all saved layouts
 ```javascript
 Object.keys(localStorage).filter(key => key.startsWith('evateam_workflow_layout_')).forEach(key => {
     console.log(`Key: ${key}`);
@@ -18,43 +18,43 @@ Object.keys(localStorage).filter(key => key.startsWith('evateam_workflow_layout_
 });
 ```
 
-### Принудительное пересчитывание макета текущего workflow
+### Force recalculate current workflow layout
 ```javascript
 localStorage.removeItem(`evateam_workflow_layout_${getWorkflowIdFromUrl()}`);
 location.reload();
 ```
 
-### Получение информации о текущем workflow
+### Get current workflow information
 ```javascript
 console.log('Workflow ID:', getWorkflowIdFromUrl());
 console.log('Current nodes:', document.querySelectorAll('[id^="CmfStatus:"]').length);
 console.log('Current edges:', document.querySelectorAll('[jtk-overlay-id]').length);
 ```
 
-### Проверка загруженных библиотек
+### Check loaded libraries
 ```javascript
 console.log('React loaded:', typeof React !== 'undefined');
 console.log('ReactFlow loaded:', typeof ReactFlow !== 'undefined');
 console.log('React version:', React.version);
 ```
 
-### Тестирование алгоритма авто-раскладки
+### Test auto-layout algorithm
 ```javascript
-// Получить текущие данные
+// Get current data
 const currentNodes = Array.from(document.querySelectorAll('[id^="CmfStatus:"]')).map(el => ({
     id: el.id,
     text: el.textContent.trim(),
     position: { x: parseInt(el.style.left) || 0, y: parseInt(el.style.top) || 0 }
 }));
 
-// Протестировать авто-раскладку
+// Test auto-layout
 const testLayout = autoLayoutNodes(currentNodes, []);
 console.log('Auto layout result:', testLayout);
 ```
 
-## Мониторинг производительности
+## Performance Monitoring
 
-### Измерение времени парсинга
+### Measure parsing time
 ```javascript
 const startTime = performance.now();
 const parsed = parseOriginalWorkflow(document.querySelector('#workflow').innerHTML);
@@ -64,9 +64,9 @@ console.log('Parsed nodes:', parsed.nodes.length);
 console.log('Parsed edges:', parsed.edges.length);
 ```
 
-### Мониторинг localStorage
+### Monitor localStorage
 ```javascript
-// Отслеживание изменений в localStorage
+// Track localStorage changes
 const originalSetItem = localStorage.setItem;
 localStorage.setItem = function(key, value) {
     if (key.startsWith('evateam_workflow_layout_')) {
@@ -76,36 +76,36 @@ localStorage.setItem = function(key, value) {
 };
 ```
 
-## Тестирование обработки ошибок
+## Error Handling Testing
 
-### Имитация поврежденного DOM
+### Simulate broken DOM
 ```javascript
-// Сохранить оригинальный контент
+// Save original content
 const originalContent = document.querySelector('#workflow').innerHTML;
 
-// Имитировать ошибку
+// Simulate error
 document.querySelector('#workflow').innerHTML = '<div>Broken content</div>';
 location.reload();
 
-// Восстановить оригинал
+// Restore original
 setTimeout(() => {
     document.querySelector('#workflow').innerHTML = originalContent;
 }, 5000);
 ```
 
-### Тестирование без localStorage
+### Test without localStorage
 ```javascript
-// Имитировать недоступность localStorage
+// Simulate localStorage unavailability
 const originalLocalStorage = window.localStorage;
 Object.defineProperty(window, 'localStorage', {
     value: null,
     writable: false
 });
 
-// Перезагрузить страницу для тестирования
+// Reload page for testing
 location.reload();
 
-// Восстановить localStorage (после теста)
+// Restore localStorage (after test)
 setTimeout(() => {
     Object.defineProperty(window, 'localStorage', {
         value: originalLocalStorage,
@@ -114,26 +114,26 @@ setTimeout(() => {
 }, 3000);
 ```
 
-## Полезные селекторы
+## Useful Selectors
 
-### Поиск элементов workflow
+### Find workflow elements
 ```javascript
-// Все узлы workflow
+// All workflow nodes
 const workflowNodes = document.querySelectorAll('[id^="CmfStatus:"]');
 
-// Все связи workflow
+// All workflow connections
 const workflowEdges = document.querySelectorAll('[jtk-overlay-id]');
 
-// Кнопка Workflow
+// Workflow button
 const workflowButton = document.querySelector('button[title*="Workflow"], button:contains("Workflow")');
 
-// Контейнер workflow
+// Workflow container
 const workflowContainer = document.querySelector('#workflow, .workflow-container');
 ```
 
-### Поиск по тексту
+### Text search
 ```javascript
-// Функция для поиска элементов по тексту
+// Function to find elements by text
 function findElementsByText(text) {
     const elements = [];
     const walker = document.createTreeWalker(
@@ -152,15 +152,15 @@ function findElementsByText(text) {
     return elements;
 }
 
-// Пример использования
+// Usage example
 const workflowElements = findElementsByText('Workflow');
 ```
 
-## Профилирование React
+## React Profiling
 
-### Отслеживание ре-рендеров
+### Track re-renders
 ```javascript
-// Переопределить React.createElement для отладки
+// Override React.createElement for debugging
 const originalCreateElement = React.createElement;
 React.createElement = function(type, props, ...children) {
     console.log('Creating element:', type, props?.id || props?.className);
@@ -168,9 +168,9 @@ React.createElement = function(type, props, ...children) {
 };
 ```
 
-### Мониторинг состояния компонента
+### Monitor component state
 ```javascript
-// Добавить в WorkflowEnhancerApp для мониторинга состояния
+// Add to WorkflowEnhancerApp for state monitoring
 const [debugState, setDebugState] = React.useState({});
 
 React.useEffect(() => {
@@ -179,11 +179,11 @@ React.useEffect(() => {
 }, [activeTab, nodes, edges]);
 ```
 
-## Тестирование на разных workflow
+## Testing Different Workflows
 
-### Создание тестовых данных
+### Create test data
 ```javascript
-// Функция для создания простого workflow для тестирования
+// Function to create simple workflow for testing
 function createTestWorkflow() {
     const testHTML = `
         <div id="workflow">
@@ -207,11 +207,11 @@ function createTestWorkflow() {
 }
 ```
 
-## Автоматизация тестирования
+## Testing Automation
 
-### Bookmarklet для быстрого тестирования
+### Bookmarklet for quick testing
 ```javascript
-// Создать закладку с этим кодом для быстрого тестирования
+// Create a bookmark with this code for quick testing
 javascript:(function(){
     console.clear();
     console.log('=== EvaTeam Workflow Enhancer Test ===');
@@ -225,27 +225,27 @@ javascript:(function(){
 })();
 ```
 
-## Часто встречающиеся проблемы
+## Common Issues
 
-### 1. Библиотеки не загружаются
-**Симптомы**: "React is not defined" в консоли
-**Решение**: Проверить подключение @require в заголовке скрипта
+### 1. Libraries not loading
+**Symptoms**: "React is not defined" in console
+**Solution**: Check @require connection in script header
 
-### 2. Неправильный парсинг DOM
-**Симптомы**: Узлы не отображаются или отображаются некорректно
-**Решение**: Проверить селекторы `[id^="CmfStatus:"]` и `[jtk-overlay-id]`
+### 2. Incorrect DOM parsing
+**Symptoms**: Nodes not displaying or displaying incorrectly
+**Solution**: Check selectors `[id^="CmfStatus:"]` and `[jtk-overlay-id]`
 
-### 3. localStorage недоступен
-**Симптомы**: Позиции не сохраняются между сессиями
-**Решение**: Проверить режим инкогнито или настройки приватности
+### 3. localStorage unavailable
+**Symptoms**: Positions not saved between sessions
+**Solution**: Check incognito mode or privacy settings
 
-### 4. Производительность
-**Симптомы**: Медленная работа с большими диаграммами
-**Решение**: Включить debouncing для автосохранения
+### 4. Performance
+**Symptoms**: Slow operation with large diagrams
+**Solution**: Enable debouncing for auto-save
 
 ---
 
-## Полезные ссылки
+## Useful Links
 
 - [React DevTools](https://react.dev/learn/react-developer-tools)
 - [Tampermonkey Documentation](https://www.tampermonkey.net/documentation.php)

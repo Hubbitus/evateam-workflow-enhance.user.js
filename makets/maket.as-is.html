@@ -1,3 +1,158 @@
+<style>
+@charset "UTF-8";
+[_nghost-ng-c1570323233] {
+  display:flex;
+  flex:1;
+  flex-direction:column
+}
+.readonly[_ngcontent-ng-c1570323233] {
+  pointer-events:none
+}
+.chart-container[_ngcontent-ng-c1570323233] {
+  position:relative
+}
+.box[_ngcontent-ng-c1570323233] {
+  cursor:move;
+  -webkit-user-select:none;
+  user-select:none;
+  position:absolute;
+  z-index:2;
+  overflow:hidden;
+  min-width:100px;
+  min-height:100px;
+  opacity:.9;
+  border:2px solid var(--color-gray-888);
+  border-radius:6px
+}
+.box[_ngcontent-ng-c1570323233]:not(.circle)   .node[_ngcontent-ng-c1570323233] {
+  margin-top:25px;
+  padding-bottom:12px
+}
+.box.circle[_ngcontent-ng-c1570323233] {
+  width:50px;
+  height:50px;
+  text-align:center;
+  border-radius:100%;
+  border: 1px solid black;
+}
+.box.circle[_ngcontent-ng-c1570323233]   .node[_ngcontent-ng-c1570323233] {
+  padding-right:12px
+}
+.box.circle[_ngcontent-ng-c1570323233]   .ep[_ngcontent-ng-c1570323233] {
+  position:absolute;
+  width:10px;
+  height:10px;
+  visibility:hidden;
+  border-radius:50%
+}
+.box.jtk-drag-hover[_ngcontent-ng-c1570323233] {
+  outline:2px solid blue
+}
+.ep[_ngcontent-ng-c1570323233] {
+  cursor:grab;
+  -webkit-user-select:none;
+  user-select:none;
+  position:absolute;
+  z-index:4;
+  top:5px;
+  right:5px;
+  width:20px;
+  height:20px;
+  padding:0;
+  color:#48c038;
+  border:2px solid var(--color-gray-888);
+  border-radius:6px
+}
+.ep-disabled[_ngcontent-ng-c1570323233] {
+  pointer-events:none;
+  cursor:inherit;
+  -webkit-user-select:none;
+  user-select:none;
+  visibility:hidden
+}
+.node[_ngcontent-ng-c1570323233] {
+  cursor:move;
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+  margin:0 auto;
+  padding:12px 32px 12px 12px;
+  font-weight:600;
+  background-clip:border-box;
+  transition:background-color .3s ease
+}
+.node-start[_ngcontent-ng-c1570323233] {
+  cursor:move;
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:60px;
+  height:60px;
+  padding:12px;
+  font-weight:600;
+  color:#fff;
+  background-color:#456;
+  border-radius:100%;
+  transition:background-color .3s ease
+}
+[_nghost-ng-c1570323233]     .n2n-transition {
+  cursor:pointer;
+  -webkit-user-select:none;
+  user-select:none;
+  z-index:2;
+  max-width:100px;
+  margin:0 auto;
+  padding:4px;
+  font-size:9pt;
+  line-height:10pt;
+  color:#456;
+  background:var(--color-gray-fff);
+  border:1px solid #456;
+  border-radius:6px;
+  transition:background-color .3s ease
+}
+[_nghost-ng-c1570323233]     .n2n-transition:hover {
+  z-index:3;
+  background-color:#f5f5f5
+}
+[_nghost-ng-c1570323233]     .jtk-endpoint-connected {
+  z-index:9000
+}
+.widget-actions[_ngcontent-ng-c1570323233] {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+  padding-top:10px
+}
+[_nghost-ng-c1570323233]     .endpoint {
+  z-index:2
+}
+
+	/** Full overlay - task workflow **/
+	.cdk-overlay-pane:has(dlg-cmf-workflow-task) {
+		max-width: 100% !important;
+		width: calc(100% - 2em);
+		height: calc(100% - 2em);
+	}
+	.cdk-overlay-pane .dialog__body {
+		width: 100%;
+		height: 100%
+	}
+	.cdk-overlay-pane .cmf-dialog__header {
+		margin-bottom: 0;
+	}
+	.cdk-overlay-pane .cmf-dialog__content {
+		max-height: 100%;
+	}
+	/** /Full overlay - task workflow **/
+</style>
+
 <div id="cdk-overlay-2" class="cdk-overlay-pane cmfDialogObj" style="max-width: 80vw; position: static;">
     <div tabindex="0" class="cdk-visually-hidden cdk-focus-trap-anchor" aria-hidden="true"></div><mat-dialog-container tabindex="-1" class="mat-dialog-container cdk-dialog-container ng-tns-c2096979241-125 ng-trigger ng-trigger-dialogContainer ng-star-inserted" id="mat-dialog-0" role="dialog" aria-modal="true" style="padding: 0px; transform: none;"><ng-component
             class="ng-star-inserted"><dlg-cmf-workflow-task _nghost-ng-c2682208480 class="ng-star-inserted" style>
