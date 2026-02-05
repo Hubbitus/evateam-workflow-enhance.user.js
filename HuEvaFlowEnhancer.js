@@ -7,6 +7,13 @@ class HuEvaFlowEnhancer {
         this.workflowData = null;
         this.originalContainer = null;
         this.enhancedContainer = null;
+        // Determine the base URL for the API based on the environment
+        const apiBaseUrl = window.location.hostname === 'localhost' ?
+                           'http://localhost:3000/makets/api/' : // Corrected: without 'api__m=' prefix
+                           'https://eva.gid.team/api/?m=';
+        this.api = new window.HuEvaApi(apiBaseUrl);
+        this.workflowId = null; // Store the workflow ID
+        console.log('HuEvaFlowEnhancer: Constructor - Initialized.');
     }
 
     /**
@@ -14,6 +21,19 @@ class HuEvaFlowEnhancer {
      */
     async initialize() {
         console.log('Hu: EvaTeam Workflow Enhancer: Initializing...');
+
+        // Extract workflowId from the URL. Example: /project/Task/YOUR-WORKFLOW-ID
+        const pathSegments = window.location.pathname.split('/');
+        const taskIndex = pathSegments.indexOf('Task');
+        if (taskIndex > -1 && taskIndex + 1 < pathSegments.length) {
+            this.workflowId = pathSegments[taskIndex + 1];
+            console.log(`Hu: EvaTeam Workflow Enhancer: Detected workflowId: ${this.workflowId}`);
+        } else {
+            console.warn('Hu: EvaTeam Workflow Enhancer: Could not extract workflowId from URL. This might be an issue in production.');
+            // For localhost development, we might not have a workflowId in the URL,
+            // but the mock API can still provide data.
+            // In a real scenario, this would need to be passed or extracted reliably.
+        }
 
         // Wait for required libraries
         await this.waitForLibraries();
@@ -23,26 +43,21 @@ class HuEvaFlowEnhancer {
 
         // Use a MutationObserver to detect when the workflow dialog appears
         const observer = new MutationObserver((mutationsList, observer) => {
-            // Look for the specific element in each mutation
             for (const mutation of mutationsList) {
                 if (mutation.type === 'childList') {
-                    // Check if the target element exists in the added nodes
                     for (const node of mutation.addedNodes) {
                         if (node.nodeType === 1) { // Element node
-                            // Check the node itself
-                            if (node.matches && node.matches('dlg-cmf-workflow-task[_nghost-ng-c2682208480].ng-star-inserted')) {
+                            if (node.matches && node.matches('dlg-cmf-workflow-task.ng-star-inserted')) {
                                 console.log('Hu: EvaTeam Workflow Enhancer: Found target element via mutation.');
-                                this.addImproveSchemaButton();
+                                this.addImproveSchemaButton(); // Re-add button if dialog re-appears
                                 return;
                             }
-
-                            // Check descendants of the node
-                            const targetElement = node.querySelector && node.querySelector('dlg-cmf-workflow-task[_nghost-ng-c2682208480].ng-star-inserted');
+                            const targetElement = node.querySelector && node.querySelector('dlg-cmf-workflow-task.ng-star-inserted');
                             if (targetElement) {
                                 console.log('Hu: EvaTeam Workflow Enhancer: Found target element in mutation descendants.');
-
-                                // Extract the HTML content from the target element and initialize from it
-                                this.initFromHTML(targetElement.outerHTML);
+                                // Call the API-based enhancement
+                                // Pass the targetElement to openEnhancedWorkflowAPI if needed for context/display
+                                this.openEnhancedWorkflowAPI(this.workflowId, targetElement);
                                 return;
                             }
                         }
@@ -58,79 +73,10 @@ class HuEvaFlowEnhancer {
     }
 
     /**
-     * Initialize the enhancer from HTML content
-     * @param {string} htmlContent - HTML content to parse and visualize
-     */
-    async initFromHTML(htmlContent) {
-        console.log('Hu: EvaTeam Workflow Enhancer: Initializing from HTML content...');
-
-        // Wait for required libraries
-        await this.waitForLibraries();
-
-        // Create a temporary element to parse the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = htmlContent;
-
-        // Extract workflow data from the HTML content
-        const workflowData = this.extractWorkflowData(tempDiv);
-
-        // Find the appropriate container for the enhanced view
-        // In development mode, look for the react-flow-container in the 'enhanced' tab
-        let container = document.getElementById('react-flow-container');
-
-        // If not found, try to find it in the development environment
-        if (!container) {
-            // Look for the container in the development environment
-            const tabContent = document.querySelector('#enhanced-tab .react-flow-container') ||
-                              document.querySelector('#enhanced-tab [id$="container"]') ||
-                              document.querySelector('#enhanced-tab div') ||
-                              document.getElementById('enhanced-tab');
-
-            if (tabContent) {
-                // Create a new container inside the enhanced tab
-                container = document.createElement('div');
-                container.id = 'react-flow-container';
-                container.style.cssText = `
-                    width: 100%;
-                    height: 600px;
-                    min-height: 500px;
-                    display: block;
-                    position: relative;
-                `;
-
-                // Clear the tab content and add our container
-                tabContent.innerHTML = '';
-                tabContent.appendChild(container);
-            } else {
-                // If still not found, create a new container and add it to the body
-                container = document.createElement('div');
-                container.id = 'react-flow-container';
-                container.style.cssText = `
-                    width: 100%;
-                    height: 600px;
-                    min-height: 500px;
-                    display: block;
-                    position: relative;
-                `;
-
-                // Add the container to the document body or to a specific location
-                document.body.appendChild(container);
-            }
-        } else {
-            // Clear the existing container
-            container.innerHTML = '';
-        }
-
-        // Render the ReactFlow component in the container
-        this.renderReactFlowComponent(container, workflowData);
-
-        console.log('Hu: EvaTeam Workflow Enhancer: Initialized from HTML content.');
-    }
-
-    /**
      * Wait for required libraries to load
      */
     async waitForLibraries(retries = 50, delay = 200) {
+        console.log(`Hu: EvaTeam Workflow Enhancer: waitForLibraries - Starting check (retries left: ${retries}).`);
         return new Promise((resolve, reject) => {
             const checkLibraries = () => {
                 const isReactLoaded = typeof window.React !== 'undefined';
@@ -195,7 +141,7 @@ class HuEvaFlowEnhancer {
 
             // Add click handler for the button
             improveButton.addEventListener('click', () => {
-                this.openEnhancedWorkflow(workflowTaskElement);
+                this.openEnhancedWorkflowAPI(this.workflowId, workflowTaskElement);
             });
 
             // Find the header div that contains the title "Бизнес-процесс: Project DATA - sub-analytics"
@@ -217,745 +163,330 @@ class HuEvaFlowEnhancer {
     }
 
     /**
-     * Function to extract workflow data from HTML elements (similar to the extension)
+     * Initialize the enhancer from API data.
+     * @param {string} workflowId - The ID of the workflow to fetch.
      */
-    extractWorkflowData(element) {
-        const nodes = [];
-        const edges = [];
+    async initFromAPI(workflowId) {
+        console.log(`Hu: EvaTeam Workflow Enhancer: initFromAPI - Starting for workflowId: ${workflowId}...`);
 
-        // Find the chart container - try different selectors that might be in the actual HTML
-        const chartContainer = element.querySelector('.chart-container') ||
-                              element.querySelector('.chart-container[_ngcontent-ng-c1570323233]') ||
-                              element.querySelector('[class*="chart-container"]') ||
-                              element.querySelector('.jtk-draggable') ||
-                              element.querySelector('[data-jtk-container]') ||
-                              element.querySelector('app-cmf-ui-jsplumb') ||
-                              element || // If no specific container found, use the element itself
-                              null;
-
-        if (!chartContainer) {
-            console.error('Hu: EvaTeam Workflow Enhancer: Chart container not found.');
-            return { nodes, edges };
+        if (!workflowId) {
+            console.error('Hu: EvaTeam Workflow Enhancer: initFromAPI - No workflowId provided for API initialization.');
+            return;
         }
 
-        // Extract nodes - try different selectors for nodes
-        const nodeSelectors = [
-            'div[id^="node_"]',
-            'div[id*="CmfStatus:"]',
-            'div[id*="CmfTrans:"]',
-            'div[id="node_start"]',
-            'div[id="all0"]',
-            'div[class*="box circle"]',
-            'div[class*="node"]',
-            'div[class*="box"]',
-            '[data-statusid]',
-            '.node-start',
-            '[id$="_draw_scheme_item"]'
-        ];
+        try {
+            // Fetch all necessary data in parallel
+            const [workflowResponse, transitionsResponse, statusesResponse] = await Promise.all([
+                this.api.getCmfWorkflow({ workflowId: workflowId }),
+                this.api.getCmfTransList(),
+                this.api.getCmfStatusList()
+            ]);
 
-        const nodeElements = [];
-        console.log(`Hu: EvaTeam Workflow Enhancer: Looking for node elements with selectors: ${nodeSelectors.join(', ')}`);
-        nodeSelectors.forEach(selector => {
+            console.log('Hu: EvaTeam Workflow Enhancer: initFromAPI - API responses received:', { workflowResponse, transitionsResponse, statusesResponse });
+
+            // Process API data into ReactFlow format
+            let workflowData;
             try {
-                const elements = chartContainer.querySelectorAll ? chartContainer.querySelectorAll(selector) : [];
-                console.log(`Hu: EvaTeam Workflow Enhancer: Selector "${selector}" found ${elements.length} elements`);
-                elements.forEach(el => {
-                    if (!nodeElements.some(existingEl => existingEl === el)) {
-                        nodeElements.push(el);
-                    }
-                });
-            } catch(e) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Error with selector "${selector}": ${e.message}`);
-                // Ignore selector errors
-            }
-        });
-        console.log(`Hu: EvaTeam Workflow Enhancer: Total unique node elements found: ${nodeElements.length}`);
-
-        nodeElements.forEach(el => {
-            // Get ID from various possible attributes
-            let id = el.id ||
-                      el.getAttribute('data-statusid') ||
-                      el.getAttribute('data-jtk-managed') ||
-                      el.getAttribute('data-jtk-scope') ||
-                      el.getAttribute('data-statusid') ||
-                      null;
-
-            // Normalize node ID: remove '_draw_scheme_item' suffix to match edge IDs
-            // Edges reference nodes as 'CmfStatus:uuid' but nodes have 'CmfStatus:uuid_draw_scheme_item'
-            if (id && id.includes('_draw_scheme_item')) {
-                const originalId = id;
-                id = id.replace('_draw_scheme_item', '');
-                console.log(`Hu: EvaTeam Workflow Enhancer: Normalized node ID from "${originalId}" to "${id}"`);
+                // Access the 'result' property for the actual data
+                workflowData = this.processApiData(workflowResponse.result, transitionsResponse.result, statusesResponse.result);
+                console.log('Hu: EvaTeam Workflow Enhancer: initFromAPI - Processed workflowData:', workflowData);
+                window.lastWorkflowData = workflowData; // Expose globally for debugging
+            } catch (processError) {
+                console.error('Hu: EvaTeam Workflow Enhancer: initFromAPI - Error during processApiData:', processError);
+                throw processError; // Re-throw to be caught by the outer catch
             }
 
-            // Special handling for non-UUID nodes like 'node_start' and 'all0'
-            if (id === 'node_start' || id === 'all0') {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Special node found: "${id}"`);
-            }
+            // Find the appropriate container for the enhanced view
+            // In development mode, look for the react-flow-container in the 'enhanced' tab
+            let container = document.getElementById('react-flow-container');
 
-            if (!id) return;
+            // If not found, try to find it in the development environment
+            if (!container) {
+                const tabContent = document.querySelector('#enhanced-tab .react-flow-container') ||
+                                  document.querySelector('#enhanced-tab [id$="container"]') ||
+                                  document.querySelector('#enhanced-tab div') ||
+                                  document.getElementById('enhanced-tab');
 
-            // Get label from various possible sources
-            let label = '';
-            const labelEl = el.querySelector('.node') ||
-                           el.querySelector('.title') ||
-                           el.querySelector('span') ||
-                           null;
-            label = (labelEl ? labelEl.textContent : el.textContent).trim();
-
-            // Extract position from various possible sources
-            let x = 0, y = 0;
-
-            // Try to get position from style
-            if (el.style) {
-                const leftMatch = el.style.left ? el.style.left.match(/(\d+\.?\d*)px?/) : null;
-                const topMatch = el.style.top ? el.style.top.match(/(\d+\.?\d*)px?/) : null;
-
-                x = leftMatch ? parseFloat(leftMatch[1]) : 0;
-                y = topMatch ? parseFloat(topMatch[1]) : 0;
-            }
-
-            // If no position from style, try to get from attributes/data attributes
-            if (x === 0 && y === 0) {
-                const leftAttr = el.getAttribute('data-left') || el.getAttribute('left') || null;
-                const topAttr = el.getAttribute('data-top') || el.getAttribute('top') || null;
-
-                if (leftAttr) x = parseFloat(leftAttr);
-                if (topAttr) y = parseFloat(topAttr);
-            }
-
-            // Scale down positions to fit ReactFlow viewport better
-            // Original positions can be too large for ReactFlow
-            if (x > 1000 || y > 1000) {
-                x = x / 3; // Scale down large positions
-                y = y / 3;
-            }
-
-            // Ensure minimum spacing between nodes
-            x = Math.max(x, 50);
-            y = Math.max(y, 50);
-
-            // Create default width/height for nodes
-            const isStartOrEndNode = (id === 'node_start' || id === 'all0');
-
-            // Special sizing for start/end nodes - 1.2x height, circular
-            let width = 120; // Regular width
-            let height = 60;
-            let shape = 'rect'; // Default shape
-
-            if (id === 'node_start') {
-                // Make it square for circular shape (ReactFlow handles circular via borderRadius)
-                width = height; // Use height for both dimensions
-                shape = 'circle';
-            }
-            if (id === 'all0') { // 'all' statuses
-                shape = 'circle';
-                height = 50;
-            }
-
-            const nodeData = {
-                id: id,
-                position: { x, y },
-                data: {
-                    label: label,
-                    isStartEndNode: isStartOrEndNode,
-                    shape: shape,
-                    width: width,
-                    height: height
-                },
-                width: width,
-                height: height,
-                className: Array.from(el.classList).join(' '),
-                style: {
-                    backgroundColor: el.style.backgroundColor || (isStartOrEndNode ? '#4CAF50' : '#fff'),
-                    borderColor: el.style.borderColor || '#ccc',
-                    color: el.style.color || '#000',
-                    borderRadius: isStartOrEndNode ? '50%' : '8px', // Circular for start/end nodes
-                    borderWidth: isStartOrEndNode ? '3px' : '1px',
-                    borderStyle: 'solid',
-                    fontWeight: isStartOrEndNode ? 'bold' : 'normal',
-                    textAlign: 'center',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: isStartOrEndNode ? '14px' : '12px'
-                }
-            };
-
-            // Set node type for start/end nodes to use custom component
-            if (isStartOrEndNode) {
-                nodeData.type = 'startEnd';
-                console.log(`Hu: EvaTeam Workflow Enhancer: Created start/end node: ${id} (${label})`);
-            }
-
-            nodes.push(nodeData);
-
-            // Debug: Log node creation details
-            // console.log(`Hu: EvaTeam Workflow Enhancer: Node created:`, {
-            //     nodeId: id,
-            //     elementId: el.id,
-            //     label: label,
-            //     position: { x, y },
-            //     classes: Array.from(el.classList).join(', '),
-            //     attributes: {
-            //         'data-statusid': el.getAttribute('data-statusid'),
-            //         'data-jtk-managed': el.getAttribute('data-jtk-managed'),
-            //         'data-jtk-scope': el.getAttribute('data-jtk-scope')
-            //     }
-            // });
-        });
-
-        // Extract edges - try different selectors for edge labels
-        const edgeSelectors = [
-            '.jtk-overlay.n2n-transition',
-            '.jtk-overlay',
-            '.n2n-transition',
-            '[class*="transition"]',
-            '[jtk-overlay-id]',
-            '[data-jtk-managed*="overlay"]'
-        ];
-
-        const edgeLabelElements = [];
-        edgeSelectors.forEach(selector => {
-            try {
-                const elements = chartContainer.querySelectorAll ? chartContainer.querySelectorAll(selector) : [];
-                elements.forEach(el => {
-                    if (!edgeLabelElements.some(existingEl => existingEl === el)) {
-                        edgeLabelElements.push(el);
-                    }
-                });
-            } catch(e) {
-                // Ignore selector errors
-            }
-        });
-
-        const uniqueEdgeIds = new Set();
-
-        console.log(`Hu: EvaTeam Workflow Enhancer: Found ${edgeLabelElements.length} edge elements to process`);
-
-        // Debug edge element details
-        edgeLabelElements.forEach((el, index) => {
-            const overlayId = el.getAttribute('jtk-overlay-id') ||
-                             el.getAttribute('data-jtk-overlay-id') ||
-                             el.getAttribute('id') ||
-                             null;
-            const label = el.textContent.trim();
-            console.log(`Hu: EvaTeam Workflow Enhancer: Edge element ${index}: overlayId="${overlayId}", label="${label}", element:`, el);
-        });
-
-        edgeLabelElements.forEach(el => {
-            // Get overlay ID from various possible attributes
-            const overlayId = el.getAttribute('jtk-overlay-id') ||
-                             el.getAttribute('data-jtk-overlay-id') ||
-                             el.getAttribute('id') ||
-                             null;
-            const label = el.textContent.trim();
-
-            console.log(`Hu: EvaTeam Workflow Enhancer: Processing edge element, overlayId: "${overlayId}", label: "${label}"`);
-
-            // Log all overlayId patterns for debugging
-            if (overlayId.includes('node_start') || overlayId.includes('all0')) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found start/end related overlayId: "${overlayId}"`);
-            }
-
-            if (!overlayId || !label) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Skipping edge element - missing overlayId or label`);
-                return;
-            }
-
-            let sourceId = null;
-            let targetId = null;
-
-            // Extract source and target from the overlay ID
-            // Try different patterns that might exist in the actual HTML
-            // Format might be: CmfTrans:...CmfStatus:... (concatenated) or node_start-CmfStatus:... (with dash)
-
-            // Pattern 1: Direct connections like "node_startCmfStatus:..." or "all0CmfStatus:..."
-            if (overlayId.startsWith('node_startCmfStatus:') || overlayId.startsWith('all0CmfStatus:')) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found direct connection pattern: ${overlayId}`);
-                const parts = overlayId.split('CmfStatus:');
-                if (parts.length === 2) {
-                    if (overlayId.startsWith('node_start')) {
-                        sourceId = 'node_start';
-                    } else if (overlayId.startsWith('all0')) {
-                        sourceId = 'all0';
-                    }
-                    targetId = 'CmfStatus:' + parts[1];
-                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Parsed direct start/end connection: ${sourceId} -> ${targetId}`);
+                if (tabContent) {
+                    container = document.createElement('div');
+                    container.id = 'react-flow-container';
+                    container.style.cssText = `
+                        width: 100%;
+                        height: 600px;
+                        min-height: 500px;
+                        display: block;
+                        position: relative;
+                    `;
+                    tabContent.innerHTML = '';
+                    tabContent.appendChild(container);
                 } else {
-                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Failed to parse direct connection, parts length: ${parts.length}`);
-                }
-            }
-
-            // Pattern 2: Direct connections with dashes: "node_start-CmfStatus:..." or "all0-CmfStatus:..."
-            else if ((overlayId.startsWith('node_start-CmfStatus:') || overlayId.startsWith('all0-CmfStatus:')) && !overlayId.includes('CmfTrans:')) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found dash-separated start/end pattern: ${overlayId}`);
-                const parts = overlayId.split('-CmfStatus:');
-                if (parts.length === 2) {
-                    if (parts[0] === 'node_start') {
-                        sourceId = 'node_start';
-                    } else if (parts[0] === 'all0') {
-                        sourceId = 'all0';
-                    }
-                    targetId = 'CmfStatus:' + parts[1];
-                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Parsed dash-separated start/end connection: ${sourceId} -> ${targetId}`);
-                }
-            }
-
-            // Pattern 2: IDs separated by a dash (common in our example)
-            // But we need to check if it's really a separator, not just UUID dashes
-            else if (overlayId.includes('-') && !overlayId.includes('CmfStatus:') && !overlayId.includes('CmfTrans:')) {
-                const parts = overlayId.split('-');
-                if (parts.length >= 2) {
-                    // Look for known patterns in the parts
-                    for (let i = 0; i < parts.length; i++) {
-                        if (parts[i].startsWith('CmfStatus:') ||
-                            parts[i].startsWith('CmfTrans:') ||
-                            parts[i] === 'node' ||
-                            parts[i] === 'all') {
-
-                            if (parts[i] === 'node' && i + 1 < parts.length && parts[i + 1].startsWith('_')) {
-                                // This is 'node_start' pattern
-                                sourceId = parts[i] + parts[i + 1];
-                                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found node_start pattern: ${sourceId}`);
-                                if (i + 2 < parts.length) {
-                                    // Try to reconstruct the target ID
-                                    targetId = parts[i + 2];
-                                    for (let j = i + 3; j < parts.length; j++) {
-                                        if (parts[j].startsWith('CmfStatus:') ||
-                                            parts[j].startsWith('CmfTrans:') ||
-                                            parts[j] === 'all') {
-                                            break; // Found start of next ID
-                                        }
-                                        targetId += '-' + parts[j];
-                                    }
-                                }
-                                break;
-                            } else if (parts[i] === 'all' && i + 1 < parts.length && /^\d+$/.test(parts[i + 1])) {
-                                // This is 'all0' pattern
-                                sourceId = parts[i] + parts[i + 1];
-                                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found all0 pattern: ${sourceId}`);
-                                if (i + 2 < parts.length) {
-                                    targetId = parts[i + 2];
-                                    for (let j = i + 3; j < parts.length; j++) {
-                                        if (parts[j].startsWith('CmfStatus:') ||
-                                            parts[j].startsWith('CmfTrans:') ||
-                                            parts[j] === 'all' ||
-                                            (parts[j] === 'node' && j + 1 < parts.length && parts[j + 1].startsWith('_'))) {
-                                            break; // Found start of next ID
-                                        }
-                                        targetId += '-' + parts[j];
-                                    }
-                                }
-                                break;
-                            } else if (parts[i].startsWith('CmfStatus:') || parts[i].startsWith('CmfTrans:')) {
-                                // This is a complete ID
-                                sourceId = parts[i];
-                                if (i + 1 < parts.length) {
-                                    targetId = parts[i + 1];
-                                    for (let j = i + 2; j < parts.length; j++) {
-                                        if (parts[j].startsWith('CmfStatus:') ||
-                                            parts[j].startsWith('CmfTrans:') ||
-                                            parts[j] === 'all' ||
-                                            (parts[j] === 'node' && j + 1 < parts.length && parts[j + 1].startsWith('_'))) {
-                                            break; // Found start of next ID
-                                        }
-                                        targetId += '-' + parts[j];
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            // Pattern 2: IDs concatenated without separators (like in the actual HTML)
-            else {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Processing concatenated overlayId: "${overlayId}"`);
-
-                // Find all UUID patterns in the string
-                const uuidRegex = /([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
-                const uuidMatches = [];
-                let match;
-                while ((match = uuidRegex.exec(overlayId)) !== null) {
-                    uuidMatches.push(match[1]);
-                }
-
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Found UUIDs:`, uuidMatches);
-
-                if (uuidMatches.length >= 2) {
-                    // We have at least 2 UUIDs, now we need to figure out which prefixes belong to which UUIDs
-
-                    // Find positions of each UUID in the overlayId
-                    const uuidPositions = uuidMatches.map(uuid => ({
-                        uuid: uuid,
-                        index: overlayId.indexOf(uuid)
-                    })).sort((a, b) => a.index - b.index);
-
-                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - UUID positions:`, uuidPositions);
-
-                    // For each UUID, find what comes before it
-                    for (let i = 0; i < uuidPositions.length; i++) {
-                        const uuidInfo = uuidPositions[i];
-                        // Find the closest CmfStatus: or CmfTrans: before this UUID
-                        let closestPrefix = '';
-                        let closestPrefixIndex = -1;
-
-                        // Look for CmfStatus: before this UUID
-                        const statusIndex = overlayId.lastIndexOf('CmfStatus:', uuidInfo.index);
-                        // Look for CmfTrans: before this UUID
-                        const transIndex = overlayId.lastIndexOf('CmfTrans:', uuidInfo.index);
-
-                        // Choose the closer one
-                        if (statusIndex > transIndex) {
-                            closestPrefix = 'CmfStatus:';
-                            closestPrefixIndex = statusIndex;
-                        } else if (transIndex > statusIndex) {
-                            closestPrefix = 'CmfTrans:';
-                            closestPrefixIndex = transIndex;
-                        }
-
-                        // If we found a prefix, extract the content between it and the UUID
-                        if (closestPrefixIndex !== -1) {
-                            const prefixContent = overlayId.substring(closestPrefixIndex + closestPrefix.length, uuidInfo.index);
-                            const fullPrefix = closestPrefix + prefixContent;
-
-                            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - UUID ${i} (${uuidInfo.uuid}) has prefix: "${fullPrefix}"`);
-
-                            // Check what type of ID this is
-                            if (fullPrefix.includes('CmfTrans:')) {
-                                // This is a source ID
-                                if (!sourceId) {
-                                    sourceId = fullPrefix + uuidInfo.uuid;
-                                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Set sourceId to: "${sourceId}"`);
-                                }
-                            } else if (fullPrefix.includes('CmfStatus:')) {
-                                // This is a target ID
-                                if (!targetId) {
-                                    targetId = fullPrefix + uuidInfo.uuid;
-                                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Set targetId to: "${targetId}"`);
-                                }
-                            }
-                        } else {
-                            // No clear prefix, try to determine from context
-                            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - UUID ${i} (${uuidInfo.uuid}) has NO prefix found`);
-
-                            if (!sourceId) {
-                                // Assume it's a source ID if we don't have one yet
-                                sourceId = 'CmfTrans:' + uuidInfo.uuid;
-                                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Defaulted sourceId to: "${sourceId}"`);
-                            } else if (!targetId) {
-                                // Assume it's a target ID if we already have source
-                                targetId = 'CmfStatus:' + uuidInfo.uuid;
-                                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Defaulted targetId to: "${targetId}"`);
-                            }
-                        }
-
-                        // Stop once we have both source and target
-                        if (sourceId && targetId) {
-                            break;
-                        }
-                    }
-                } else if (uuidMatches.length === 1) {
-                    // Only one UUID found - this is unusual but handle it
-                    const uuid = uuidMatches[0];
-                    const uuidIndex = overlayId.indexOf(uuid);
-                    const beforeUuid = overlayId.substring(0, uuidIndex);
-                    const afterUuid = overlayId.substring(uuidIndex + uuid.length);
-
-                    console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Single UUID case: before="${beforeUuid}", after="${afterUuid}"`);
-
-                    if (beforeUuid.includes('CmfTrans:')) {
-                        sourceId = beforeUuid + uuid;
-                    } else if (beforeUuid.includes('CmfStatus:')) {
-                        targetId = beforeUuid + uuid;
-                    }
-
-                    // If we still don't have both IDs, try to infer from the remaining text
-                    if (!sourceId || !targetId) {
-                        if (!sourceId) {
-                            // Look for CmfTrans: pattern in the remaining text
-                            const transMatch = afterUuid.match(/CmfTrans:([0-9a-fA-F]{8})/);
-                            if (transMatch) {
-                                sourceId = transMatch[0] + uuid;
-                            }
-                        }
-
-                        if (!targetId) {
-                            // Look for CmfStatus: pattern in the remaining text
-                            const statusMatch = afterUuid.match(/CmfStatus:([0-9a-fA-F]{8})/);
-                            if (statusMatch) {
-                                targetId = statusMatch[0] + uuid;
-                            }
-                        }
-                    }
-                }
-
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Final IDs - source: "${sourceId}", target: "${targetId}"`);
-            }
-
-            // Final check: if we found start/end patterns, make sure they're preserved
-            if (overlayId.includes('node_start') || overlayId.includes('all0')) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - OverlayId contained start/end pattern but final IDs: source="${sourceId}", target="${targetId}"`);
-            }
-
-            // Additional debug for special start/end nodes
-            if (sourceId && (sourceId.includes('node_start') || sourceId.includes('all0'))) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Source contains start/end node: "${sourceId}"`);
-            }
-            if (targetId && (targetId.includes('node_start') || targetId.includes('all0'))) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Target contains start/end node: "${targetId}"`);
-            }
-
-            // Fix ID mapping - ensure both source and target IDs exist as nodes
-            // If source is CmfTrans, try to find corresponding CmfStatus node
-            let fixedSourceId = sourceId;
-            let fixedTargetId = targetId;
-
-            if (sourceId && sourceId.startsWith('CmfTrans:')) {
-                // For CmfTrans source, we need to find the logical source status
-                // Since CmfTrans elements are not actual nodes, we need to determine
-                // which status this transition originates from based on UUID relationships
-                const transUuid = sourceId.replace('CmfTrans:', '');
-
-                // Regular CmfTrans mapping to status
-                let bestMatch = null;
-                let bestScore = Infinity;
-
-                for (const node of nodes) {
-                    if (node.id.startsWith('CmfStatus:')) {
-                        const statusUuid = node.id.replace('CmfStatus:', '');
-
-                        // Calculate similarity score between UUIDs
-                        // Using first 8 characters for comparison (simpler heuristic)
-                        const transPrefix = transUuid.substring(0, 8);
-                        const statusPrefix = statusUuid.substring(0, 8);
-
-                        // Convert hex to decimal for comparison
-                        const transNum = parseInt(transPrefix, 16);
-                        const statusNum = parseInt(statusPrefix, 16);
-
-                        const score = Math.abs(transNum - statusNum);
-
-                        // Only consider reasonable matches (not too far apart)
-                        if (score < bestScore && score < 100000000) {
-                            bestScore = score;
-                            bestMatch = node.id;
-                        }
-                    }
-                }
-
-                // Fallback: use the first available status if no good match found
-                if (!bestMatch) {
-                    bestMatch = nodes.find(n => n.id.startsWith('CmfStatus:'))?.id;
-                }
-
-                fixedSourceId = bestMatch;
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Mapped CmfTrans ${transUuid} to source status: ${bestMatch} (score: ${bestScore})`);
-            }
-
-            if (targetId && targetId.startsWith('CmfTrans:')) {
-                // If target is CmfTrans, try to find corresponding CmfStatus node
-                const uuid = targetId.replace('CmfTrans:', '');
-                fixedTargetId = `CmfStatus:${uuid}`;
-            }
-
-            // Special handling for target connections to start/end nodes
-            if (targetId && (targetId.includes('node_start') || targetId.includes('all0'))) {
-                fixedTargetId = targetId;
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Target is start/end node: ${targetId}`);
-            }
-
-            // Additional debug for direct connections to start/end
-            if (sourceId && (sourceId.includes('node_start') || sourceId.includes('all0'))) {
-                fixedSourceId = sourceId;
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Source is start/end node: ${sourceId}`);
-            }
-
-            // Check if both fixed IDs exist in our nodes
-            const nodeIds = nodes.map(n => n.id);
-            const sourceExists = nodeIds.includes(fixedSourceId);
-            const targetExists = nodeIds.includes(fixedTargetId);
-
-            // Debug: Check specifically for start/end nodes
-            if (fixedSourceId && (fixedSourceId === 'node_start' || fixedSourceId === 'all0')) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Source is start/end node: ${fixedSourceId}, exists: ${sourceExists}`);
-            }
-            if (fixedTargetId && (fixedTargetId === 'node_start' || fixedTargetId === 'all0')) {
-                console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Target is start/end node: ${fixedTargetId}, exists: ${targetExists}`);
-            }
-
-            if (fixedSourceId && fixedTargetId && sourceExists && targetExists && fixedSourceId !== fixedTargetId) {
-                const edgeId = `e-${fixedSourceId}-${fixedTargetId}-${label.replace(/\s/g, '_')}`;
-                if (!uniqueEdgeIds.has(edgeId)) {
-                    // Get optimal connection positions
-                    const sourceNode = nodes.find(n => n.id === fixedSourceId);
-                    const targetNode = nodes.find(n => n.id === fixedTargetId);
-
-                    let sourcePosition = 'right';
-                    let targetPosition = 'left';
-
-                    if (sourceNode && targetNode) {
-                        // For start/end nodes, force top/bottom connections only
-                        if (sourceNode.type === 'startEnd' || sourceNode.data?.isStartEndNode) {
-                            // For circular source nodes, prefer top/bottom based on relative position
-                            const dy = targetNode.position.y - sourceNode.position.y;
-                            sourcePosition = dy > 0 ? 'bottom' : 'top';
-                            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Forced source position for circular node: ${sourcePosition}`);
-                        } else {
-                            sourcePosition = this.getOptimalConnectionPosition(sourceNode, targetNode, 'source');
-                        }
-
-                        if (targetNode.type === 'startEnd' || targetNode.data?.isStartEndNode) {
-                            // For circular target nodes, prefer top/bottom based on relative position
-                            const dy = sourceNode.position.y - targetNode.position.y;
-                            targetPosition = dy > 0 ? 'top' : 'bottom';
-                            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Forced target position for circular node: ${targetPosition}`);
-                        } else {
-                            targetPosition = this.getOptimalConnectionPosition(targetNode, sourceNode, 'target');
-                        }
-                    }
-
-                    edges.push({
-                        id: edgeId,
-                        source: fixedSourceId,
-                        target: fixedTargetId,
-                        sourcePosition: sourcePosition,
-                        targetPosition: targetPosition,
-                        label: label,
-                        type: 'smoothstep',
-                        animated: false,
-                        style: {
-                            strokeWidth: 2,
-                            stroke: '#666',
-                            strokeDasharray: label.toLowerCase().includes('reopen') ? '5,5' : 'none'
-                        },
-                        labelStyle: {
-                            fill: '#333',
-                            fontWeight: 'bold',
-                            fontSize: '12px'
-                        },
-                        labelBgPadding: [8, 4],
-                        labelBgBorderRadius: 4,
-                        labelBgStyle: {
-                            fill: '#fff',
-                            color: '#333',
-                            fillOpacity: 0.9,
-                            stroke: '#ccc',
-                            strokeWidth: 1
-                        },
-                        markerEnd: {
-                            type: 'arrowclosed',
-                            width: 15,
-                            height: 15,
-                            color: '#666',
-                            strokeWidth: 1
-                        }
-                    });
-                    uniqueEdgeIds.add(edgeId);
-                    console.log(`Hu: EvaTeam Workflow Enhancer: ✅ Created edge: ${fixedSourceId} -> ${fixedTargetId} with label: "${label}"`);
-                } else {
-                    console.log(`Hu: EvaTeam Workflow Enhancer: ⚠️ Edge already exists: ${edgeId}`);
+                    container = document.createElement('div');
+                    container.id = 'react-flow-container';
+                    container.style.cssText = `
+                        width: 100%;
+                        height: 600px;
+                        min-height: 500px;
+                        display: block;
+                        position: relative;
+                    `;
+                    document.body.appendChild(container);
                 }
             } else {
-                const reasons = [];
-                if (!fixedSourceId) reasons.push('no source ID');
-                if (!fixedTargetId) reasons.push('no target ID');
-                if (!sourceExists) reasons.push(`source "${fixedSourceId}" doesn't exist`);
-                if (!targetExists) reasons.push(`target "${fixedTargetId}" doesn't exist`);
-                if (fixedSourceId === fixedTargetId) reasons.push('source equals target (self-loop)');
-
-                console.log(`Hu: EvaTeam Workflow Enhancer: ❌ Cannot create edge - ${reasons.join(', ')}. Original: source="${sourceId}", target="${targetId}"`);
+                container.innerHTML = ''; // Clear existing content
             }
-        });
+            console.log('Hu: EvaTeam Workflow Enhancer: initFromAPI - Target container:', container);
 
-        console.log(`Hu: EvaTeam Workflow Enhancer: Edge elements processing finished. Starting final checks...`);
-        console.log(`Hu: EvaTeam Workflow Enhancer: Parsing complete - Created ${nodes.length} nodes and ${edges.length} edges`);
-        console.log(`Hu: EvaTeam Workflow Enhancer: Node IDs:`, nodes.map(n => n.id));
-        console.log(`Hu: EvaTeam Workflow Enhancer: Edge connections:`, edges.map(e => `${e.source} -> ${e.target}`));
 
-        // Debug: Check if node IDs match edge source/target IDs
-        const nodeIds = nodes.map(n => n.id);
-        const edgeConnections = edges.map(e => `${e.source} -> ${e.target}`);
-
-        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Checking ID matching:`);
-        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Available node IDs:`, nodeIds);
-        edges.forEach((edge, index) => {
-            const sourceExists = nodeIds.includes(edge.source);
-            const targetExists = nodeIds.includes(edge.target);
-            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Edge ${index}: ${edge.source} -> ${edge.target} | Source exists: ${sourceExists}, Target exists: ${targetExists}`);
-        });
-
-        // Debug: Check node positions
-        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Node positions:`);
-        nodes.forEach((node, index) => {
-            console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Node ${index}: ${node.id} at position (${node.position.x}, ${node.position.y})`);
-        });
-
-        // Final validation and cleanup
-        const finalEdges = [];
-        const validNodeIds = new Set(nodes.map(n => n.id));
-
-        // Calculate optimal connection positions for all nodes
-        this.calculateOptimalConnectionPositions(nodes);
-
-        edges.forEach(edge => {
-            if (validNodeIds.has(edge.source) && validNodeIds.has(edge.target)) {
-                // Add optimal connection positions to the edge
-                const sourceNode = nodes.find(n => n.id === edge.source);
-                const targetNode = nodes.find(n => n.id === edge.target);
-
-                if (sourceNode && targetNode) {
-                    edge.sourcePosition = this.getOptimalConnectionPosition(sourceNode, targetNode, 'source');
-                    edge.targetPosition = this.getOptimalConnectionPosition(targetNode, sourceNode, 'target');
-                    // For start/end nodes, force top/bottom connections only
-                    if (sourceNode.type === 'startEnd' || sourceNode.data?.isStartEndNode) {
-                        // For circular source nodes, prefer top/bottom based on relative position
-                        const dy = targetNode.position.y - sourceNode.position.y;
-                        edge.sourcePosition = dy > 0 ? 'bottom' : 'top';
-                        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Final validation: Forced source position for circular node: ${edge.sourcePosition}`);
-                    } else {
-                        edge.sourcePosition = this.getOptimalConnectionPosition(sourceNode, targetNode, 'source');
-                    }
-
-                    if (targetNode.type === 'startEnd' || targetNode.data?.isStartEndNode) {
-                        // For circular target nodes, prefer top/bottom based on relative position
-                        const dy = sourceNode.position.y - targetNode.position.y;
-                        edge.targetPosition = dy > 0 ? 'top' : 'bottom';
-                        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Final validation: Forced target position for circular node: ${edge.targetPosition}`);
-                    } else {
-                        edge.targetPosition = this.getOptimalConnectionPosition(targetNode, sourceNode, 'target');
-                    }
-                }
-
-                finalEdges.push(edge);
-            } else {
-                console.log(`Hu: EvaTeam Workflow Enhancer: ⚠️ Removing invalid edge: ${edge.source} -> ${edge.target}`);
+            // Render the ReactFlow component in the container
+            try {
+                this.renderReactFlowComponent(container, workflowData);
+                console.log('Hu: EvaTeam Workflow Enhancer: Initialized from API.');
+            } catch (renderError) {
+                console.error('Hu: EvaTeam Workflow Enhancer: initFromAPI - Error during renderReactFlowComponent:', renderError);
+                throw renderError; // Re-throw to be caught by the outer catch
             }
-        });
 
-        console.log(`Hu: EvaTeam Workflow Enhancer: Final validation - ${finalEdges.length} valid edges from ${edges.length} total`);
-
-        // Debug: Check connections involving start/end nodes
-        const startEndEdges = finalEdges.filter(edge =>
-            edge.source === 'node_start' || edge.source === 'all0' ||
-            edge.target === 'node_start' || edge.target === 'all0'
-        );
-
-        if (startEndEdges.length > 0) {
-            console.log(`Hu: EvaTeam Workflow Enhancer: Found ${startEndEdges.length} edges involving start/end nodes:`, startEndEdges);
-        } else {
-            console.log(`Hu: EvaTeam Workflow Enhancer: ⚠️ No edges found involving start/end nodes!`);
+        } catch (error) {
+            console.error('Hu: EvaTeam Workflow Enhancer: Failed to initialize from API:', error);
+            alert('Failed to load workflow data from API. Please check console for details.');
         }
-
-        return { nodes, edges: finalEdges };
     }
 
+    /**
+     * Function to process API data into ReactFlow nodes and edges.
+     * @param {object} workflowResult - The 'result' object from CmfWorkflow.get response.
+     * @param {Array} transitionsResult - The 'result' array from CmfTrans.list response.
+     * @param {Array} statusesResult - The 'result' array from CmfStatus.list response.
+     * @returns {{nodes: Array, edges: Array}} - ReactFlow compatible data.
+     */
+    processApiData(workflowResult, transitionsResult, statusesResult) {
+        console.log('Hu: EvaTeam Workflow Enhancer: processApiData - Starting data processing.');
+        const nodes = [];
+        const edges = [];
+        const statusMap = new Map(); // Map status ID to status object for easy lookup
+
+        try {
+            // Process statuses first to create nodes
+            if (!statusesResult || !Array.isArray(statusesResult)) {
+                console.warn('Hu: EvaTeam Workflow Enhancer: processApiData - Invalid statusesResult:', statusesResult);
+            } else {
+                statusesResult.forEach((status, index) => {
+                    const id = status.id; // Use status.id directly
+                    statusMap.set(status.id, status); // Store for later use by its full ID
+
+                    // Simple grid layout for initial positioning
+                    const x = 50 + (index % 4) * 250;
+                    const y = 50 + Math.floor(index / 4) * 150;
+
+                    const isStartOrEndNode = (status.name === 'Старт' || status.name === 'Все'); // Adjust based on actual names if needed
+                    let width = 120;
+                    let height = 60;
+                    let shape = 'rect';
+
+                    if (status.name === 'Старт') {
+                        width = height = 60;
+                        shape = 'circle';
+                    }
+                    if (status.name === 'Все') {
+                        width = height = 50;
+                        shape = 'circle';
+                    }
+
+                    nodes.push({
+                        id: id,
+                        position: { x, y },
+                        data: {
+                            label: status.name,
+                            isStartEndNode: isStartOrEndNode,
+                            shape: shape,
+                            width: width,
+                            height: height
+                        },
+                        width: width,
+                        height: height,
+                        type: (status.name === 'Старт' || status.name === 'Все') ? 'startEnd' : 'default',
+                        style: {
+                            backgroundColor: status.color || (isStartOrEndNode ? '#4CAF50' : '#fff'),
+                            borderColor: '#ccc',
+                            color: isStartOrEndNode ? '#fff' : '#000',
+                            borderRadius: isStartOrEndNode ? '50%' : '8px',
+                            borderWidth: '1px',
+                            borderStyle: 'solid',
+                            fontWeight: isStartOrEndNode ? 'bold' : 'normal',
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: isStartOrEndNode ? '14px' : '12px'
+                        }
+                    });
+                });
+            }
+
+
+            // Add 'node_start' and 'all0' as special nodes if they are not represented in statusesResult
+            // And ensure their IDs are correct for edges to connect.
+            if (!nodes.some(node => node.id === 'node_start')) {
+                nodes.unshift({ // Add to the beginning
+                    id: 'node_start',
+                    position: { x: 50, y: 20 },
+                    data: { label: 'Старт', isStartEndNode: true, shape: 'circle', width: 60, height: 60 },
+                    width: 60, height: 60, type: 'startEnd',
+                    style: {
+                        backgroundColor: '#4CAF50', borderColor: '#2E7D32', color: 'white',
+                        borderRadius: '50%', borderWidth: '3px', borderStyle: 'solid',
+                        fontWeight: 'bold', textAlign: 'center', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', fontSize: '14px'
+                    }
+                });
+            }
+            if (!nodes.some(node => node.id === 'all0')) {
+                 nodes.push({ // Add to the end
+                    id: 'all0',
+                    position: { x: 50 + (nodes.length % 4) * 250, y: 50 + Math.floor(nodes.length / 4) * 150 },
+                    data: { label: 'Все', isStartEndNode: true, shape: 'circle', width: 50, height: 50 },
+                    width: 50, height: 50, type: 'startEnd',
+                    style: {
+                        backgroundColor: '#607D8B', borderColor: '#455A64', color: 'white',
+                        borderRadius: '50%', borderWidth: '2px', borderStyle: 'solid',
+                        fontWeight: 'bold', textAlign: 'center', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', fontSize: '12px'
+                    }
+                });
+            }
+
+            // Process transitions to create edges
+            if (!transitionsResult || !Array.isArray(transitionsResult)) {
+                console.warn('Hu: EvaTeam Workflow Enhancer: processApiData - Invalid transitionsResult:', transitionsResult);
+            } else {
+                transitionsResult.forEach(trans => {
+                    // Check if status_from is an array (as seen in some mock data)
+                    const statusFromArr = Array.isArray(trans.status_from) ? trans.status_from : [trans.status_from];
+
+                    statusFromArr.forEach(statusFrom => {
+                        let sourceId = statusFrom.id; // Use statusFrom.id directly
+                        let targetId = trans.status_to.id; // Use trans.status_to.id directly
+
+                        // Handle special cases for 'start' and 'all' statuses if they are part of transitions
+                        if (statusFrom.name === 'Старт') {
+                            sourceId = 'node_start';
+                        }
+                        if (trans.status_to.name === 'Все') {
+                            targetId = 'all0';
+                        }
+
+                        if (sourceId && targetId && sourceId !== targetId) {
+                            const edgeId = `e-${sourceId}-${targetId}-${trans.id}`; // Use trans.id for unique edge ID part
+                            edges.push({
+                                id: edgeId,
+                                source: sourceId,
+                                target: targetId,
+                                label: trans.name,
+                                type: 'smoothstep',
+                                animated: false,
+                                style: {
+                                    strokeWidth: 2,
+                                    stroke: '#666',
+                                    strokeDasharray: trans.name.toLowerCase().includes('reopen') ? '5,5' : 'none'
+                                },
+                                labelStyle: {
+                                    fill: '#333',
+                                    fontWeight: 'bold',
+                                    fontSize: '12px'
+                                },
+                                labelBgPadding: [8, 4],
+                                labelBgBorderRadius: 4,
+                                labelBgStyle: {
+                                    fill: '#fff',
+                                    color: '#333',
+                                    fillOpacity: 0.9,
+                                    stroke: '#ccc',
+                                    strokeWidth: 1
+                                },
+                                markerEnd: {
+                                    type: 'arrowclosed',
+                                    width: 15,
+                                    height: 15,
+                                    color: '#666',
+                                    strokeWidth: 1
+                                }
+                            });
+                        }
+                    }); // End statusFromArr.forEach
+                }); // End transitionsResult.forEach
+            } // End else (transitionsResult is valid)
+        } catch (processingError) {
+            console.error('Hu: EvaTeam Workflow Enhancer: processApiData - Fatal error during data processing:', processingError);
+            throw processingError; // Re-throw to be caught by initFromAPI
+        }
+
+
+        console.log(`Hu: EvaTeam Workflow Enhancer: processApiData - Created ${nodes.length} nodes and ${edges.length} edges.`);
+        return { nodes, edges };
+    }
+
+    /**
+     * Function to open the enhanced workflow view (API version).
+     * @param {string} workflowId - The ID of the workflow to display.
+     * @param {HTMLElement} workflowTaskElement - The original DOM element containing the workflow (used for context, not direct manipulation in dev mode).
+     */
+    async openEnhancedWorkflowAPI(workflowId, workflowTaskElement) {
+        console.log('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Starting.');
+
+        if (!workflowId) {
+            console.error('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Workflow ID is not available.');
+            return;
+        }
+
+        // Check if libraries loaded properly before proceeding
+        const isReactLoaded = typeof window.React !== 'undefined';
+        const isReactDOMLoaded = typeof window.ReactDOM !== 'undefined';
+        const isReactFlowLoaded = typeof window.reactflow !== 'undefined' ||
+                                  typeof window.ReactFlow !== 'undefined' ||
+                                  typeof window.REACT_FLOW !== 'undefined';
+
+        if (!isReactLoaded || !isReactDOMLoaded || !isReactFlowLoaded) {
+            console.error('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Required libraries not loaded.');
+            return;
+        }
+
+        // In dev.html, we directly manipulate the tabs.
+        // We ensure the enhanced tab is active and then call initFromAPI.
+        const enhancedTab = document.getElementById('enhanced-tab');
+        const originalTab = document.getElementById('original-tab');
+        const reactFlowContainer = document.getElementById('react-flow-container');
+
+        if (!enhancedTab || !reactFlowContainer) {
+            console.error('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Dev environment missing #enhanced-tab or #react-flow-container.');
+            alert('Dev environment setup is incorrect. Missing enhanced tab or ReactFlow container.');
+            return;
+        }
+
+        // Ensure enhanced tab is visible and original is hidden
+        if (originalTab) {
+            originalTab.style.display = 'none';
+        }
+        enhancedTab.style.display = 'block';
+
+        // Update active class for tab buttons (assuming they exist in dev.html)
+        const enhancedButton = document.querySelector(".tab-button[onclick*='enhanced']");
+        const originalButton = document.querySelector(".tab-button[onclick*='original']");
+        if (enhancedButton) enhancedButton.classList.add('active');
+        if (originalButton) originalButton.classList.remove('active');
+
+
+        // Render the ReactFlow component in the container with API data
+        await this.initFromAPI(workflowId);
+        console.log('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Completed.');
+    }
     /**
      * Function to render the ReactFlow component
      */
     renderReactFlowComponent(container, workflowData) {
-        console.log('Hu: EvaTeam Workflow Enhancer: Rendering ReactFlow component...');
+        console.log('Hu: EvaTeam Workflow Enhancer: renderReactFlowComponent - Rendering ReactFlow component...');
+        console.log('Hu: EvaTeam Workflow Enhancer: renderReactFlowComponent - Container:', container);
+        console.log('Hu: EvaTeam Workflow Enhancer: renderReactFlowComponent - workflowData:', workflowData);
+
 
         // Determine which React Flow object is available
         const ReactFlow = window.reactflow || window.ReactFlow || window.REACT_FLOW;
@@ -963,7 +494,7 @@ class HuEvaFlowEnhancer {
         const ReactDOM = window.ReactDOM;
 
         if (!ReactFlow) {
-            console.error('Hu: EvaTeam Workflow Enhancer: ReactFlow library not found!');
+            console.error('Hu: EvaTeam Workflow Enhancer: renderReactFlowComponent - ReactFlow library not found!');
             return;
         }
 
@@ -1242,9 +773,9 @@ class HuEvaFlowEnhancer {
 
     /**
      * Calculate optimal connection positions for all nodes based on minimum distance
-     * This method is now simplified since getOptimalConnectionPosition does the heavy lifting
      */
     calculateOptimalConnectionPositions(nodes) {
+        console.log(`Hu: EvaTeam Workflow Enhancer: calculateOptimalConnectionPositions - Initializing positions for ${nodes.length} nodes.`);
         // Initialize with default positions - individual edges will be optimized later
         nodes.forEach(node => {
             if (node.type === 'startEnd' || node.data?.isStartEndNode) {
@@ -1258,7 +789,7 @@ class HuEvaFlowEnhancer {
             }
         });
 
-        console.log(`Hu: EvaTeam Workflow Enhancer: Initialized connection positions for ${nodes.length} nodes`);
+        console.log(`Hu: EvaTeam Workflow Enhancer: calculateOptimalConnectionPositions - Completed.`);
     }
 
     /**
@@ -1308,8 +839,7 @@ class HuEvaFlowEnhancer {
             }
         });
 
-        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Connection distances for ${node.id} -> ${connectedNode.id}:`, distances);
-        console.log(`Hu: EvaTeam Workflow Enhancer: Debug - Optimal position: ${optimalPosition} (distance: ${minDistance.toFixed(2)})`);
+        console.log(`Hu: EvaTeam Workflow Enhancer: getOptimalConnectionPosition - for ${node.id} -> ${connectedNode.id}: ${optimalPosition} (distance: ${minDistance.toFixed(2)})`);
 
         return optimalPosition;
     }
@@ -1318,6 +848,7 @@ class HuEvaFlowEnhancer {
      * Generate HTML for the enhanced workflow view (for backward compatibility)
      */
     generateEnhancedWorkflowHTML(workflowData) {
+        console.log('Hu: EvaTeam Workflow Enhancer: generateEnhancedWorkflowHTML - Called.');
         return `
 <!DOCTYPE html>
 <html>

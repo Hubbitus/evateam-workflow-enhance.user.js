@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/umd/index.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/style.min.css">
+    <script src="../HuEvaApi.js"></script>
     <script src="../HuEvaFlowEnhancer.js"></script>
 
 
@@ -179,20 +180,73 @@
     </div>
 
     <script>
+        // Store original console methods
+        const originalConsole = { ...console };
+
+        // Override console methods to log to debug-console div
+        function setupConsoleCapture() {
+            const debugConsoleEl = document.getElementById('debug-console');
+            if (!debugConsoleEl) return;
+
+            function appendLog(level, args) {
+                const message = Array.from(args).map(arg => {
+                    if (typeof arg === 'object' && arg !== null) {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg); // Fallback for circular structures
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+
+                debugConsoleEl.innerHTML += `<div class="log-${level}">${new Date().toISOString()} [${level.toUpperCase()}] - ${message.replace(/\n/g, '<br>')}</div>`;
+                debugConsoleEl.scrollTop = debugConsoleEl.scrollHeight;
+            }
+
+            console.log = (...args) => {
+                originalConsole.log(...args);
+                appendLog('log', args);
+            };
+            console.warn = (...args) => {
+                originalConsole.warn(...args);
+                appendLog('warn', args);
+            };
+            console.error = (...args) => {
+                originalConsole.error(...args);
+                appendLog('error', args);
+            };
+            console.info = (...args) => {
+                originalConsole.info(...args);
+                appendLog('info', args);
+            };
+        }
+
         // Development utilities
-        function log(message) {
+        function log(message) { // This custom log function can stay for specific UI messages if desired
             const consoleEl = document.getElementById('debug-console');
-            consoleEl.innerHTML += `${new Date().toISOString()} - ${message}\n`;
-            consoleEl.scrollTop = consoleEl.scrollHeight;
+            if (consoleEl) {
+                consoleEl.innerHTML += `${new Date().toISOString()} - ${message}\n`;
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            } else {
+                originalConsole.log(message);
+            }
         }
 
         function resetDemo() {
             log('Resetting demo...');
             // Reset any demo state here
+            // Clear ReactFlow container
+            const container = document.getElementById('react-flow-container');
+            if (container) container.innerHTML = '';
+            clearConsole();
         }
 
         function clearConsole() {
-            document.getElementById('debug-console').innerHTML = '';
+            const debugConsoleEl = document.getElementById('debug-console');
+            if (debugConsoleEl) debugConsoleEl.innerHTML = '';
+            // Clear browser console too if possible (not directly via JS in most browsers)
+            // originalConsole.clear(); // This might not work everywhere or clear history
         }
 
         function copyLogToClipboard() {
@@ -272,86 +326,47 @@
         }
 
         // Main initialization function - this emulates the Tampermonkey script startup
-        function initializeDevEnvironment() {
+        let enhancer; // Declare enhancer in a higher scope
+
+        async function initializeDevEnvironment() { // Mark as async
             log('Initializing EvaTeam Workflow Enhancer Development Environment...');
 
-            // Wait for libraries to load
-            function waitForLibraries(callback, retries = 50, delay = 200) {
-                const isReactLoaded = typeof window.React !== 'undefined';
-                const isReactDOMLoaded = typeof window.ReactDOM !== 'undefined';
+            enhancer = new HuEvaFlowEnhancer(); // Assign to the globally declared variable
 
-                // Check for ReactFlow in various possible locations
-                const isReactFlowLoaded = typeof window.reactflow !== 'undefined' ||
-                                          typeof window.ReactFlow !== 'undefined' ||
-                                          typeof window.REACT_FLOW !== 'undefined';
+            // Store a static workflow ID for mock data as per API mock examples
+            // This is "Project DATA - sub-analytics" as seen in maket.as-is.html title
+            // or from README-API.md common sequence invocation.
+            const staticWorkflowId = "Project DATA - sub-analytics";
+            enhancer.workflowId = staticWorkflowId; // Set the workflowId on the enhancer instance
 
-                // Debug: log what's available in the window object related to ReactFlow
-                if (retries === 50) { // Only log once at the beginning
-                    log('Debug: Available ReactFlow objects:');
-                    log(`  window.reactflow: ${typeof window.reactflow}`);
-                    log(`  window.ReactFlow: ${typeof window.ReactFlow}`);
-                    log(`  window.REACT_FLOW: ${typeof window.REACT_FLOW}`);
-                    log(`  window keys with 'flow': ${Object.keys(window).filter(k => k.toLowerCase().includes('flow')).join(', ')}`);
-                    log(`  Full window.ReactFlow object: ${!!window.ReactFlow}`);
-                    if (window.ReactFlow) {
-                        log(`  ReactFlow keys: ${Object.keys(window.ReactFlow).join(', ')}`);
-                    }
-                }
+            await enhancer.waitForLibraries(); // Wait for libraries at the start
 
-                log(`Checking library status - React: ${isReactLoaded}, ReactDOM: ${isReactDOMLoaded}, ReactFlow: ${isReactFlowLoaded}. Retries left: ${retries}`);
+            log('Libraries loaded, initializing UI...');
 
-                if (isReactLoaded && isReactDOMLoaded && isReactFlowLoaded) {
-                    log('All required libraries found.');
-                    callback();
-                } else if (retries > 0) {
-                    setTimeout(() => waitForLibraries(callback, retries - 1, delay), delay);
-                } else {
-                    log('Failed to load all required libraries after multiple retries.');
-                    callback();
-                }
-            }
-
-            waitForLibraries(() => {
-                log('Libraries loaded, initializing UI...');
-
-                // Add event listener to the "Improve Schema" button
-                const improveButton = document.getElementById('improve-schema-button');
-                improveButton.addEventListener('click', function() {
-                    log('Improve Schema button clicked!');
-
-                    // In the development environment, we now use the enhancer class
-                    // which handles the workflow data extraction and visualization
-                    // The button click functionality is now handled by the HuEvaFlowEnhancer class
-                    alert('In development mode, the "Improve Schema" button functionality is integrated into the HuEvaFlowEnhancer class');
-                });
-
-                // Show initial info
-                showInfo();
+            // Add event listener to the "Improve Schema" button
+            const improveButton = document.getElementById('improve-schema-button');
+            improveButton.addEventListener('click', async function() {
+                log('Improve Schema button clicked!');
+                const emulatedWorkflowElement = document.getElementById('emulated-workflow');
+                await enhancer.openEnhancedWorkflowAPI(staticWorkflowId, emulatedWorkflowElement);
             });
+
+            // Show initial info
+            showInfo();
         }
 
         // Start the development environment when the page loads
-        // This is equivalent to the main execution part of the Tampermonkey script
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeDevEnvironment();
+        document.addEventListener('DOMContentLoaded', async function() { // Mark as async
+            setupConsoleCapture(); // Setup console capture immediately
+            await initializeDevEnvironment();
 
             // Initialize the first tab as active
             switchTab('enhanced');
 
-            // Load the HTML content from the as-is file and initialize the enhancer with it
-            fetch('./maket.as-is.html')
-                .then(response => response.text())
-                .then(htmlContent => {
-                    // Initialize the enhancer with the HTML content
-                    const enhancer = new HuEvaFlowEnhancer();
-                    enhancer.initialize();
-                    enhancer.initFromHTML(htmlContent);
-                })
-                .catch(error => {
-                    console.error('Error loading HTML content for development:', error);
-                });
-            }
-        );
+            // Automatically trigger the enhanced view for the mock data
+            const emulatedWorkflowElement = document.getElementById('emulated-workflow');
+            await enhancer.openEnhancedWorkflowAPI(enhancer.workflowId, emulatedWorkflowElement);
+        });
     </script>
 </body>
 </html>
