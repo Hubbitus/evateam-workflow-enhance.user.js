@@ -1,0 +1,48 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "id": "CmfWorkflow:97af61e2-659a-11f0-8b7b-ee37db4b230b",
+    "class_name": "CmfWorkflow",
+    "name": "Project DATA - sub-analytics",
+    "scheme_draw_config": null,
+    "text": "DATA workflow for the sub-analytics",
+    "parent_id": null,
+    "project_id": null,
+    "cmf_owner_id": "CmfPerson:00000000-0000-0000-0000-000000000001",
+    "code": "WF-000077"
+  },
+  "meta": {},
+  "jsver": "20260205115513256",
+  "callid": "87aafa49-89b6-4c18-b0a1-b0a71b147862",
+  "jsurl": "/project/Task/DATA-5945#analyze-visiology-protsess-raboty-s-dashbordami-postanovka-to-be",
+  "profiler_data": {
+    "select_count": {
+      "select": 7,
+      "total": 7
+    },
+    "inmemory_cache_hit": 3,
+    "inmemory_cache_miss": 0,
+    "prepare": 5.335,
+    "redis_cache_miss": 1,
+    "redis_cache_hit": 0,
+    "redis_cache_miss_last": "CmfWorkflow.get:944b11a1092b1ccf6815b632497a036e",
+    "call_method_ms": 85.213,
+    "save": 0.002,
+    "commit": 1.376,
+    "acl_check": 9,
+    "acl_check_skip": 0,
+    "acl_check_owner_skip": 0,
+    "acl_check_cache": 4,
+    "acl_check_calc": 5,
+    "acl_check_cache_static": 0,
+    "acl_check_calc_static": 0,
+    "result_to_dict_ms": 0.385,
+    "number_of_objects": 19
+  },
+  "alert": [],
+  "note": [],
+  "abort": null,
+  "version": "02.31.01.4836",
+  "invalidate": [],
+  "redis_id": "1770249067"
+}

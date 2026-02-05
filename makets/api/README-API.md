@@ -1,6 +1,7 @@
 # Api MOCKs
 
 Directory contains examples of requests and responces as it served by EvaTeam for the workflow data.
+Examples provided by https://eva.gid.team/desk/Task/DQ-7.
 
 ## Files naming and structure
 

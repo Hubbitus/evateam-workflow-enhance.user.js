@@ -10,8 +10,8 @@ await fetch("https://eva.gid.team/api/?m=CmfTrans.list", {
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-origin"
     },
-    "referrer": "https://eva.gid.team/project/Task/DATA-5945",
-    "body": "{\"jsonrpc\":\"2.2\",\"callid\":\"1d224c88-5efb-4126-8189-e0fdb664def2\",\"jsver\":null,\"jsurl\":\"/project/Task/DATA-5945#analyze-visiology-protsess-raboty-s-dashbordami-postanovka-to-be\",\"method\":\"CmfTrans.list\",\"args\":[],\"kwargs\":{\"filter\":[\"workflow_id\",\"=\",\"CmfWorkflow:97af61e2-659a-11f0-8b7b-ee37db4b230b\"],\"fields\":[\"name\",\"status_from\",\"status_to\"]},\"fields\":[],\"no_cache\":false,\"no_meta\":true,\"session_tab_id\":\"HZj1\",\"cache_id\":\"289987\",\"jshash\":\"jshash:CmfTrans.list:plalexeev@gid.ru:ae5c7fea69cb2146e0c9:289987\"}",
+    "referrer": "https://eva.gid.team/desk/Task/DQ-7",
+    "body": "{\"jsonrpc\":\"2.2\",\"callid\":\"3ad0a41a-a43e-4349-85d6-c86e0b02cf23\",\"jsver\":null,\"jsurl\":\"/desk/Task/DQ-7\",\"method\":\"CmfTrans.list\",\"args\":[],\"kwargs\":{\"filter\":[\"workflow_id\",\"=\",\"CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e\"],\"fields\":[\"name\",\"status_from\",\"status_to\"]},\"fields\":[],\"no_cache\":false,\"no_meta\":true,\"session_tab_id\":\"HZj1\",\"cache_id\":\"a68fa6\",\"jshash\":\"jshash:CmfTrans.list:plalexeev@gid.ru:e3b5f57d3016ad3214d2:a68fa6\"}",
     "method": "POST",
     "mode": "cors"
 });

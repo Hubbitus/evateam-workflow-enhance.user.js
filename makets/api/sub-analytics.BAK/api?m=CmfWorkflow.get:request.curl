@@ -1,0 +1,18 @@
+curl 'https://eva.gid.team/api/?m=CmfWorkflow.get' \
+  -X POST \
+  -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Accept-Language: en-US,en;q=0.9' \
+  -H 'Accept-Encoding: gzip, deflate, br, zstd' \
+  -H 'Content-Type: application/json' \
+  -H 'Origin: https://eva.gid.team' \
+  -H 'Sec-GPC: 1' \
+  -H 'Connection: keep-alive' \
+  -H 'Referer: https://eva.gid.team/project/Task/DATA-5945' \
+  -H 'Cookie: nginx_auth_token=password123; session_token=kRf6TCh8ZHiCkkR9yOxS0A+Ij0VDDsTUvSexzVWXM5thBiClpFdrnN/iLZo+FlTt; _DeviceUid=072a1236-ca88-49c9-bd91-83baabd6f27d; ajs_user_id=737680cc-2e34-4b7c-947a-358e47a9954a:2fed9ec3-8d6e-4bde-823d-4039372d2b3e:GID; INGRESSCOOKIE=1769167001.8.791.788673|efeb10917df1337cf39a3aac69a00417; ajs_anonymous_id=b21fc69d-7569-4310-b9c4-cac02c4950fd' \
+  -H 'Sec-Fetch-Dest: empty' \
+  -H 'Sec-Fetch-Mode: cors' \
+  -H 'Sec-Fetch-Site: same-origin' \
+  -H 'TE: trailers' \
+  --data-raw '{"jsonrpc":"2.2","callid":"87aafa49-89b6-4c18-b0a1-b0a71b147862","jsver":null,"jsurl":"/project/Task/DATA-5945#analyze-visiology-protsess-raboty-s-dashbordami-postanovka-to-be","method":"CmfWorkflow.get","args":[],"kwargs":{"filter":["id","=","CmfWorkflow:97af61e2-659a-11f0-8b7b-ee37db4b230b"],"fields":["name","status_from","status_to","text","cmf_ui_form","scheme_draw_config"]},"fields":[],"no_cache":false,"no_meta":true,"session_tab_id":"HZj1","cache_id":"289987","jshash":"jshash:CmfWorkflow.get:plalexeev@gid.ru:2a723cb7376e276a7b87:289987"}'
+  
