@@ -208,3 +208,5 @@ function WorkflowEnhancerApp() {
 
 # Important notes
 - `make build` should be run *only* for the release, do not call it in normal development mode!
+- Never "embed" external dependencied like JS or CSS into project files (until it was explicitly stated)! Use CDN and loading.
+- When doung screenshot (e.g. over MCP), place it into _screenshots directory. File name musb be started with date-time in iso-8601 format with millisecond precision.

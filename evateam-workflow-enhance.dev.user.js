@@ -9,6 +9,7 @@
 // @require      https://unpkg.com/react@18/umd/react.production.min.js
 // @require      https://unpkg.com/react-dom@18/umd/react-dom.production.min.js
 // @require      https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/umd/index.min.js
+// @require      https://cdn.jsdelivr.net/npm/elkjs@latest/lib/elk.bundled.js
 // @require      http://localhost:3004/HuEvaApi.js
 // @require      http://localhost:3004/HuEvaFlowEnhancer.js
 // ==/UserScript==

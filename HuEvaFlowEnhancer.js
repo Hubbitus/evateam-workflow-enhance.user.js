@@ -1,12 +1,10 @@
-/**
- * HuEvaFlowEnhancer - Class for enhancing EvaTeam workflow visualization
- */
 class HuEvaFlowEnhancer {
     constructor() {
         this.isInitialized = false;
         this.workflowData = null;
         this.originalContainer = null;
         this.enhancedContainer = null;
+        this.reactRoot = null; // Initialize React root to null
         // Determine the base URL for the API based on the environment
         const apiBaseUrl = window.location.hostname === 'localhost' ?
                            'http://localhost:3000/makets/api/' : // Corrected: without 'api__m=' prefix
@@ -86,10 +84,12 @@ class HuEvaFlowEnhancer {
                 const isReactFlowLoaded = typeof window.reactflow !== 'undefined' ||
                                           typeof window.ReactFlow !== 'undefined' ||
                                           typeof window.REACT_FLOW !== 'undefined';
+                // ELK is loaded via a separate script tag in dev.html, no need to check here.
+
 
                 console.log(`Hu: EvaTeam Workflow Enhancer: Checking library status - React: ${isReactLoaded}, ReactDOM: ${isReactDOMLoaded}, ReactFlow: ${isReactFlowLoaded}. Retries left: ${retries}`);
 
-                if (isReactLoaded && isReactDOMLoaded && isReactFlowLoaded) { // Corrected: was checking isReactDOMLoaded twice
+                if (isReactLoaded && isReactDOMLoaded && isReactFlowLoaded) {
                     console.log('Hu: EvaTeam Workflow Enhancer: All required libraries found.');
                     resolve();
                 } else if (retries > 0) {
@@ -164,7 +164,8 @@ class HuEvaFlowEnhancer {
 
     /**
      * Initialize the enhancer from API data.
-     * @param {string} workflowId - The ID of the workflow to fetch.
+     * @param {string} workflowId - The ID of the workflow to display.
+     * @param {HTMLElement} workflowTaskElement - The original DOM element containing the workflow (used for context, not direct manipulation in dev mode).
      */
     async initFromAPI(workflowId) {
         console.log(`Hu: EvaTeam Workflow Enhancer: initFromAPI - Starting for workflowId: ${workflowId}...`);
@@ -188,7 +189,8 @@ class HuEvaFlowEnhancer {
             let workflowData;
             try {
                 // Access the 'result' property for the actual data
-                workflowData = this.processApiData(workflowResponse.result, transitionsResponse.result, statusesResponse.result);
+                workflowData = await this.processApiData(workflowResponse.result, transitionsResponse.result, statusesResponse.result); // ADDED 'await'
+
                 console.log('Hu: EvaTeam Workflow Enhancer: initFromAPI - Processed workflowData:', workflowData);
                 window.lastWorkflowData = workflowData; // Expose globally for debugging
             } catch (processError) {
@@ -252,15 +254,7 @@ class HuEvaFlowEnhancer {
         }
     }
 
-    /**
-     * Function to process API data into ReactFlow nodes and edges.
-     * @param {object} workflowResult - The 'result' object from CmfWorkflow.get response.
-     * @param {Array} transitionsResult - The 'result' array from CmfTrans.list response.
-     * @param {Array} statusesResult - The 'result' array from CmfStatus.list response.
-     * @returns {{nodes: Array, edges: Array}} - ReactFlow compatible data.
-     */
-    processApiData(workflowResult, transitionsResult, statusesResult) {
-        console.log('Hu: EvaTeam Workflow Enhancer: processApiData - Starting data processing.');
+    async processApiData(workflowResult, transitionsResult, statusesResult) {
         const nodes = [];
         const edges = [];
         const statusMap = new Map(); // Map status ID to status object for easy lookup
@@ -270,15 +264,11 @@ class HuEvaFlowEnhancer {
             if (!statusesResult || !Array.isArray(statusesResult)) {
                 console.warn('Hu: EvaTeam Workflow Enhancer: processApiData - Invalid statusesResult:', statusesResult);
             } else {
-                statusesResult.forEach((status, index) => {
+                statusesResult.forEach((status) => { // Removed index, not needed for ElkJS initial positioning
                     const id = status.id; // Use status.id directly
                     statusMap.set(status.id, status); // Store for later use by its full ID
 
-                    // Simple grid layout for initial positioning
-                    const x = 50 + (index % 4) * 250;
-                    const y = 50 + Math.floor(index / 4) * 150;
-
-                    const isStartOrEndNode = (status.name === 'Старт' || status.name === 'Все'); // Adjust based on actual names if needed
+                    const isStartOrEndNode = (status.name === 'Старт' || status.name === 'Все');
                     let width = 120;
                     let height = 60;
                     let shape = 'rect';
@@ -294,7 +284,8 @@ class HuEvaFlowEnhancer {
 
                     nodes.push({
                         id: id,
-                        position: { x, y },
+                        // Initial position will be set by ElkJS, these are placeholders
+                        position: { x: 0, y: 0 },
                         data: {
                             label: status.name,
                             isStartEndNode: isStartOrEndNode,
@@ -309,9 +300,7 @@ class HuEvaFlowEnhancer {
                             backgroundColor: status.color || (isStartOrEndNode ? '#4CAF50' : '#fff'),
                             borderColor: '#ccc',
                             color: isStartOrEndNode ? '#fff' : '#000',
-                            borderRadius: isStartOrEndNode ? '50%' : '8px',
-                            borderWidth: '1px',
-                            borderStyle: 'solid',
+                            borderRadius: '50%', borderWidth: '1px', borderStyle: 'solid',
                             fontWeight: 'normal',
                             textAlign: 'center',
                             display: 'flex',
@@ -323,13 +312,11 @@ class HuEvaFlowEnhancer {
                 });
             }
 
-
             // Add 'node_start' as special node if it is not represented in statusesResult
-            // And ensure its ID is correct for edges to connect.
             if (!nodes.some(node => node.id === 'node_start')) {
                 nodes.unshift({ // Add to the beginning
                     id: 'node_start',
-                    position: { x: 50, y: 20 },
+                    position: { x: 0, y: 0 }, // Placeholder, ElkJS will set
                     data: { label: 'Старт', isStartEndNode: true, shape: 'circle', width: 60, height: 60 },
                     width: 60, height: 60, type: 'startEnd',
                     style: {
@@ -346,27 +333,29 @@ class HuEvaFlowEnhancer {
                 console.warn('Hu: EvaTeam Workflow Enhancer: processApiData - Invalid transitionsResult:', transitionsResult);
             } else {
                 transitionsResult.forEach(trans => {
-                    // Check if status_from is an array (as seen in some mock data)
                     const statusFromArr = Array.isArray(trans.status_from) ? trans.status_from : [trans.status_from];
 
                     statusFromArr.forEach(statusFrom => {
-                        let sourceId = statusFrom.id; // Use statusFrom.id directly
-                        let targetId = trans.status_to.id; // Use trans.status_to.id directly
+                        let sourceId = statusFrom.id;
+                        let targetId = trans.status_to.id;
 
-                        // Handle special case for 'start' status if it is part of transitions
                         if (statusFrom.name === 'Старт') {
                             sourceId = 'node_start';
                         }
-
                         if (sourceId && targetId && sourceId !== targetId) {
-                            const edgeId = `e-${sourceId}-${targetId}-${trans.id}`; // Use trans.id for unique edge ID part
+                            const edgeId = `e-${sourceId}-${targetId}-${trans.id}`;
+
+                            // No need to calculate optimal connection here, ElkJS handles layout
+                            // and ReactFlow handles connection positions based on node layout.
                             edges.push({
                                 id: edgeId,
                                 source: sourceId,
                                 target: targetId,
                                 label: trans.name,
-                                type: 'smoothstep',
+                                type: 'default',
                                 animated: false,
+                                // sourcePosition and targetPosition will be dynamically set by calculateOptimalConnection
+                                // when nodes are dragged, not during initial layout by ElkJS.
                                 style: {
                                     strokeWidth: 2,
                                     stroke: '#666',
@@ -395,37 +384,94 @@ class HuEvaFlowEnhancer {
                                 }
                             });
                         }
-                    }); // End statusFromArr.forEach
-                }); // End transitionsResult.forEach
-            } // End else (transitionsResult is valid)
+                    });
+                });
+            }
         } catch (processingError) {
             console.error('Hu: EvaTeam Workflow Enhancer: processApiData - Fatal error during data processing:', processingError);
-            throw processingError; // Re-throw to be caught by initFromAPI
+            throw processingError;
         }
 
         // --- Add dynamic transition for Start node ---
-        // Find the start node (the one with no incoming edges from transitions)
         const allTargetIds = new Set(edges.map(edge => edge.target));
-        const startNode = nodes.find(node => node.id !== 'node_start' && !allTargetIds.has(node.id));
+        const startNodeForDefaultEdge = nodes.find(node => node.id !== 'node_start' && !allTargetIds.has(node.id));
 
-        if (startNode && !edges.some(edge => edge.source === 'node_start' && edge.target === startNode.id)) {
-            edges.unshift({ // Add to the beginning to keep 'start' edges prominent
-                id: `e-node_start-${startNode.id}-DefaultStart`,
+        if (startNodeForDefaultEdge && !edges.some(edge => edge.source === 'node_start' && edge.target === startNodeForDefaultEdge.id)) {
+            edges.unshift({
+                id: `e-node_start-${startNodeForDefaultEdge.id}-DefaultStart`,
                 source: 'node_start',
-                target: startNode.id,
+                target: startNodeForDefaultEdge.id,
                 label: 'Начать',
-                type: 'smoothstep',
-                animated: true, // Make default transitions animated
+                type: 'default',
+                animated: true,
+                // Positions will be handled by ElkJS initially, and then by calculateOptimalConnection on interaction
                 style: { strokeWidth: 2, stroke: '#4CAF50' },
                 markerEnd: { type: 'arrowclosed', width: 15, height: 15, color: '#4CAF50', strokeWidth: 1 },
                 labelStyle: { fill: '#4CAF50', fontWeight: 'bold', fontSize: '12px' }
             });
-            console.log('Hu: EvaTeam Workflow Enhancer: processApiData - Added default Start ->', startNode.data.label, 'edge.');
         }
         // --- End dynamic transition ---
 
-        console.log(`Hu: EvaTeam Workflow Enhancer: processApiData - Created ${nodes.length} nodes and ${edges.length} edges.`);
-        return { nodes, edges };
+        // Initialize ElkJS
+        const elk = new window.ELK();
+
+        // Convert ReactFlow nodes and edges to ElkJS graph format
+        const elkNodes = nodes.map(node => ({
+            id: node.id,
+            width: node.width,
+            height: node.height
+        }));
+
+        const elkEdges = edges.map(edge => ({
+            id: edge.id,
+            sources: [edge.source],
+            targets: [edge.target]
+        }));
+
+        const elkGraph = {
+            id: 'root',
+            layoutOptions: {
+                'elk.algorithm': 'layered',
+                'elk.direction': 'DOWN',
+                'elk.spacing.nodeNode': '75',
+                'elk.layered.spacing.nodeNodeBetweenLayers': '100',
+                'elk.layered.nodePlacement.strategy': 'SIMPLE'
+            },
+            children: elkNodes,
+            edges: elkEdges
+        };
+
+        // Run ElkJS layout algorithm
+        return elk.layout(elkGraph)
+            .then(layoutedGraph => {
+                // Update node positions based on ElkJS results
+                const layoutedNodes = nodes.map(node => {
+                    const layoutNode = layoutedGraph.children.find(n => n.id === node.id);
+                    if (layoutNode) {
+                        return { ...node, position: { x: layoutNode.x, y: layoutNode.y } };
+                    }
+                    return node;
+                });
+
+                // Re-calculate source and target positions for edges after layout
+                const finalEdges = edges.map(edge => {
+                    const sourceNode = layoutedNodes.find(n => n.id === edge.source);
+                    const targetNode = layoutedNodes.find(n => n.id === edge.target);
+
+                    if (sourceNode && targetNode) {
+                        const { sourcePosition, targetPosition } = this.calculateOptimalConnection(sourceNode, targetNode);
+                        return { ...edge, sourcePosition, targetPosition };
+                    }
+                    return edge;
+                });
+
+                return { nodes: layoutedNodes, edges: finalEdges };
+            })
+            .catch(error => {
+                console.error('Hu: EvaTeam Workflow Enhancer: ElkJS layout failed:', error);
+                // Fallback to existing layout if ElkJS fails (which is no layout, just default positions)
+                return { nodes, edges };
+            });
     }
 
     /**
@@ -487,8 +533,8 @@ class HuEvaFlowEnhancer {
      */
     renderReactFlowComponent(container, workflowData) {
         console.log('Hu: EvaTeam Workflow Enhancer: renderReactFlowComponent - Rendering ReactFlow component...');
-        console.log('Hu: EvaTeam Workflow Enhancer: renderReactFlowComponent - Container:', container);
-        console.log('Hu: EvaTeam Workflow Enhancer: renderReactFlowComponent - workflowData:', workflowData);
+
+
 
 
         // Determine which React Flow object is available
@@ -522,52 +568,33 @@ class HuEvaFlowEnhancer {
                     position: 'relative'
                 }
             }, [
-                // Add handles for connections - only top and bottom for top-bottom positioning
+                // Only include handles for bottom source and top target to enforce tree layout
                 React.createElement(ReactFlow.Handle, {
-                    type: 'source',
-                    position: 'top',
-                    id: 'source-top',
-                    style: {
-                        background: '#2E7D32',
-                        width: '8px',
-                        height: '8px',
-                        border: '2px solid white'
-                    }
-                }),
-                React.createElement(ReactFlow.Handle, {
+                    key: 'source-bottom',
                     type: 'source',
                     position: 'bottom',
                     id: 'source-bottom',
                     style: {
-                        background: '#2E7D32',
-                        width: '8px',
-                        height: '8px',
-                        border: '2px solid white'
+                        background: '#1A192B', // Darker background
+                        width: '10px',
+                        height: '10px',
+                        border: '2px solid #555' // Matching example border color
                     }
                 }),
                 React.createElement(ReactFlow.Handle, {
+                    key: 'target-top',
                     type: 'target',
                     position: 'top',
                     id: 'target-top',
                     style: {
-                        background: '#2E7D32',
-                        width: '8px',
-                        height: '8px',
-                        border: '2px solid white'
-                    }
-                }),
-                React.createElement(ReactFlow.Handle, {
-                    type: 'target',
-                    position: 'bottom',
-                    id: 'target-bottom',
-                    style: {
-                        background: '#2E7D32',
-                        width: '8px',
-                        height: '8px',
-                        border: '2px solid white'
+                        background: '#555', // Lighter background for target
+                        width: '10px',
+                        height: '10px',
+                        border: '2px solid #1A192B' // Matching example border color
                     }
                 }),
                 React.createElement('div', {
+                    key: 'label',
                     style: {
                         position: 'absolute',
                         top: '50%',
@@ -579,8 +606,69 @@ class HuEvaFlowEnhancer {
             ]);
         };
 
+        // Create custom node component for default nodes with handles on all sides
+        const DefaultNode = ({ data, selected }) => {
+            return React.createElement('div', {
+                className: `react-flow__node-default ${selected ? 'react-flow__node-selected' : ''}`,
+                style: {
+                    width: data.width || 120,
+                    height: data.height || 60,
+                    background: selected ? '#ffffcc' : '#fff',
+                    border: selected ? '2px solid #ff0000' : '1px solid #ccc',
+                    borderRadius: '8px',
+                    fontWeight: 'normal',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    position: 'relative'
+                }
+            }, [
+                // Only include handles for bottom source and top target to enforce tree layout
+                React.createElement(ReactFlow.Handle, {
+                    key: 'source-bottom',
+                    type: 'source',
+                    position: 'bottom',
+                    id: 'source-bottom',
+                    style: {
+                        background: '#1A192B', // Darker background
+                        width: '10px',
+                        height: '10px',
+                        border: '2px solid #555' // Matching example border color
+                    }
+                }),
+                React.createElement(ReactFlow.Handle, {
+                    key: 'target-top',
+                    type: 'target',
+                    position: 'top',
+                    id: 'target-top',
+                    style: {
+                        background: '#555', // Lighter background for target
+                        width: '10px',
+                        height: '10px',
+                        border: '2px solid #1A192B' // Matching example border color
+                    }
+                }),
+                React.createElement('div', {
+                    key: 'label',
+                    style: {
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        pointerEvents: 'none'
+                    }
+                }, data.label)
+            ]);
+        };
+
+
+
         // Create the ReactFlow component
-        function EnhancedWorkflowApp() {
+        function EnhancedWorkflowApp({ workflowData, calculateOptimalConnection }) {
+ // <--- Добавлено
             const [nodes, setNodes, onNodesChange] = ReactFlow.useNodesState(workflowData.nodes);
             const [edges, setEdges, onEdgesChange] = ReactFlow.useEdgesState(workflowData.edges);
 
@@ -591,13 +679,52 @@ class HuEvaFlowEnhancer {
 
             // Define node types
             const nodeTypes = React.useMemo(() => ({
-                startEnd: StartEndNode
+                startEnd: StartEndNode,
+                default: DefaultNode
             }), []);
+
+            const handleNodesChange = React.useCallback(
+                (changes) => {
+                    // Apply changes to nodes directly to get the updated nodes array immediately
+                    const newNodes = ReactFlow.applyNodeChanges(changes, nodes);
+                    setNodes(newNodes); // Update the state with the new node positions
+
+                    // Check if any change is a position change
+                    const hasPositionChanges = changes.some(change =>
+                        change.type === 'position' || change.type === 'dimensions'
+                    );
+
+                    if (hasPositionChanges) {
+
+                        setEdges(prevEdges => {
+                            return prevEdges.map(edge => {
+                                // Find the source and target nodes using the *newNodes* array
+                                const sourceNode = newNodes.find(n => n.id === edge.source);
+                                const targetNode = newNodes.find(n => n.id === edge.target);
+
+                                if (sourceNode && targetNode) {
+                                    const { sourcePosition, targetPosition } = calculateOptimalConnection(sourceNode, targetNode);
+
+                                    return {
+                                        ...edge,
+                                        sourcePosition,
+                                        targetPosition,
+                                        // Adding a changing data property helps React Flow detect changes and re-render the edge
+                                        data: { ...edge.data, updateTime: Date.now() }
+                                    };
+                                }
+                                return edge;
+                            });
+                        });
+                    }
+                },
+                [nodes, setNodes, setEdges, calculateOptimalConnection] // Update dependencies
+            );
 
             return React.createElement(ReactFlow.ReactFlow, {
                 nodes: nodes,
                 edges: edges,
-                onNodesChange: onNodesChange,
+                onNodesChange: handleNodesChange,
                 onEdgesChange: onEdgesChange,
                 onConnect: onConnect,
                 fitView: true,
@@ -605,7 +732,7 @@ class HuEvaFlowEnhancer {
                 connectionMode: ReactFlow.ConnectionMode.Loose,
                 nodeTypes: nodeTypes,
                 defaultEdgeOptions: {
-                    type: 'smoothstep',
+                    type: 'default',
                     style: { strokeWidth: 2, stroke: '#666' },
                     markerEnd: {
                         type: 'arrowclosed',
@@ -626,17 +753,15 @@ class HuEvaFlowEnhancer {
         }
 
         try {
-            // Debug information
-            console.log('Hu: EvaTeam Workflow Enhancer: ReactFlow data:', {
-                nodesCount: workflowData.nodes.length,
-                edgesCount: workflowData.edges.length,
-                firstFewNodes: workflowData.nodes.slice(0, 3),
-                firstFewEdges: workflowData.edges.slice(0, 3)
-            });
-
             // Render the component in the container using createRoot (React 18+)
-            const root = ReactDOM.createRoot(container);
-            root.render(React.createElement(EnhancedWorkflowApp));
+            if (!this.reactRoot || this.reactRoot._internalRoot.containerInfo !== container) {
+                if (this.reactRoot) {
+                    // Unmount previous root if container changed or root exists but is for a different container
+                    this.reactRoot.unmount();
+                }
+                this.reactRoot = ReactDOM.createRoot(container);
+            }
+            this.reactRoot.render(React.createElement(EnhancedWorkflowApp, { workflowData: workflowData, calculateOptimalConnection: this.calculateOptimalConnection }));
             console.log('Hu: EvaTeam Workflow Enhancer: ReactFlow component rendered successfully!');
 
             // Additional debug after render
@@ -658,6 +783,60 @@ class HuEvaFlowEnhancer {
         }
     }
 
+    /**
+     * Function to open the enhanced workflow view (API version).
+     * @param {string} workflowId - The ID of the workflow to display.
+     * @param {HTMLElement} workflowTaskElement - The original DOM element containing the workflow (used for context, not direct manipulation in dev mode).
+     */
+    async openEnhancedWorkflowAPI(workflowId, workflowTaskElement) {
+        console.log('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Starting.');
+
+        if (!workflowId) {
+            console.error('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Workflow ID is not available.');
+            return;
+        }
+
+        // Check if libraries loaded properly before proceeding
+        const isReactLoaded = typeof window.React !== 'undefined';
+        const isReactDOMLoaded = typeof window.ReactDOM !== 'undefined';
+        const isReactFlowLoaded = typeof window.reactflow !== 'undefined' ||
+                                  typeof window.ReactFlow !== 'undefined' ||
+                                  typeof window.REACT_FLOW !== 'undefined';
+
+        if (!isReactLoaded || !isReactDOMLoaded || !isReactFlowLoaded) {
+            console.error('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Required libraries not loaded.');
+            return;
+        }
+
+        // In dev.html, we directly manipulate the tabs.
+        // We ensure the enhanced tab is active and then call initFromAPI.
+        const enhancedTab = document.getElementById('enhanced-tab');
+        const originalTab = document.getElementById('original-tab');
+        const reactFlowContainer = document.getElementById('react-flow-container');
+
+        if (!enhancedTab || !reactFlowContainer) {
+            console.error('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Dev environment missing #enhanced-tab or #react-flow-container.');
+            alert('Dev environment setup is incorrect. Missing enhanced tab or ReactFlow container.');
+            return;
+        }
+
+        // Ensure enhanced tab is visible and original is hidden
+        if (originalTab) {
+            originalTab.style.display = 'none';
+        }
+        enhancedTab.style.display = 'block';
+
+        // Update active class for tab buttons (assuming they exist in dev.html)
+        const enhancedButton = document.querySelector(".tab-button[onclick*='enhanced']");
+        const originalButton = document.querySelector(".tab-button[onclick*='original']");
+        if (enhancedButton) enhancedButton.classList.add('active');
+        if (originalButton) originalButton.classList.remove('active');
+
+
+        // Render the ReactFlow component in the container with API data
+        await this.initFromAPI(workflowId);
+        console.log('Hu: EvaTeam Workflow Enhancer: openEnhancedWorkflowAPI - Completed.');
+    }
     /**
      * Function to open the enhanced workflow view
      */
@@ -796,124 +975,17 @@ class HuEvaFlowEnhancer {
     }
 
     /**
-     * Get optimal connection position for a specific connection based on minimum distance
+     * Helper function to calculate optimal connection positions between two nodes
      */
-    getOptimalConnectionPosition(node, connectedNode, connectionType) {
-        // Node dimensions (approximate, can be adjusted)
-        const nodeWidth = node.width || 120;
-        const nodeHeight = node.height || 60;
+    calculateOptimalConnection = (sourceNode, targetNode) => {
+        // For a strict downward tree-like flow:
+        // Source should always emit from the bottom of the node.
+        const sourcePosition = 'bottom';
+        // Target should always receive at the top of the node.
+        const targetPosition = 'top';
 
-        // Calculate center points of the node
-        const nodeCenterX = node.position.x + nodeWidth / 2;
-        const nodeCenterY = node.position.y + nodeHeight / 2;
-
-        // Connected node center
-        const connectedCenterX = connectedNode.position.x + (connectedNode.width || 120) / 2;
-        const connectedCenterY = connectedNode.position.y + (connectedNode.height || 60) / 2;
-
-        // Calculate distances from each possible connection point to the target center
-        const distances = {
-            left: Math.sqrt(
-                Math.pow(node.position.x - connectedCenterX, 2) +
-                Math.pow(nodeCenterY - connectedCenterY, 2)
-            ),
-            right: Math.sqrt(
-                Math.pow((node.position.x + nodeWidth) - connectedCenterX, 2) +
-                Math.pow(nodeCenterY - connectedCenterY, 2)
-            ),
-            top: Math.sqrt(
-                Math.pow(nodeCenterX - connectedCenterX, 2) +
-                Math.pow(node.position.y - connectedCenterY, 2)
-            ),
-            bottom: Math.sqrt(
-                Math.pow(nodeCenterX - connectedCenterX, 2) +
-                Math.pow((node.position.y + nodeHeight) - connectedCenterY, 2)
-            )
-        };
-
-        // Find the position with minimum distance
-        let optimalPosition = 'right';
-        let minDistance = distances.right;
-
-        Object.keys(distances).forEach(position => {
-            if (distances[position] < minDistance) {
-                minDistance = distances[position];
-                optimalPosition = position;
-            }
-        });
-
-        console.log(`Hu: EvaTeam Workflow Enhancer: getOptimalConnectionPosition - for ${node.id} -> ${connectedNode.id}: ${optimalPosition} (distance: ${minDistance.toFixed(2)})`);
-
-        return optimalPosition;
-    }
-
-    /**
-     * Generate HTML for the enhanced workflow view (for backward compatibility)
-     */
-    generateEnhancedWorkflowHTML(workflowData) {
-        console.log('Hu: EvaTeam Workflow Enhancer: generateEnhancedWorkflowHTML - Called.');
-        return `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Улучшенная схема workflow</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/umd/index.min.js"></script>
-    <style>
-        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
-        #root { width: 100%; height: calc(100vh - 40px); }
-        .header { margin-bottom: 20px; }
-        .header h1 { color: #333; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Улучшенная схема workflow</h1>
-        <p>Интерактивная диаграмма с возможностью перетаскивания и масштабирования</p>
-    </div>
-    <div id="root"></div>
-
-    <script>
-        (function() {
-            const React = window.React;
-            const ReactDOM = window.ReactDOM;
-            // Determine which React Flow object is available
-            const ReactFlow = window.reactflow || window.ReactFlow || window.REACT_FLOW;
-
-            function EnhancedWorkflowApp() {
-                const [nodes, setNodes, onNodesChange] = ReactFlow.useNodesState(${JSON.stringify(workflowData.nodes)});
-                const [edges, setEdges, onEdgesChange] = ReactFlow.useEdgesState(${JSON.stringify(workflowData.edges)});
-
-                const onConnect = React.useCallback(
-                    (params) => setEdges((eds) => ReactFlow.addEdge(params, eds)),
-                    [setEdges]
-                );
-
-                return React.createElement(ReactFlow.ReactFlow, {
-                    nodes: nodes,
-                    edges: edges,
-                    onNodesChange: onNodesChange,
-                    onEdgesChange: onEdgesChange,
-                    onConnect: onConnect,
-                    fitView: true,
-                    attributionPosition: 'bottom-left'
-                },
-                    React.createElement(ReactFlow.Controls, null),
-                    React.createElement(ReactFlow.MiniMap, null),
-                    React.createElement(ReactFlow.Background, {
-                        variant: ReactFlow.BackgroundVariant?.dots || 'dots'
-                    })
-                );
-            }
-
-            const rootElement = document.getElementById('root');
-            const root = ReactDOM.createRoot(rootElement);
-            root.render(React.createElement(EnhancedWorkflowApp));
-        })();
-    <\/script>
-</body>
-</html>`;
+        console.log(`Hu: calculateOptimalConnection: Source: ${sourceNode.id}, Target: ${targetNode.id}, Returning: sourcePosition: '${sourcePosition}', targetPosition: '${targetPosition}'`);
+        return { sourcePosition, targetPosition };
     }
 }
 
