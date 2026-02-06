@@ -300,7 +300,7 @@ class HuEvaFlowEnhancer {
                             backgroundColor: status.color || (isStartOrEndNode ? '#4CAF50' : '#fff'),
                             borderColor: '#ccc',
                             color: isStartOrEndNode ? '#fff' : '#000',
-                            borderRadius: '50%', borderWidth: '1px', borderStyle: 'solid',
+                            borderRadius: (status.name === 'Старт' || status.name === 'Все') ? '50%' : '8px', // Conditional border radius
                             fontWeight: 'normal',
                             textAlign: 'center',
                             display: 'flex',
@@ -320,10 +320,16 @@ class HuEvaFlowEnhancer {
                     data: { label: 'Старт', isStartEndNode: true, shape: 'circle', width: 60, height: 60 },
                     width: 60, height: 60, type: 'startEnd',
                     style: {
-                        backgroundColor: '#4CAF50', borderColor: '#2E7D32', color: 'white',
-                        borderRadius: '50%', borderWidth: '3px', borderStyle: 'solid',
-                        fontWeight: 'bold', textAlign: 'center', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', fontSize: '14px'
+                        backgroundColor: '#4CAF50',
+                        borderColor: '#2E7D32', // Keep borderColor for general use
+                        color: 'white',
+                        borderRadius: '50%', // This is a circular node, so keep 50%
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px'
                     }
                 });
             }
@@ -984,7 +990,6 @@ class HuEvaFlowEnhancer {
         // Target should always receive at the top of the node.
         const targetPosition = 'top';
 
-        console.log(`Hu: calculateOptimalConnection: Source: ${sourceNode.id}, Target: ${targetNode.id}, Returning: sourcePosition: '${sourcePosition}', targetPosition: '${targetPosition}'`);
         return { sourcePosition, targetPosition };
     }
 }
