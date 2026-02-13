@@ -1,0 +1,33 @@
+{
+  "result": {
+    "id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+    "name": "Main Workflow",
+    "description": "Main business process workflow",
+    "scheme_draw_config": {
+      "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e_draw_scheme_item": {
+        "x": 271,
+        "y": 97
+      },
+      "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e_draw_scheme_item": {
+        "x": 350,
+        "y": 254
+      },
+      "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e_draw_scheme_item": {
+        "x": 757,
+        "y": 269
+      },
+      "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e_draw_scheme_item": {
+        "x": 680,
+        "y": 495
+      },
+      "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e_draw_scheme_item": {
+        "x": 850,
+        "y": 605
+      },
+      "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e_draw_scheme_item": {
+        "x": 1020,
+        "y": 715
+      }
+    }
+  }
+}

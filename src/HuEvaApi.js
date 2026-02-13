@@ -4,9 +4,9 @@ export class HuEvaApi {
         this.config = {
             baseUrl: 'https://eva.gid.team/api/',
             mockUrls: {
-                'CmfWorkflow.get': 'http://localhost:3000/makets/api/api__m=CmfWorkflow.get:response.json',
-                'CmfTrans.list': 'http://localhost:3000/makets/api/api__m=CmfTrans.list:response.json',
-                'CmfStatus.list': 'http://localhost:3000/makets/api/api__m=CmfStatus.list:response.json'
+                'CmfWorkflow.get': '../dev/api/api_CmfWorkflow_get_response.json',
+                'CmfTrans.list': '../dev/api/api_CmfTrans_list_response.json',
+                'CmfStatus.list': '../dev/api/api_CmfStatus_list_response.json'
             },
             useMock: typeof config.useMock !== 'undefined' ? config.useMock : false,
             ...config

@@ -1,13 +1,17 @@
-const tampermonkeyHeaderPlugin = () => {
+/**
+ * Vite plugin to add Tampermonkey headers to the output
+ */
+function tampermonkeyHeaders() {
   return {
-    name: 'tampermonkey-header',
+    name: 'tampermonkey-headers',
     generateBundle(options, bundle) {
+      // Process each JS file in the bundle
       for (const fileName in bundle) {
-        if (fileName.endsWith('.js')) {
+        if (fileName.endsWith('.js') && !fileName.includes('style')) {
           const chunk = bundle[fileName];
-          if (chunk.type === 'chunk') {
-            // Add Tampermonkey headers
-            const tampermonkeyHeader = `// ==UserScript==
+          
+          // Tampermonkey headers
+          const tampermonkeyHeader = `// ==UserScript==
 // @name         EvaTeam Workflow Enhancer
 // @namespace    http://tampermonkey.net/
 // @version      0.1
@@ -18,12 +22,15 @@ const tampermonkeyHeaderPlugin = () => {
 // ==/UserScript==
 
 `;
+          
+          // Add the header to the beginning of the code
+          if (chunk.type === 'chunk') {
             chunk.code = tampermonkeyHeader + chunk.code;
           }
         }
       }
     }
   };
-};
+}
 
-module.exports = tampermonkeyHeaderPlugin;
+module.exports = tampermonkeyHeaders;

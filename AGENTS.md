@@ -1,13 +1,13 @@
 # EvaTeam Workflow Enhancer Project Analysis
 
-# Important notes
-- Do conversation in chat in Russian language, all comments and documentation in project should ne in English.
+## Important notes
+- Do conversation in chat in Russian language, all comments and documentation in project should be in English.
 - `make build` should be run **only** for the release, do not call it in normal development mode!
-- Never "embed" external dependencied like JS or CSS into project files (until it was explicitly stated)! Use CDN and loading.
+- Never "embed" external dependencies like JS or CSS into project files (until it was explicitly stated)! Use CDN and loading.
 - Speak in Russian for chats, but all code comments and documentation must be in English!
 - After each change and report to user about success:
     * Check if it works!
-    * For testing use MCP and real brawser!
+    * For testing use MCP and real browser!
     * Check browser console do not have errors!
     * In workflow diagram area present desired structure!
     * Make screenshot and place it into `_screenshots` directory. File name must be like: `<date-time in ISO 8601 format with milliseconds>.png`
@@ -28,14 +28,17 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 - **JavaScript/ES6+**: Programming language
 - **Svelte**: User interface library
 - **SvelteFlow**: Interactive diagrams and graphs library
+- **Vite**: Build tool for development and production
+- **pnpm**: Package manager for faster and more efficient dependency installation
 - **DOM API**: For interaction with existing EvaTeam DOM
 - **localStorage**: For saving user settings
 - **MutationObserver**: For tracking DOM changes
 
 ### Architectural Solutions
 - **Tampermonkey UserScript**: Execution environment with @require support
-- **CDN Dependencies**: all dependencies loaded from public CDN
+- **CDN Dependencies**: Svelte and SvelteFlow loaded via CDN
 - **Modular Structure**: Logic divided into functions
+- **Reactive Programming**: Using Svelte runes for state management
 
 ## Project Structure
 
@@ -44,12 +47,25 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 ├── AGENTS.md                          # Project analysis (this file)
 ├── evateam-workflow-enhance.user.js   # Main UserScript for Tampermonkey
 ├── HuEvaFlowEnhancer.js               # Main handler class
-├── Makefile                           # Make file for automation
+├── dist/                              # Build artifacts directory
+│   └── evateam-workflow-enhance.user.js # Built Tampermonkey script
+├── dev/                               # Development directory
+│   ├── index.html                     # Development page
+│   └── main.js                        # Development entry point
+├── src/                               # Source code directory
+│   ├── HuEvaApi.js                    # API interaction class
+│   ├── HuEvaFlowEnhancer.js           # Main workflow enhancer class
+│   └── main.js                        # Production entry point
+├── plugins/                           # Vite plugins
+│   └── tampermonkey-header-plugin.js  # Plugin to add TM headers
+├── makets/                            # Directory with mockups and tests
+├── tests/                             # Test files (removed)
+├── _screenshots/                      # Screenshots directory
+├── package.json                       # Project configuration
+├── vite.config.js                     # Vite configuration for development
+├── vite.userscript.config.js          # Vite configuration for userscript build
 ├── README.md                          # Project documentation
-└── makets/                            # Directory with mockups and tests
-    ├── dev.html                       # Development page
-    └── maket.as-is.html               # Original workflow data
-├── watch-run.sh                       # Dev server launch script
+└── favicon.ico                        # Project icon
 ```
 
 ### Main Components
@@ -58,62 +74,73 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 - Central class for workflow data processing
 - HTML parsing and node/edge extraction
 - Application state management
-- Must be used in `dev.html` and `evateam-workflow-enhance.user.js` version as core logic implementation.
+- Located in `src/` directory as core logic implementation.
 
-#### 2. **evateam-workflow-enhance.user.js**
+#### 2. **HuEvaApi.js**
+- Class for interacting with EvaTeam API
+- Data fetching for workflows, statuses, and transitions
+- Located in `src/` directory as API layer.
+
+#### 3. **evateam-workflow-enhance.user.js**
 - Main UserScript for Tampermonkey
 - Entry point for end users
 - Dependency loading via @require
 - Application initialization on EvaTeam pages
+- Located in `dist/` directory as build artifact.
 
-#### 3. **makets/dev.html**
+#### 4. **dev/index.html**
 - Development and debugging page
 - Tampermonkey environment emulation
 - Developer tools
 - Functionality testing
 
-##### 3.1. Use foror developers
-1. Open makets/dev.html in browser
+##### 4.1. Use for developers
+1. Open http://localhost:3000 in browser (after `pnpm run dev`)
 2. Check functionality in dev mode
 3. Open developer console (F12)
 4. Check logs: "HuEvaFlowEnhancer: ..."
 
-#### 4. **Makefile**
-- Project build automation via make
-- Embedding HuEvaFlowEnhancer.js and othere resourses into main UserScript
-- Final `evateam-workflow-enhance.user.js` generation
-- Development and build process management
+#### 5. **vite.config.js**
+- Vite configuration for development
+- Sets up dev server on port 3000
+- Includes Svelte plugin with dev: true
+- Allows serving files from parent directories
 
-#### 5. **watch-run.sh**
-- Local development server launch script
-- Automatic pages updates on file changes (no need to reload)
-- Uses browser-sync for hot reload
+#### 6. **vite.userscript.config.js**
+- Vite configuration for Tampermonkey script build
+- Creates IIFE bundle with Tampermonkey headers
+- Includes Svelte plugin with dev: false
+- Uses terser for minification
+
+#### 7. **plugins/tampermonkey-header-plugin.js**
+- Custom Vite plugin to inject Tampermonkey headers
+- Adds required @match, @name, @namespace, etc. headers
+- Ensures proper Tampermonkey script format
 
 ## Development Commands
 
 ### Development Mode
 
-* For the development purpose use makets/dev.html as emulation of userscript action!
-* All asset must be added fom CDN and must not require any build and server!
-* Server run with command: `./watch-run.sh`. Once! Do not restart it on file changes! Result will be in http://localhost:3000/makets/dev.html
-* Server watches changes and automatically perform page reload - no need to refresh page or trigger something on the page.
-
+* For the development purpose use `pnpm run dev` which starts Vite dev server.
+* All assets must be added from CDN and must not require any build and server!
+* Server run with command: `pnpm run dev`. Once! Do not restart it on file changes! Result will be in http://localhost:3000/
+* Server watches changes and automatically performs page reload - no need to refresh page or trigger something on the page.
 
 ```bash
 # Development server launch
-./watch-run.sh
+pnpm run dev
 
 # Server will be available at:
-# http://localhost:3000/makets/dev.html
+# http://localhost:3000/
 ```
 
 ### Project Build
 ```bash
-# UserScript build via Make
-make build
+# UserScript build via Vite
+pnpm run build-userscript
 ```
 
-Result: evateam-workflow-enhance.user.js (ready for installation)
+Result: dist/evateam-workflow-enhance.user.js (ready for installation)
 
 ## Development Rules
 
@@ -121,4 +148,4 @@ Result: evateam-workflow-enhance.user.js (ready for installation)
 - **Comments**: Detailed logs with "HuEvaFlowEnhancer:" prefix. All comments in code and documentation in English! Russian possible only in interface.
 - **Naming**: camelCase for variables and functions
 - **Structure**: OOP approach with modular organization
-- **Erros**: exceptions for errors must be checked and detailedreported
+- **Errors**: exceptions for errors must be checked and detailed reported

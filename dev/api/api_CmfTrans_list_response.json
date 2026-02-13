@@ -1,0 +1,100 @@
+{
+  "result": [
+    {
+      "id": "CmfTrans:trans1",
+      "name": "Взято в работу",
+      "status_from": [
+        {
+          "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e"
+      }
+    },
+    {
+      "id": "CmfTrans:trans2",
+      "name": "Задача не актуальна",
+      "status_from": [
+        {
+          "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e"
+      }
+    },
+    {
+      "id": "CmfTrans:trans3",
+      "name": "Задача готова",
+      "status_from": [
+        {
+          "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e"
+      }
+    },
+    {
+      "id": "CmfTrans:trans4",
+      "name": "Нужны доработки",
+      "status_from": [
+        {
+          "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
+      }
+    },
+    {
+      "id": "CmfTrans:trans5",
+      "name": "Возврат в работу",
+      "status_from": [
+        {
+          "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e"
+      }
+    },
+    {
+      "id": "CmfTrans:trans6",
+      "name": "Проверяется",
+      "status_from": [
+        {
+          "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e"
+      }
+    },
+    {
+      "id": "CmfTrans:trans7",
+      "name": "Возврат в доработку",
+      "status_from": [
+        {
+          "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
+      }
+    },
+    {
+      "id": "CmfTrans:trans8",
+      "name": "Задача принята и готова",
+      "status_from": [
+        {
+          "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e"
+        }
+      ],
+      "status_to": {
+        "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e"
+      }
+    }
+  ]
+}

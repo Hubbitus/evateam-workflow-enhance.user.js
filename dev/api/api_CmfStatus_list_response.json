@@ -1,0 +1,60 @@
+{
+  "result": [
+    {
+      "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e",
+      "name": "Открыто",
+      "code": "open",
+      "status_type": "start",
+      "color": "#FF6B6B",
+      "text": "Задача открыта"
+    },
+    {
+      "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
+      "name": "В работе",
+      "code": "in_progress",
+      "status_type": "process",
+      "color": "#4ECDC4",
+      "text": "Задача в работе"
+    },
+    {
+      "id": "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e",
+      "name": "Отклонено",
+      "code": "rejected",
+      "status_type": "end",
+      "color": "#FF6B6B",
+      "text": "Задача отклонена"
+    },
+    {
+      "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e",
+      "name": "Закрыто",
+      "code": "closed",
+      "status_type": "end",
+      "color": "#95E1D3",
+      "text": "Задача закрыта"
+    },
+    {
+      "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e",
+      "name": "Требует проверки",
+      "code": "needs_review",
+      "status_type": "process",
+      "color": "#FDFD96",
+      "text": "Задача требует проверки"
+    },
+    {
+      "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e",
+      "name": "На проверке",
+      "code": "under_review",
+      "status_type": "process",
+      "color": "#DDA0DD",
+      "text": "Задача на проверке"
+    },
+    {
+      "id": "CmfStatus:34ad943e-e23f-11f0-ab06-029a32f97d49",
+      "name": "Внешний проект",
+      "code": "external_project",
+      "status_type": "process",
+      "color": "#87CEEB",
+      "text": "Задача во внешнем проекте"
+    }
+  ]
+}

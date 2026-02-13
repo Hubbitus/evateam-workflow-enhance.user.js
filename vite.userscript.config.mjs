@@ -1,26 +1,26 @@
-const { defineConfig } = require('vite');
-const { svelte } = require('@sveltejs/vite-plugin-svelte');
-const tampermonkeyHeaderPlugin = require('./plugins/tampermonkey-header-plugin.js');
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import tampermonkeyHeaders from './plugins/tampermonkey-header-plugin.js';
 
 // https://vitejs.dev/config/
-module.exports = defineConfig({
+export default defineConfig({
   plugins: [
     svelte({
       compilerOptions: {
         // Disable run-time checks in production
         dev: false,
-        // Generate a CSS file during component compilation
-        css: false
+        // Use 'external' instead of false for css option in Svelte 5
+        css: 'external'
       }
     }),
-    tampermonkeyHeaderPlugin()
+    tampermonkeyHeaders()
   ],
   build: {
     lib: {
       entry: './src/main.js',
       name: 'HuEvaFlowEnhancer',
       formats: ['iife'], // Immediately Invoked Function Expression for Tampermonkey
-      fileName: 'evateam-workflow-enhance.user.js'
+      fileName: (format) => `evateam-workflow-enhance.user.js`
     },
     rollupOptions: {
       external: [],
