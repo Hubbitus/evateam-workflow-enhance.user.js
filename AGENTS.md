@@ -1,8 +1,20 @@
 # EvaTeam Workflow Enhancer Project Analysis
 
+# Important notes
+- Do conversation in chat in Russian language, all comments and documentation in project should ne in English.
+- `make build` should be run **only** for the release, do not call it in normal development mode!
+- Never "embed" external dependencied like JS or CSS into project files (until it was explicitly stated)! Use CDN and loading.
+- Speak in Russian for chats, but all code comments and documentation must be in English!
+- After each change and report to user about success:
+    * Check if it works!
+    * For testing use MCP and real brawser!
+    * Check browser console do not have errors!
+    * In workflow diagram area present desired structure!
+    * Make screenshot and place it into `_screenshots` directory. File name must be like: `<date-time in ISO 8601 format with milliseconds>.png`
+
 ## Project Overview
 
-The project is a **UserScript for Tampermonkey** designed to improve the visualization of workflow diagrams in the EvaTeam project management system. The main goal is to replace the standard business process display with a more modern and interactive solution using ReactFlow.
+The project is a **UserScript for Tampermonkey** designed to improve the visualization of workflow diagrams in the EvaTeam project management system. The main goal is to replace the standard business process display with a more modern and interactive solution using SvelteFlow.
 
 ### Purpose
 - **UI Modernization**: Transform static workflow diagrams into interactive ones
@@ -22,9 +34,8 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 
 ### Architectural Solutions
 - **Tampermonkey UserScript**: Execution environment with @require support
-- **CDN Dependencies**: React and ReactFlow loaded from unpkg.com
+- **CDN Dependencies**: all dependencies loaded from public CDN
 - **Modular Structure**: Logic divided into functions
-- **Reactive Programming**: Using React hooks for state management
 
 ## Project Structure
 
@@ -111,15 +122,3 @@ Result: evateam-workflow-enhance.user.js (ready for installation)
 - **Naming**: camelCase for variables and functions
 - **Structure**: OOP approach with modular organization
 - **Erros**: exceptions for errors must be checked and detailedreported
-
-# Important notes
-- Do conversation in chat in Russian language, all comments and documentation in project should ne in English.
-- `make build` should be run **only** for the release, do not call it in normal development mode!
-- Never "embed" external dependencied like JS or CSS into project files (until it was explicitly stated)! Use CDN and loading.
-- Speak in Russian for chats, but all code comments and documentation must be in English!
-- After each change and report to user about success:
-    * Check if it works!
-    * For testing use MCP and real brawser!
-    * Check browser console do not have errors!
-    * In workflow diagram area present desired structure!
-    * Make screenshot and place it into `_screenshots` directory. File name must be like: `<date-time in ISO 8601 format with milliseconds>.png`
