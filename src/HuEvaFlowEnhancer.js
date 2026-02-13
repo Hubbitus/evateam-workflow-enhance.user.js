@@ -1,7 +1,12 @@
-// src/HuEvaFlowEnhancer.js
+/**
+ * Class for enhancing EvaTeam workflow visualization using SvelteFlow
+ */
 import { HuEvaApi } from './HuEvaApi.js';
 
 export class HuEvaFlowEnhancer {
+    /**
+     * Constructor for HuEvaFlowEnhancer
+     */
     constructor() {
         this.api = new HuEvaApi({
             useMock: typeof window !== 'undefined' && window.location.hostname.includes('localhost')
@@ -14,6 +19,9 @@ export class HuEvaFlowEnhancer {
         console.log('HuEvaFlowEnhancer: Initialized');
     }
 
+    /**
+     * Initialize the enhancer
+     */
     initialize() {
         console.log('HuEvaFlowEnhancer: Starting initialization');
 
@@ -27,6 +35,10 @@ export class HuEvaFlowEnhancer {
         });
     }
 
+    /**
+     * Wait for the workflow element to be available in the DOM
+     * @returns {Promise<HTMLElement>} Promise that resolves with the workflow element
+     */
     waitForWorkflowElement() {
         return new Promise((resolve, reject) => {
             // Check if we're in dev mode and have a stored workflow element
@@ -76,6 +88,9 @@ export class HuEvaFlowEnhancer {
         });
     }
 
+    /**
+     * Set up the container for our enhanced workflow
+     */
     setupContainer() {
         this.container = document.createElement('div');
         this.container.id = 'hu-evateam-workflow-enhancer';
@@ -92,6 +107,9 @@ export class HuEvaFlowEnhancer {
         console.log('HuEvaFlowEnhancer: Container set up');
     }
 
+    /**
+     * Create the tabs interface to switch between views
+     */
     createTabsInterface() {
         const tabContainer = document.createElement('div');
         tabContainer.className = 'workflow-tabs-container';
@@ -132,7 +150,15 @@ export class HuEvaFlowEnhancer {
         const originalViewContainer = document.createElement('div');
         originalViewContainer.id = 'original-workflow-view';
         originalViewContainer.style.display = 'none';
-        originalViewContainer.appendChild(this.originalWorkflowElement.cloneNode(true));
+        originalViewContainer.style.width = '100%';
+        originalViewContainer.style.height = 'calc(100% - 50px)';
+        originalViewContainer.style.overflow = 'auto';
+        // Clone the original workflow element with all its styles and structure
+        const clonedOriginal = this.originalWorkflowElement.cloneNode(true);
+        // Ensure the cloned element maintains its original styling
+        clonedOriginal.style.width = '100%';
+        clonedOriginal.style.height = '100%';
+        originalViewContainer.appendChild(clonedOriginal);
 
         const enhancedViewContainer = document.createElement('div');
         enhancedViewContainer.id = 'enhanced-workflow-view';
@@ -148,6 +174,10 @@ export class HuEvaFlowEnhancer {
         console.log('HuEvaFlowEnhancer: Tabs interface created');
     }
 
+    /**
+     * Switch between original and enhanced views
+     * @param {'original'|'enhanced'} view - View to switch to
+     */
     switchView(view) {
         const originalView = document.getElementById('original-workflow-view');
         const enhancedView = document.getElementById('enhanced-workflow-view');
@@ -180,6 +210,9 @@ export class HuEvaFlowEnhancer {
         console.log(`HuEvaFlowEnhancer: Switched to ${view} view`);
     }
 
+    /**
+     * Load and display the workflow data
+     */
     async loadAndDisplayWorkflow() {
         try {
             console.log('HuEvaFlowEnhancer: Loading workflow data...');
@@ -216,6 +249,10 @@ export class HuEvaFlowEnhancer {
         }
     }
 
+    /**
+     * Extract workflow ID from the page
+     * @returns {string|null} Workflow ID or null if not found
+     */
     extractWorkflowId() {
         const possibleElements = [
             document.querySelector('[data-workflow-id]'),
@@ -266,6 +303,10 @@ export class HuEvaFlowEnhancer {
         return null;
     }
 
+    /**
+     * Render the enhanced workflow using SvelteFlow
+     * @param {HTMLElement} container - Container element to render the workflow in
+     */
     renderEnhancedWorkflow(container) {
         // Check if SvelteFlow is available
         if (typeof window.SvelteFlow === 'undefined') {
@@ -320,6 +361,10 @@ export class HuEvaFlowEnhancer {
         }
     }
 
+    /**
+     * Prepare data for SvelteFlow (nodes and edges)
+     * @returns {{nodes: Array, edges: Array}} Object containing nodes and edges arrays
+     */
     prepareSvelteFlowData() {
         if (!this.workflowData) {
             throw new Error('Workflow data not loaded');
@@ -428,6 +473,12 @@ export class HuEvaFlowEnhancer {
         return { nodes, edges };
     }
 
+    /**
+     * Helper function to convert hex color to RGBA
+     * @param {string} hex - Hex color string
+     * @param {number} alpha - Alpha value (0-1)
+     * @returns {string|null} RGBA color string or null if invalid
+     */
     hexToRgbA(hex, alpha = 1) {
         if (!hex) return null;
 
@@ -442,6 +493,12 @@ export class HuEvaFlowEnhancer {
             null;
     }
 
+    /**
+     * Helper function to adjust color lightness
+     * @param {string} hex - Hex color string
+     * @param {number} percent - Percentage to adjust (-100 to 100)
+     * @returns {string|null} Adjusted hex color string or null if invalid
+     */
     adjustColorLightness(hex, percent) {
         if (!hex) return null;
 

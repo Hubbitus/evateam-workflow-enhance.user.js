@@ -1,5 +1,15 @@
-// src/HuEvaApi.js
+/**
+ * Class for interacting with EvaTeam API
+ * Provides methods to get workflow data, statuses, and transitions
+ */
 export class HuEvaApi {
+    /**
+     * Constructor for HuEvaApi
+     * @param {Object} config - Configuration object
+     * @param {string} config.baseUrl - Base URL for API calls
+     * @param {Object} config.mockUrls - Mock URLs for development
+     * @param {boolean} config.useMock - Whether to use mock data
+     */
     constructor(config = {}) {
         this.config = {
             baseUrl: 'https://eva.gid.team/api/',
@@ -13,6 +23,12 @@ export class HuEvaApi {
         };
     }
 
+    /**
+     * Makes an API call to EvaTeam
+     * @param {string} method - API method to call (e.g., 'CmfWorkflow.get')
+     * @param {Object} params - Parameters for the API call
+     * @returns {Promise<Object>} Response from the API
+     */
     async call(method, params = {}) {
         try {
             let url;
@@ -53,6 +69,11 @@ export class HuEvaApi {
         }
     }
 
+    /**
+     * Gets workflow data
+     * @param {string} workflowId - ID of the workflow to retrieve
+     * @returns {Promise<Object>} Workflow data
+     */
     async getWorkflow(workflowId) {
         const params = {};
         if (workflowId) {
@@ -63,6 +84,11 @@ export class HuEvaApi {
         return response.result;
     }
 
+    /**
+     * Gets transitions for a workflow
+     * @param {string} workflowId - ID of the workflow
+     * @returns {Promise<Array>} Array of transitions
+     */
     async getTransitions(workflowId) {
         const params = {};
         if (workflowId) {
@@ -73,6 +99,11 @@ export class HuEvaApi {
         return response.result;
     }
 
+    /**
+     * Gets statuses for a workflow
+     * @param {string} workflowId - ID of the workflow
+     * @returns {Promise<Array>} Array of statuses
+     */
     async getStatuses(workflowId) {
         const params = {};
         if (workflowId) {
@@ -83,6 +114,11 @@ export class HuEvaApi {
         return response.result;
     }
 
+    /**
+     * Gets complete workflow data (workflow, statuses, and transitions)
+     * @param {string} workflowId - ID of the workflow
+     * @returns {Promise<Object>} Complete workflow data
+     */
     async getCompleteWorkflowData(workflowId) {
         try {
             console.log(`HuEvaFlowEnhancer: Getting complete workflow data for workflow ID: ${workflowId}`);
