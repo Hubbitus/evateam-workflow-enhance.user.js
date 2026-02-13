@@ -113,6 +113,7 @@ Result: evateam-workflow-enhance.user.js (ready for installation)
 - **Erros**: exceptions for errors must be checked and detailedreported
 
 # Important notes
+- Do conversation in chat in Russian language, all comments and documentation in project should ne in English.
 - `make build` should be run **only** for the release, do not call it in normal development mode!
 - Never "embed" external dependencied like JS or CSS into project files (until it was explicitly stated)! Use CDN and loading.
 - Speak in Russian for chats, but all code comments and documentation must be in English!
