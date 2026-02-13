@@ -98,33 +98,34 @@ export class HuEvaFlowEnhancer {
         tabContainer.style.display = 'flex';
         tabContainer.style.marginBottom = '10px';
 
-        const originalTab = document.createElement('button');
-        originalTab.id = 'original-workflow-tab';
-        originalTab.textContent = 'Исходный workflow';
-        originalTab.style.flex = '1';
-        originalTab.style.padding = '10px';
-        originalTab.style.border = '1px solid #ccc';
-        originalTab.style.borderRadius = '4px 0 0 4px';
-        originalTab.style.cursor = 'pointer';
-        originalTab.addEventListener('click', () => this.switchView('original'));
-
         const enhancedTab = document.createElement('button');
         enhancedTab.id = 'enhanced-workflow-tab';
         enhancedTab.textContent = 'Улучшенная схема';
         enhancedTab.style.flex = '1';
         enhancedTab.style.padding = '10px';
         enhancedTab.style.border = '1px solid #ccc';
-        enhancedTab.style.borderLeft = 'none';
-        enhancedTab.style.borderRadius = '0 4px 4px 0';
+        enhancedTab.style.borderRadius = '4px 0 0 4px';
         enhancedTab.style.cursor = 'pointer';
+        enhancedTab.style.backgroundColor = 'rgb(154 231 181)'; // Active tab background
+        enhancedTab.style.fontWeight = 'bold'; // Make active tab visually distinct
         enhancedTab.addEventListener('click', () => this.switchView('enhanced'));
 
-        tabContainer.appendChild(originalTab);
-        tabContainer.appendChild(enhancedTab);
+        const originalTab = document.createElement('button');
+        originalTab.id = 'original-workflow-tab';
+        originalTab.textContent = 'Исходный workflow';
+        originalTab.style.flex = '1';
+        originalTab.style.padding = '10px';
+        originalTab.style.border = '1px solid #ccc';
+        originalTab.style.borderLeft = 'none';
+        originalTab.style.borderRadius = '0 4px 4px 0';
+        originalTab.style.cursor = 'pointer';
+        originalTab.style.backgroundColor = '#f0f0f0'; // Inactive tab background
+        originalTab.style.fontWeight = 'normal'; // Normal weight for inactive tab
+        originalTab.addEventListener('click', () => this.switchView('original'));
 
-        // Set enhanced tab as active by default
-        enhancedTab.style.backgroundColor = '#e0e0e0';
-        originalTab.style.backgroundColor = '';
+        // Add tabs to container (enhanced first, original second)
+        tabContainer.appendChild(enhancedTab);
+        tabContainer.appendChild(originalTab);
 
         this.container.appendChild(tabContainer);
 
@@ -156,8 +157,10 @@ export class HuEvaFlowEnhancer {
         if (view === 'original') {
             originalView.style.display = 'block';
             enhancedView.style.display = 'none';
-            originalTab.style.backgroundColor = '#e0e0e0';
-            enhancedTab.style.backgroundColor = '';
+            originalTab.style.backgroundColor = '#e0e0e0'; // Active tab background
+            originalTab.style.fontWeight = 'bold'; // Make active tab visually distinct
+            enhancedTab.style.backgroundColor = '#f0f0f0'; // Inactive tab background
+            enhancedTab.style.fontWeight = 'normal'; // Normal weight for inactive tab
             this.currentView = 'original';
         } else if (view === 'enhanced') {
             originalView.style.display = 'none';
@@ -167,8 +170,10 @@ export class HuEvaFlowEnhancer {
                 this.renderEnhancedWorkflow(enhancedView);
             }
 
-            originalTab.style.backgroundColor = '';
-            enhancedTab.style.backgroundColor = '#e0e0e0';
+            originalTab.style.backgroundColor = '#f0f0f0'; // Inactive tab background
+            originalTab.style.fontWeight = 'normal'; // Normal weight for inactive tab
+            enhancedTab.style.backgroundColor = '#e0e0e0'; // Active tab background
+            enhancedTab.style.fontWeight = 'bold'; // Make active tab visually distinct
             this.currentView = 'enhanced';
         }
 
