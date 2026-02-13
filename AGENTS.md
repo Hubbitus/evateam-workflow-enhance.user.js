@@ -14,8 +14,8 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 
 ### Core Technologies
 - **JavaScript/ES6+**: Programming language
-- **React 18**: User interface library
-- **ReactFlow**: Interactive diagrams and graphs library
+- **Svelte**: User interface library
+- **SvelteFlow**: Interactive diagrams and graphs library
 - **DOM API**: For interaction with existing EvaTeam DOM
 - **localStorage**: For saving user settings
 - **MutationObserver**: For tracking DOM changes
@@ -29,16 +29,15 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 ## Project Structure
 
 ```
-├── .qwen/                              # Qwen AI internal files
-├── AGENTS.md                           # Project analysis (this file)
+├── .qwen/                             # Qwen AI internal files
+├── AGENTS.md                          # Project analysis (this file)
 ├── evateam-workflow-enhance.user.js   # Main UserScript for Tampermonkey
 ├── HuEvaFlowEnhancer.js               # Main handler class
-├── KODA.md                            # Symlink to AGENTS.md
 ├── Makefile                           # Make file for automation
 ├── README.md                          # Project documentation
 └── makets/                            # Directory with mockups and tests
     ├── dev.html                       # Development page
-    └── maket.as-is.html              # Original workflow data
+    └── maket.as-is.html               # Original workflow data
 ├── watch-run.sh                       # Dev server launch script
 ```
 
@@ -47,8 +46,8 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 #### 1. **HuEvaFlowEnhancer.js**
 - Central class for workflow data processing
 - HTML parsing and node/edge extraction
-- ReactFlow integration
 - Application state management
+- Must be used in `dev.html` and `evateam-workflow-enhance.user.js` version as core logic implementation.
 
 #### 2. **evateam-workflow-enhance.user.js**
 - Main UserScript for Tampermonkey
@@ -62,20 +61,33 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 - Developer tools
 - Functionality testing
 
+##### 3.1. Use foror developers
+1. Open makets/dev.html in browser
+2. Check functionality in dev mode
+3. Open developer console (F12)
+4. Check logs: "HuEvaFlowEnhancer: ..."
+
 #### 4. **Makefile**
 - Project build automation via make
-- Embedding HuEvaFlowEnhancer.js into main UserScript
-- Final evateam-workflow-enhance.user.js generation
+- Embedding HuEvaFlowEnhancer.js and othere resourses into main UserScript
+- Final `evateam-workflow-enhance.user.js` generation
 - Development and build process management
 
 #### 5. **watch-run.sh**
 - Local development server launch script
-- Automatic updates on file changes
+- Automatic pages updates on file changes (no need to reload)
 - Uses browser-sync for hot reload
 
 ## Development Commands
 
 ### Development Mode
+
+* For the development purpose use makets/dev.html as emulation of userscript action!
+* All asset must be added fom CDN and must not require any build and server!
+* Server run with command: `./watch-run.sh`. Once! Do not restart it on file changes! Result will be in http://localhost:3000/makets/dev.html
+* Server watches changes and automatically perform page reload - no need to refresh page or trigger something on the page.
+
+
 ```bash
 # Development server launch
 ./watch-run.sh
@@ -88,127 +100,25 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 ```bash
 # UserScript build via Make
 make build
-
-# Result: evateam-workflow-enhance.user.js (ready for installation)
 ```
 
-### Installation and Testing
-
-#### For Developers
-```bash
-# 1. Project build
-make build
-
-# 2. Open makets/dev.html in browser
-# 3. Check functionality in dev mode
-# 4. Open developer console (F12)
-# 5. Check logs: "Hu: EvaTeam Workflow Enhancer:"
-```
-
-#### For Users
-```bash
-# Installation in Tampermonkey
-# 1. Open Tampermonkey Dashboard
-# 2. Create new script
-# 3. Copy contents of evateam-workflow-enhance.user.js
-# 4. Save and activate
-
-# Testing on EvaTeam
-# 1. Open task page in EvaTeam
-# 2. URL: https://eva.gid.team/project/Task/*
-# 3. Check for "Workflow" button presence
-# 4. Ensure correct tab switching operation
-```
-
-### Debugging and Diagnostics
-```bash
-# JavaScript syntax check
-node -c HuEvaFlowEnhancer.js
-node -c evateam-workflow-enhance.user.js
-
-# Logging in browser console
-console.log('Hu: EvaTeam Workflow Enhancer: ...');
-// Library loading check
-// DOM changes monitoring via MutationObserver
-
-# Debugging in dev.html
-# - Open "Debug Console" tab
-# - Use buttons: Reset Demo, Clear Console, Show Info
-# - Copy logs to clipboard
-```
-
-### Make Automation
-```bash
-# Main commands:
-make build        # Production UserScript build
-make dev          # Development HTTP server on port 3002
-make clean        # Temporary files cleanup (if any)
-make install      # Dependencies installation (if required)
-
-# Additional commands:
-make help         # Show help on commands
-```
+Result: evateam-workflow-enhance.user.js (ready for installation)
 
 ## Development Rules
 
 ### Coding Style
-- **Comments**: Detailed logs with "Hu: EvaTeam Workflow Enhancer:" prefix. All comments in code and documentation in English! Russian possible only in interface.
+- **Comments**: Detailed logs with "HuEvaFlowEnhancer:" prefix. All comments in code and documentation in English! Russian possible only in interface.
 - **Naming**: camelCase for variables and functions
 - **Structure**: OOP approach with modular organization
 - **Erros**: exceptions for errors must be checked and detailedreported
 
-## Code Analysis
-
-### Script Architecture
-
-#### 1. Initialization and dependency loading
-```javascript
-// Wait for React and ReactFlow libraries to load
-function waitForLibraries(callback, retries = 50, delay = 200)
-```
-
-#### 2. Original data parsing
-```javascript
-// Extract nodes and connections from EvaTeam HTML
-function parseOriginalWorkflow(htmlContent)
-```
-
-#### 3. React component
-```javascript
-function WorkflowEnhancerApp() {
-    // Node and edge state management
-    // Tab switching
-    // ReactFlow integration
-}
-```
-
-#### 4. Application initialization
-```javascript
-// Target DOM element search
-// React application rendering
-// MutationObserver usage
-```
-
-### Key Implementation Features
-
-#### Workflow parsing
-- Extracts nodes from HTML elements with IDs starting with `CmfStatus:`
-- Determines connections via overlay elements with `jtk-overlay-id` attribute
-- Preserves styles and positioning from original HTML
-
-#### State management
-- Uses React hooks: `useNodesState`, `useEdgesState`
-- Supports interactive editing via ReactFlow
-- Saves changes to localStorage (TODO)
-
-#### Error handling
-- Graceful degradation when libraries are missing
-- Target DOM element validation
-- Fallback to original display
-
 # Important notes
 - `make build` should be run **only** for the release, do not call it in normal development mode!
 - Never "embed" external dependencied like JS or CSS into project files (until it was explicitly stated)! Use CDN and loading.
-- When doung screenshot (e.g. over MCP), place it into _screenshots directory. File name musb be started with date-time in iso-8601 format with millisecond precision.
-- For testing made changes use MCP and real brawser!
 - Speak in Russian for chats, but all code comments and documentation must be in English!
+- After each change and report to user about success:
+    * Check if it works!
+    * For testing use MCP and real brawser!
+    * Check browser console do not have errors!
+    * In workflow diagram area present desired structure!
+    * Make screenshot and place it into `_screenshots` directory. File name must be like: `<date-time in ISO 8601 format with milliseconds>.png`
