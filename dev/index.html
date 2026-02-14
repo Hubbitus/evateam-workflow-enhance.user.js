@@ -62,25 +62,19 @@
     <!-- Original copy/paste workflow example -->
     <div class="cdk-global-overlay-wrapper" dir="ltr" style="justify-content: center; align-items: center;">
     </div>
+
     <script>
         // Загрузка workflow. Для дев грузим из файла makets/maket.as-is.html в блок <div class="cdk-global-overlay-wrapper">. Грузим как есть, со стилями.
         fetch('../makets/maket.as-is.html')
             .then(response => response.text())
             .then(html => {
-                // Insert the workflow HTML into the target container
-                document.querySelector('.cdk-global-overlay-wrapper').innerHTML = html;
+                document.write(html);
             })
             .catch(error => {
                 console.error('Error loading workflow HTML:', error);
             });
     </script>
 
-    <h1>EvaTeam Workflow Enhancer - Development Mode</h1>
-    <p>This page emulates the workflow enhancement functionality. The original workflow HTML is shown below:</p>
-
-    <div id="workflow-container">
-        <!-- Enhanced workflow will be inserted here by the enhancer -->
-    </div>
     <!-- Load the development application -->
     <script type="module" src="./main.js"></script>
 </body>
