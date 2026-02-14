@@ -153,11 +153,46 @@ export class HuEvaFlowEnhancer {
         originalViewContainer.style.width = '100%';
         originalViewContainer.style.height = 'calc(100% - 50px)';
         originalViewContainer.style.overflow = 'auto';
-        // Clone the original workflow element with all its styles and structure
+        
+        // Clone the original workflow element with all its computed styles
         const clonedOriginal = this.originalWorkflowElement.cloneNode(true);
-        // Ensure the cloned element maintains its original styling
-        clonedOriginal.style.width = '100%';
-        clonedOriginal.style.height = '100%';
+        
+        // Copy all computed styles from the original element to preserve appearance
+        const copyStyles = (originalElement, clonedElement) => {
+            // Copy inline styles
+            clonedElement.setAttribute('style', originalElement.getAttribute('style') || '');
+            
+            // Copy CSS classes
+            clonedElement.className = originalElement.className;
+            
+            // For all child elements, copy their styles recursively
+            const originalChildren = originalElement.querySelectorAll('*');
+            const clonedChildren = clonedElement.querySelectorAll('*');
+            
+            for (let i = 0; i < originalChildren.length; i++) {
+                const originalChild = originalChildren[i];
+                const clonedChild = clonedChildren[i];
+                
+                if (clonedChild) {
+                    // Copy inline styles
+                    clonedChild.setAttribute('style', originalChild.getAttribute('style') || '');
+                    
+                    // Copy CSS classes
+                    clonedChild.className = originalChild.className;
+                    
+                    // Copy other attributes that might affect styling
+                    for (let attr of originalChild.attributes) {
+                        if (attr.name.startsWith('class') || attr.name.startsWith('style') || 
+                            attr.name.startsWith('id') || attr.name.startsWith('data-')) {
+                            clonedChild.setAttribute(attr.name, attr.value);
+                        }
+                    }
+                }
+            }
+        };
+        
+        copyStyles(this.originalWorkflowElement, clonedOriginal);
+        
         originalViewContainer.appendChild(clonedOriginal);
 
         const enhancedViewContainer = document.createElement('div');

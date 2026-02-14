@@ -1,21 +1,35 @@
-const { defineConfig } = require('vite');
-const { svelte } = require('@sveltejs/vite-plugin-svelte');
+/**
+ * Основной конфигурационный файл для режима разработки Vite
+ * 
+ * Этот файл настраивает сервер разработки для работы с проектом.
+ * Он использует директорию 'dev' как корневую для разработки,
+ * что позволяет изолировать разработку от остальной части проекта.
+ * 
+ * Основные особенности:
+ * - Запускает сервер на порту 3003
+ * - Включает проверки времени выполнения для отладки
+ * - Компилирует файлы в директорию ../dist
+ */
+
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 // https://vitejs.dev/config/
-module.exports = defineConfig({
+export default defineConfig({
   plugins: [
     svelte({
       compilerOptions: {
         // Enable run-time checks in development
         dev: true,
-        // Generate a CSS file during component compilation
+        // Don't generate a separate CSS file during component compilation
         css: false
       }
     })
   ],
   root: 'dev', // Serve from the dev directory for development
   server: {
-    port: 3000,
+    port: 3003,
+    host: '0.0.0.0',
     open: true,
     fs: {
       // Allow serving files from one level up to the project root
@@ -27,7 +41,6 @@ module.exports = defineConfig({
   build: {
     outDir: '../dist',
     rollupOptions: {
-      // Externalize SvelteFlow for Tampermonkey usage
       external: [],
       output: {
         globals: {}

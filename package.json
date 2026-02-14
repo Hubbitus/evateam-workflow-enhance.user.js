@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "description": "Replaces the built-in process view in EvaTeam with an advanced visualization using SvelteFlow",
   "scripts": {
-    "dev": "vite serve dev",
+    "dev": "vite",
     "build": "vite build",
-    "build-userscript": "vite build --config vite.userscript.config.mjs",
+    "build-userscript": "vite build --config vite.build.config.mjs",
     "preview": "vite preview",
     "clean": "rm -rf dist/*",
     "postbuild-userscript": "mkdir -p dist && echo 'Build completed to dist/ directory'"
@@ -27,8 +27,8 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0-next.6",
-    "vite": "^5.0.0",
-    "terser": "^5.46.0"
+    "terser": "^5.46.0",
+    "vite": "^5.0.0"
   },
   "pnpm": {
     "overrides": {

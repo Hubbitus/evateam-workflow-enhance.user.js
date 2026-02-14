@@ -62,8 +62,9 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 ├── tests/                             # Test files (removed)
 ├── _screenshots/                      # Screenshots directory
 ├── package.json                       # Project configuration
-├── vite.config.js                     # Vite configuration for development
-├── vite.userscript.config.js          # Vite configuration for userscript build
+├── vite.config.js                     # Configuration for development mode, serves from 'dev' directory
+├── vite.test.config.mjs               # Configuration for testing, serves from project root
+├── vite.build.config.mjs              # Vite configuration for userscript build
 ├── README.md                          # Project documentation
 └── favicon.ico                        # Project icon
 ```
@@ -101,18 +102,26 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 4. Check logs: "HuEvaFlowEnhancer: ..."
 
 #### 5. **vite.config.js**
-- Vite configuration for development
-- Sets up dev server on port 3000
-- Includes Svelte plugin with dev: true
-- Allows serving files from parent directories
+- Configuration for development mode
+- Uses 'dev' directory as root for development
+- Runs dev server on port 3003
+- Compiles files to ../dist directory
+- Allows isolated development environment
 
-#### 6. **vite.userscript.config.js**
+#### 7. **vite.test.config.mjs**
+- Configuration for testing
+- Serves files from project root for testing purposes
+- Runs test server on port 3004
+- Uses same output directory (./dist) as main build
+- Enables testing of the final bundle in an isolated environment
+
+#### 8. **vite.build.config.mjs**
 - Vite configuration for Tampermonkey script build
 - Creates IIFE bundle with Tampermonkey headers
 - Includes Svelte plugin with dev: false
 - Uses terser for minification
 
-#### 7. **plugins/tampermonkey-header-plugin.js**
+#### 9. **plugins/tampermonkey-header-plugin.js**
 - Custom Vite plugin to inject Tampermonkey headers
 - Adds required @match, @name, @namespace, etc. headers
 - Ensures proper Tampermonkey script format
