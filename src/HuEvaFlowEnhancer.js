@@ -2,8 +2,9 @@
  * Class for enhancing EvaTeam workflow visualization using SvelteFlow
  */
 import { HuEvaApi } from './HuEvaApi.js';
-// Import SvelteFlow component - will be bundled by Vite
-import { SvelteFlow as SvelteFlowComponent } from '@xyflow/svelte';
+import { SvelteFlow } from '@xyflow/svelte';
+import { mount } from 'svelte';
+import '@xyflow/svelte/dist/style.css';
 
 export class HuEvaFlowEnhancer {
     /**
@@ -176,65 +177,6 @@ export class HuEvaFlowEnhancer {
         console.log('HuEvaFlowEnhancer: Container set up');
     }
 
-        /**
-     * Switch between original and enhanced views
-     * @param {'original'|'enhanced'} view - View to switch to
-     */
-    switchView(view) {
-        const originalTab = document.getElementById('original-workflow-tab');
-        const enhancedTab = document.getElementById('enhanced-workflow-tab');
-
-        if (view === 'original') {
-            // Show original view
-            document.getElementById('original-workflow-view').style.display = 'block';
-            document.getElementById('enhanced-workflow-view').style.display = 'none';
-            
-            // Update tab styles - original active
-            originalTab.style.backgroundColor = '#e8f5e9'; // Light green
-            originalTab.style.color = '#1b5e20';
-            originalTab.style.fontWeight = 'bold';
-            originalTab.style.borderColor = '#2e7d32';
-            originalTab.style.borderWidth = '2px';
-            
-            // Enhanced inactive
-            enhancedTab.style.backgroundColor = '#f5f5f5';
-            enhancedTab.style.color = '#666';
-            enhancedTab.style.fontWeight = 'normal';
-            enhancedTab.style.borderColor = '#ccc';
-            enhancedTab.style.borderWidth = '2px';
-            
-            this.currentView = 'original';
-        } else if (view === 'enhanced') {
-            // Show enhanced view
-            document.getElementById('original-workflow-view').style.display = 'none';
-            const enhancedView = document.getElementById('enhanced-workflow-view');
-            enhancedView.style.display = 'block';
-
-            // Render enhanced view if not yet rendered
-            if (!enhancedView.hasChildNodes() || enhancedView.querySelector('.svelte-flow__container') === null) {
-                this.renderEnhancedWorkflow(enhancedView);
-            }
-
-            // Update tab styles - enhanced active
-            enhancedTab.style.backgroundColor = '#e8f5e9';
-            enhancedTab.style.color = '#1b5e20';
-            enhancedTab.style.fontWeight = 'bold';
-            enhancedTab.style.borderColor = '#2e7d32';
-            enhancedTab.style.borderWidth = '2px';
-            
-            // Original inactive
-            originalTab.style.backgroundColor = '#f5f5f5';
-            originalTab.style.color = '#666';
-            originalTab.style.fontWeight = 'normal';
-            originalTab.style.borderColor = '#ccc';
-            originalTab.style.borderWidth = '2px';
-            
-            this.currentView = 'enhanced';
-        }
-
-        console.log(`HuEvaFlowEnhancer: Switched to ${view} view`);
-    }
-
     /**
      * Switch between original and enhanced views
      * @param {'original'|'enhanced'} view - View to switch to
@@ -369,47 +311,87 @@ export class HuEvaFlowEnhancer {
      * @param {HTMLElement} container - Container element to render the workflow in
      */
     renderEnhancedWorkflow(container) {
-        // Determine which SvelteFlow component to use
-        const FlowComponent = SvelteFlowComponent || window.SvelteFlow;
-
-        // Check if SvelteFlow is available
-        if (!FlowComponent) {
-            container.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                    <div>
-                        <h3>SvelteFlow not loaded</h3>
-                        <p>Please ensure SvelteFlow is properly loaded.</p>
-                    </div>
-                </div>
-            `;
-            console.error('HuEvaFlowEnhancer: SvelteFlow component not available');
-            return;
-        }
-
+        // Clear the container
         container.innerHTML = '';
 
         try {
-            const { nodes, edges } = this.prepareSvelteFlowData();
+            console.log('HuEvaFlowEnhancer: renderEnhancedWorkflow called with container:', container);
+            console.log('HuEvaFlowEnhancer: workflowData available:', !!this.workflowData);
+            
+            if (!this.workflowData) {
+                throw new Error('Workflow data is not available');
+            }
+            
+            console.log('HuEvaFlowEnhancer: Workflow data structure:', {
+                workflow: this.workflowData.workflow,
+                statusesCount: this.workflowData.statuses?.length || 0,
+                transitionsCount: this.workflowData.transitions?.length || 0
+            });
 
-            // Create a container for the SvelteFlow component
+            const { nodes, edges } = this.prepareSvelteFlowData();
+            console.log('HuEvaFlowEnhancer: Prepared data', { nodes: nodes.length, edges: edges.length });
+            
+            if (nodes.length === 0) {
+                console.warn('HuEvaFlowEnhancer: No nodes to render!');
+                container.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: orange;">
+                        <div>
+                            <h3>No workflow nodes found</h3>
+                            <p>Workflow data was loaded, but no statuses/nodes were generated.</p>
+                            <p>Check console for details about statuses and transitions.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            console.log('HuEvaFlowEnhancer: Rendering with SvelteFlow', { nodes, edges });
+            console.log('HuEvaFlowEnhancer: Nodes sample:', nodes[0]);
+            if (edges.length > 0) {
+                console.log('HuEvaFlowEnhancer: Edges sample:', edges[0]);
+            } else {
+                console.log('HuEvaFlowEnhancer: No edges to render');
+            }
+
+            // Create a container for the SvelteFlow component with proper sizing
             const flowContainer = document.createElement('div');
             flowContainer.style.width = '100%';
             flowContainer.style.height = '100%';
+            flowContainer.style.minHeight = '400px';
+            flowContainer.style.border = '1px solid #ccc';
+            flowContainer.style.borderRadius = '4px';
+            flowContainer.style.backgroundColor = '#fff';
             container.appendChild(flowContainer);
 
-            // Create a new component instance
-            const flowInstance = new FlowComponent({
+            console.log('HuEvaFlowEnhancer: Flow container created, mounting SvelteFlow');
+
+            // Mount SvelteFlow component using Svelte 5 API
+            const flowInstance = mount(SvelteFlow, {
                 target: flowContainer,
                 props: {
                     nodes: nodes,
                     edges: edges,
                     fitView: true,
-                    defaultViewport: { x: 0, y: 0, zoom: 1 },
-                    onNodeDragStop: (event, node) => {
-                        console.log('HuEvaFlowEnhancer: Node dragged', node);
-                    }
+                    fitViewOptions: { padding: 0.2 },
+                    // Additional SvelteFlow options
+                    defaultEdgeOptions: {
+                        type: 'smoothstep',
+                        animated: false,
+                        style: { stroke: '#456', strokeWidth: 2 },
+                        markerEnd: { type: 'arrowclosed', color: '#456' }
+                    },
+                    nodeTypes: {}, // Custom node types can be added here
+                    connectionLineType: 'smoothstep'
                 }
             });
+
+            console.log('HuEvaFlowEnhancer: SvelteFlow mounted successfully', flowInstance);
+
+            // Store instance reference for cleanup if needed
+            if (!this.flowInstances) {
+                this.flowInstances = new Map();
+            }
+            this.flowInstances.set(container, flowInstance);
 
             console.log('HuEvaFlowEnhancer: Enhanced workflow rendered successfully with SvelteFlow');
         } catch (error) {
@@ -439,11 +421,17 @@ export class HuEvaFlowEnhancer {
         const nodes = [];
         const edges = [];
 
+        // Create a map of statuses by ID for easy lookup
+        const statusMap = new Map();
+        statuses.forEach(status => {
+            statusMap.set(status.id, status);
+        });
+
         statuses.forEach((status, index) => {
             let position = { x: 100, y: 100 };
 
             if (workflow.scheme_draw_config) {
-                const configKey = `${status.id}_draw_scheme_item`;
+                const configKey = `CmfStatus:${status.id}_draw_scheme_item`;
                 const config = workflow.scheme_draw_config[configKey];
 
                 if (config) {
@@ -451,6 +439,7 @@ export class HuEvaFlowEnhancer {
                 }
             }
 
+            // Grid layout fallback if no positions in config
             if (position.x === 100 && position.y === 100) {
                 const cols = 4;
                 const row = Math.floor(index / cols);
@@ -489,30 +478,58 @@ export class HuEvaFlowEnhancer {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 },
                 sourcePosition: 'right',
                 targetPosition: 'left',
                 draggable: true
             };
 
-            if (status.name.toLowerCase().includes('старт') || status.code === 'start') {
+            // Special styling for start status
+            if (status.status_type === 'start' || status.name.toLowerCase().includes('старт') || status.code === 'start') {
                 node.style.borderRadius = '50%';
                 node.style.minWidth = '60px';
                 node.style.minHeight = '60px';
+                node.style.width = '60px';
+                node.style.height = '60px';
             }
 
             nodes.push(node);
         });
 
+        // Create edges from transitions
         transitions.forEach(transition => {
-            transition.status_from.forEach(fromStatus => {
+            const fromStatuses = transition.status_from || [];
+            const toStatus = transition.status_to;
+
+            if (!toStatus || !toStatus.id) {
+                console.warn('HuEvaFlowEnhancer: Transition without valid status_to:', transition);
+                return;
+            }
+
+            fromStatuses.forEach(fromStatus => {
+                if (!fromStatus || !fromStatus.id) {
+                    console.warn('HuEvaFlowEnhancer: Transition with invalid status_from item:', transition);
+                    return;
+                }
+
+                // Verify that both statuses exist in our status map
+                if (!statusMap.has(fromStatus.id)) {
+                    console.warn(`HuEvaFlowEnhancer: Source status ${fromStatus.id} not found in statuses`);
+                    return;
+                }
+                if (!statusMap.has(toStatus.id)) {
+                    console.warn(`HuEvaFlowEnhancer: Target status ${toStatus.id} not found in statuses`);
+                    return;
+                }
+
                 const edge = {
-                    id: `${fromStatus.id}-${transition.status_to.id}`,
+                    id: `${fromStatus.id}-${toStatus.id}`,
                     source: fromStatus.id,
-                    target: transition.status_to.id,
-                    type: 'default', // Changed from 'smoothstep' to 'default'
-                    label: transition.name.trim(),
+                    target: toStatus.id,
+                    label: transition.name?.trim() || '',
+                    type: 'smoothstep',
                     animated: false,
                     style: {
                         stroke: '#456',
@@ -520,8 +537,12 @@ export class HuEvaFlowEnhancer {
                     },
                     labelStyle: {
                         fill: '#456',
-                        fontWeight: 600,
-                        fontSize: '12px'
+                        fontSize: '12px',
+                        fontWeight: 600
+                    },
+                    labelBgStyle: {
+                        fill: 'white',
+                        fillOpacity: 0.8
                     },
                     markerEnd: {
                         type: 'arrowclosed',
@@ -533,7 +554,7 @@ export class HuEvaFlowEnhancer {
             });
         });
 
-        console.log('HuEvaFlowEnhancer: Prepared SvelteFlow data', { nodes, edges });
+        console.log('HuEvaFlowEnhancer: Prepared SvelteFlow data', { nodes: nodes.length, edges: edges.length });
 
         return { nodes, edges };
     }
