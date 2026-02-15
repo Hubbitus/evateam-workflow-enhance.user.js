@@ -5,74 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EvaTeam Workflow Enhancer - Development Mode</title>
     <link rel="icon" href="../favicon.ico" type="image/x-icon">
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        #workflow-container {
-            width: 100%;
-            height: 80vh;
-            background-color: white;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-top: 20px;
-        }
-
-        .workflow-tabs-container {
-            display: flex;
-            margin-bottom: 10px;
-        }
-
-        .workflow-tabs-container button {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            cursor: pointer;
-            background-color: white;
-        }
-
-        .workflow-tabs-container button:first-child {
-            border-radius: 4px 0 0 4px;
-        }
-
-        .workflow-tabs-container button:last-child {
-            border-radius: 0 4px 4px 0;
-        }
-
-        .workflow-tabs-container button:hover {
-            background-color: #f0f0f0;
-        }
-
-        .workflow-tabs-container button.active {
-            background-color: #e0e0e0;
-        }
-
-        #enhanced-workflow-view {
-            width: 100%;
-            height: calc(100% - 50px);
-        }
-    </style>
 </head>
 <body>
-    <!-- Original copy/paste workflow example -->
+    <!--
+    Эмулируем для разработки скрипт встраивания в страницу.
+    Т.к. в итоге мы разрабатываем UserScript, он должен будет работать в уже имеющейся странице, а не отдельным приложением!
+    В блоке <div class="cdk-global-overlay-wrapper"> спустя секунду, будет добавлен блок <div id="cdk-overlay-1">, так, как он будет появляться в
+    на таргет странице!
+    Наше приложение, подгружаемое ниже как main.js, должно:
+    1. Зарегистрировать MutationObserver, отслеживающий появление такого блока
+        - При этом, используем именно MutationObserver, а не setInterval и поллинг! Мы не должны создавать лишней нагрузки, на странице этого блока может и не появиться!
+    2. При появлении этого блока, на его месте (вместо него), запустить наше Svelte приложение, которое:
+        * Отрисует 2 вкладки: "Улучшенный workflow" и "Оригинальный workflow"
+        * Во второй вкладке "Оригинальный workflow" должен быть представлен именно этот появившийся и заменяемый блок, "как есть"
+        * А в первой "Улучшенный workflow", добавляем его улучшенную версию, с получением данных по API, и с отрисовкой на SvelteFlow!
+          Этот флоу должен отображать логически то же самое, но красивее, элементы перетаскиваемые, стрелки плавные, расположение блоков автоматическое!
+    -->
     <div class="cdk-global-overlay-wrapper" dir="ltr" style="justify-content: center; align-items: center;">
     </div>
 
     <script>
         // Загрузка workflow. Для дев грузим из файла makets/maket.as-is.html в блок <div class="cdk-global-overlay-wrapper">. Грузим как есть, со стилями.
-        fetch('../makets/maket.as-is.html')
-            .then(response => response.text())
-            .then(html => {
-                document.write(html);
-            })
-            .catch(error => {
-                console.error('Error loading workflow HTML:', error);
-            });
+        setTimeout(function(){
+            fetch('../makets/maket.as-is.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.write(html);
+                })
+                .catch(error => {
+                    console.error('Error loading workflow HTML:', error);
+                });
+            }
+            , 1000
+        );
     </script>
 
     <!-- Load the development application -->
