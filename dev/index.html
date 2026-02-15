@@ -31,8 +31,17 @@
             fetch('/maket.as-is.html')
                 .then(response => response.text())
                 .then(html => {
-                    console.log('HuEvaFlowEnhancer: document received, writing it into document');
-                    document.write(html);
+                    console.log('HuEvaFlowEnhancer: document received, inserting into wrapper');
+
+                    // Insert the HTML into the wrapper
+                    const wrapper = document.querySelector('.cdk-global-overlay-wrapper');
+                    wrapper.innerHTML = html;
+
+                    // Move all <style> tags from wrapper to document head so they apply globally
+                    const styles = wrapper.querySelectorAll('style');
+                    styles.forEach(style => {
+                        document.head.appendChild(style);
+                    });
                 })
                 .catch(error => {
                     console.error('HuEvaFlowEnhancer: Error loading workflow HTML:', error);
