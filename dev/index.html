@@ -27,13 +27,15 @@
     <script>
         // Загрузка workflow. Для дев грузим из файла makets/maket.as-is.html в блок <div class="cdk-global-overlay-wrapper">. Грузим как есть, со стилями.
         setTimeout(function(){
-            fetch('../makets/maket.as-is.html')
+            console.log('HuEvaFlowEnhancer: fetching workflow example');
+            fetch('/maket.as-is.html')
                 .then(response => response.text())
                 .then(html => {
+                    console.log('HuEvaFlowEnhancer: document received, writing it into document');
                     document.write(html);
                 })
                 .catch(error => {
-                    console.error('Error loading workflow HTML:', error);
+                    console.error('HuEvaFlowEnhancer: Error loading workflow HTML:', error);
                 });
             }
             , 1000
