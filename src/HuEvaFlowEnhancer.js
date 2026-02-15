@@ -2,6 +2,8 @@
  * Class for enhancing EvaTeam workflow visualization using SvelteFlow
  */
 import { HuEvaApi } from './HuEvaApi.js';
+// Import SvelteFlow component - will be bundled by Vite
+import { SvelteFlow as SvelteFlowComponent } from '@xyflow/svelte';
 
 export class HuEvaFlowEnhancer {
     /**
@@ -28,7 +30,6 @@ export class HuEvaFlowEnhancer {
         this.waitForWorkflowElement().then(() => {
             console.log('HuEvaFlowEnhancer: Workflow element found, proceeding with initialization');
             this.setupContainer();
-            this.createTabsInterface();
             this.loadAndDisplayWorkflow();
         }).catch(error => {
             console.error('HuEvaFlowEnhancer: Error during initialization:', error);
@@ -49,7 +50,8 @@ export class HuEvaFlowEnhancer {
             }
 
             const checkForElement = () => {
-                const workflowElement = document.querySelector('.cmf-dialog__content app-cmf-workflow-auto, #cdk-overlay-1 app-cmf-workflow-auto, .chart-container');
+                // Look for the entire workflow dialog/element that contains the full workflow UI
+                const workflowElement = document.querySelector('mat-dialog-container .cmf-dialog, .cdk-overlay-pane .cmf-dialog, app-cmf-workflow-auto, .chart-container');
 
                 if (workflowElement) {
                     this.originalWorkflowElement = workflowElement;
@@ -62,7 +64,7 @@ export class HuEvaFlowEnhancer {
             const observer = new MutationObserver((mutationsList) => {
                 for (const mutation of mutationsList) {
                     if (mutation.type === 'childList') {
-                        const workflowElement = document.querySelector('.cmf-dialog__content app-cmf-workflow-auto, #cdk-overlay-1 app-cmf-workflow-auto, .chart-container');
+                        const workflowElement = document.querySelector('mat-dialog-container .cmf-dialog, .cdk-overlay-pane .cmf-dialog, app-cmf-workflow-auto, .chart-container');
 
                         if (workflowElement) {
                             this.originalWorkflowElement = workflowElement;
@@ -96,21 +98,20 @@ export class HuEvaFlowEnhancer {
         this.container.id = 'hu-evateam-workflow-enhancer';
         this.container.style.width = '100%';
         this.container.style.height = '100%';
+        this.container.style.display = 'flex';
+        this.container.style.flexDirection = 'column';
+        this.container.style.position = 'relative';
+        this.container.style.boxSizing = 'border-box';
+        this.container.style.border = '2px solid #ddd';
+        this.container.style.borderRadius = '8px';
+        this.container.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        this.container.style.overflow = 'hidden';
+        this.container.style.backgroundColor = '#fafafa';
 
-        const devContainer = document.getElementById('workflow-container');
-        if (devContainer) {
-            devContainer.appendChild(this.container);
-        } else {
-            this.originalWorkflowElement.parentNode.insertBefore(this.container, this.originalWorkflowElement.nextSibling);
-        }
+        // Insert after the original workflow element
+        this.originalWorkflowElement.parentNode.insertBefore(this.container, this.originalWorkflowElement.nextSibling);
 
-        console.log('HuEvaFlowEnhancer: Container set up');
-    }
-
-    /**
-     * Create the tabs interface to switch between views
-     */
-    createTabsInterface() {
+        // Create tabs interface
         const tabContainer = document.createElement('div');
         tabContainer.className = 'workflow-tabs-container';
         tabContainer.style.display = 'flex';
@@ -121,11 +122,13 @@ export class HuEvaFlowEnhancer {
         enhancedTab.textContent = 'Улучшенная схема';
         enhancedTab.style.flex = '1';
         enhancedTab.style.padding = '10px';
-        enhancedTab.style.border = '1px solid #ccc';
+        enhancedTab.style.border = '2px solid #2e7d32'; // Green border for active tab
         enhancedTab.style.borderRadius = '4px 0 0 4px';
         enhancedTab.style.cursor = 'pointer';
-        enhancedTab.style.backgroundColor = 'rgb(154 231 181)'; // Active tab background
-        enhancedTab.style.fontWeight = 'bold'; // Make active tab visually distinct
+        enhancedTab.style.backgroundColor = '#e8f5e9'; // Light green background
+        enhancedTab.style.color = '#1b5e20'; // Dark green text
+        enhancedTab.style.fontWeight = 'bold';
+        enhancedTab.style.transition = 'all 0.2s';
         enhancedTab.addEventListener('click', () => this.switchView('enhanced'));
 
         const originalTab = document.createElement('button');
@@ -133,80 +136,103 @@ export class HuEvaFlowEnhancer {
         originalTab.textContent = 'Исходный workflow';
         originalTab.style.flex = '1';
         originalTab.style.padding = '10px';
-        originalTab.style.border = '1px solid #ccc';
+        originalTab.style.border = '2px solid #ccc'; // Gray border for inactive
         originalTab.style.borderLeft = 'none';
         originalTab.style.borderRadius = '0 4px 4px 0';
         originalTab.style.cursor = 'pointer';
-        originalTab.style.backgroundColor = '#f0f0f0'; // Inactive tab background
-        originalTab.style.fontWeight = 'normal'; // Normal weight for inactive tab
+        originalTab.style.backgroundColor = '#f5f5f5'; // Light gray background
+        originalTab.style.color = '#666';
+        originalTab.style.fontWeight = 'normal';
+        originalTab.style.transition = 'all 0.2s';
         originalTab.addEventListener('click', () => this.switchView('original'));
 
-        // Add tabs to container (enhanced first, original second)
         tabContainer.appendChild(enhancedTab);
         tabContainer.appendChild(originalTab);
-
         this.container.appendChild(tabContainer);
 
+        // Move the original workflow element into our container's original view tab
+        // It will be hidden initially and shown when switching to original view
         const originalViewContainer = document.createElement('div');
         originalViewContainer.id = 'original-workflow-view';
-        originalViewContainer.style.display = 'none';
+        originalViewContainer.style.display = 'none'; // Hidden by default
         originalViewContainer.style.width = '100%';
         originalViewContainer.style.height = 'calc(100% - 50px)';
         originalViewContainer.style.overflow = 'auto';
         
-        // Clone the original workflow element with all its computed styles
-        const clonedOriginal = this.originalWorkflowElement.cloneNode(true);
-        
-        // Copy all computed styles from the original element to preserve appearance
-        const copyStyles = (originalElement, clonedElement) => {
-            // Copy inline styles
-            clonedElement.setAttribute('style', originalElement.getAttribute('style') || '');
-            
-            // Copy CSS classes
-            clonedElement.className = originalElement.className;
-            
-            // For all child elements, copy their styles recursively
-            const originalChildren = originalElement.querySelectorAll('*');
-            const clonedChildren = clonedElement.querySelectorAll('*');
-            
-            for (let i = 0; i < originalChildren.length; i++) {
-                const originalChild = originalChildren[i];
-                const clonedChild = clonedChildren[i];
-                
-                if (clonedChild) {
-                    // Copy inline styles
-                    clonedChild.setAttribute('style', originalChild.getAttribute('style') || '');
-                    
-                    // Copy CSS classes
-                    clonedChild.className = originalChild.className;
-                    
-                    // Copy other attributes that might affect styling
-                    for (let attr of originalChild.attributes) {
-                        if (attr.name.startsWith('class') || attr.name.startsWith('style') || 
-                            attr.name.startsWith('id') || attr.name.startsWith('data-')) {
-                            clonedChild.setAttribute(attr.name, attr.value);
-                        }
-                    }
-                }
-            }
-        };
-        
-        copyStyles(this.originalWorkflowElement, clonedOriginal);
-        
-        originalViewContainer.appendChild(clonedOriginal);
+        // Append the original workflow element (not a clone) to the original view container
+        this.container.appendChild(originalViewContainer);
+        originalViewContainer.appendChild(this.originalWorkflowElement);
 
+        // Create enhanced view container
         const enhancedViewContainer = document.createElement('div');
         enhancedViewContainer.id = 'enhanced-workflow-view';
         enhancedViewContainer.style.display = 'block'; // Show by default
         enhancedViewContainer.style.width = '100%';
         enhancedViewContainer.style.height = 'calc(100% - 50px)';
-
-        this.container.appendChild(originalViewContainer);
         this.container.appendChild(enhancedViewContainer);
 
         this.currentView = 'enhanced';
 
-        console.log('HuEvaFlowEnhancer: Tabs interface created');
+        console.log('HuEvaFlowEnhancer: Container set up');
+    }
+
+        /**
+     * Switch between original and enhanced views
+     * @param {'original'|'enhanced'} view - View to switch to
+     */
+    switchView(view) {
+        const originalTab = document.getElementById('original-workflow-tab');
+        const enhancedTab = document.getElementById('enhanced-workflow-tab');
+
+        if (view === 'original') {
+            // Show original view
+            document.getElementById('original-workflow-view').style.display = 'block';
+            document.getElementById('enhanced-workflow-view').style.display = 'none';
+            
+            // Update tab styles - original active
+            originalTab.style.backgroundColor = '#e8f5e9'; // Light green
+            originalTab.style.color = '#1b5e20';
+            originalTab.style.fontWeight = 'bold';
+            originalTab.style.borderColor = '#2e7d32';
+            originalTab.style.borderWidth = '2px';
+            
+            // Enhanced inactive
+            enhancedTab.style.backgroundColor = '#f5f5f5';
+            enhancedTab.style.color = '#666';
+            enhancedTab.style.fontWeight = 'normal';
+            enhancedTab.style.borderColor = '#ccc';
+            enhancedTab.style.borderWidth = '2px';
+            
+            this.currentView = 'original';
+        } else if (view === 'enhanced') {
+            // Show enhanced view
+            document.getElementById('original-workflow-view').style.display = 'none';
+            const enhancedView = document.getElementById('enhanced-workflow-view');
+            enhancedView.style.display = 'block';
+
+            // Render enhanced view if not yet rendered
+            if (!enhancedView.hasChildNodes() || enhancedView.querySelector('.svelte-flow__container') === null) {
+                this.renderEnhancedWorkflow(enhancedView);
+            }
+
+            // Update tab styles - enhanced active
+            enhancedTab.style.backgroundColor = '#e8f5e9';
+            enhancedTab.style.color = '#1b5e20';
+            enhancedTab.style.fontWeight = 'bold';
+            enhancedTab.style.borderColor = '#2e7d32';
+            enhancedTab.style.borderWidth = '2px';
+            
+            // Original inactive
+            originalTab.style.backgroundColor = '#f5f5f5';
+            originalTab.style.color = '#666';
+            originalTab.style.fontWeight = 'normal';
+            originalTab.style.borderColor = '#ccc';
+            originalTab.style.borderWidth = '2px';
+            
+            this.currentView = 'enhanced';
+        }
+
+        console.log(`HuEvaFlowEnhancer: Switched to ${view} view`);
     }
 
     /**
@@ -343,16 +369,20 @@ export class HuEvaFlowEnhancer {
      * @param {HTMLElement} container - Container element to render the workflow in
      */
     renderEnhancedWorkflow(container) {
+        // Determine which SvelteFlow component to use
+        const FlowComponent = SvelteFlowComponent || window.SvelteFlow;
+
         // Check if SvelteFlow is available
-        if (typeof window.SvelteFlow === 'undefined') {
+        if (!FlowComponent) {
             container.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
                     <div>
                         <h3>SvelteFlow not loaded</h3>
-                        <p>Please ensure SvelteFlow is properly loaded via the bundled script.</p>
+                        <p>Please ensure SvelteFlow is properly loaded.</p>
                     </div>
                 </div>
             `;
+            console.error('HuEvaFlowEnhancer: SvelteFlow component not available');
             return;
         }
 
@@ -367,8 +397,8 @@ export class HuEvaFlowEnhancer {
             flowContainer.style.height = '100%';
             container.appendChild(flowContainer);
 
-            // Create the SvelteFlow component instance
-            const flowInstance = new window.SvelteFlow({
+            // Create a new component instance
+            const flowInstance = new FlowComponent({
                 target: flowContainer,
                 props: {
                     nodes: nodes,
@@ -481,7 +511,7 @@ export class HuEvaFlowEnhancer {
                     id: `${fromStatus.id}-${transition.status_to.id}`,
                     source: fromStatus.id,
                     target: transition.status_to.id,
-                    type: 'smoothstep',
+                    type: 'default', // Changed from 'smoothstep' to 'default'
                     label: transition.name.trim(),
                     animated: false,
                     style: {
