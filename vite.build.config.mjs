@@ -24,7 +24,11 @@ export default defineConfig({
         // Disable run-time checks in production
         dev: false,
         // Use 'external' instead of false for css option in Svelte 5
-        css: 'external'
+        css: 'external',
+        // Svelte 5 component API
+        compatibility: {
+          componentApi: 4,
+        },
       }
     }),
     tampermonkeyHeaders()

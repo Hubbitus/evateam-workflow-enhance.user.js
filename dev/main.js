@@ -22,9 +22,9 @@ const enhancer = new HuEvaFlowEnhancer();
 enhancer.api = new CustomHuEvaApi({
   useMock: true,
   mockUrls: {
-    'CmfWorkflow.get': './api/api_CmfWorkflow_get_response.json',
-    'CmfTrans.list': './api/api_CmfTrans_list_response.json',
-    'CmfStatus.list': './api/api_CmfStatus_list_response.json'
+    'CmfWorkflow.get': '/api/api_CmfWorkflow_get_response.json',
+    'CmfTrans.list': '/api/api_CmfTrans_list_response.json',
+    'CmfStatus.list': '/api/api_CmfStatus_list_response.json'
   }
 });
 

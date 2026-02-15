@@ -198,16 +198,12 @@
     originalContent="{originalContent}"
     currentView="{currentView}"
     on:switchView="{(e) => switchView(e.detail.view)}"
-  />
-  
-  {#if currentView === 'enhanced'}
-    <div id="enhanced-workflow-view" style="width: 100%; height: calc(100% - 50px);">
-      {#if workflowNodes.length > 0 && workflowEdges.length > 0}
-        <!-- SvelteFlow would be initialized here -->
-        <p>Enhanced workflow view with {workflowNodes.length} nodes and {workflowEdges.length} edges</p>
-      {:else}
-        <p>Loading enhanced workflow...</p>
-      {/if}
-    </div>
-  {/if}
+  >
+    {#if workflowNodes.length > 0 && workflowEdges.length > 0}
+      <!-- SvelteFlow would be initialized here -->
+      <p>Enhanced workflow view with {workflowNodes.length} nodes and {workflowEdges.length} edges</p>
+    {:else}
+      <p>Loading enhanced workflow...</p>
+    {/if}
+  </WorkflowTabs>
 </div>

@@ -22,7 +22,11 @@ export default defineConfig({
         // Enable run-time checks in development
         dev: true,
         // Don't generate a separate CSS file during component compilation
-        css: false
+        css: false,
+        // Svelte 5 component API
+        compatibility: {
+          componentApi: 4,
+        },
       }
     })
   ],
@@ -30,13 +34,16 @@ export default defineConfig({
   server: {
     port: 3003,
     host: '0.0.0.0',
-    open: true,
+    open: false, // Open page in browser on server start!
     fs: {
       // Allow serving files from one level up to the project root
       allow: ['..'],
       // Serve files from both dev and root directories
       strict: false
     }
+  },
+  optimizeDeps: {
+    include: ['@xyflow/svelte'],
   },
   build: {
     outDir: '../dist',

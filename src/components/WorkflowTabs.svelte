@@ -1,32 +1,22 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
 
   export let originalContent = '';
-  export let onSwitchView;
   export let currentView = 'enhanced';
+
+  const dispatch = createEventDispatcher();
 
   let enhancedView;
   let originalView;
   let originalTab;
   let enhancedTab;
 
-  onMount(() => {
-    // Trigger the initial view rendering
-    if (currentView === 'enhanced' && onSwitchView) {
-      onSwitchView('enhanced');
-    }
-  });
-
   function switchToEnhanced() {
-    if (onSwitchView) {
-      onSwitchView('enhanced');
-    }
+    dispatch('switchView', { view: 'enhanced' });
   }
 
   function switchToOriginal() {
-    if (onSwitchView) {
-      onSwitchView('original');
-    }
+    dispatch('switchView', { view: 'original' });
   }
 
   // Update active tab when currentView changes
@@ -108,6 +98,6 @@
       height: calc(100% - 50px);
     "
   >
-    <!-- Enhanced workflow will be rendered here by the parent -->
+    <slot /> <!-- This is the new slot -->
   </div>
 {/if}
