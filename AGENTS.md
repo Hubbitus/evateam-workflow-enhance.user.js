@@ -11,6 +11,10 @@
     * Check browser console do not have errors!
     * In workflow diagram area present desired structure!
     * Make screenshot and place it into `_screenshots` directory. File name must be like: `<date-time in ISO 8601 format with milliseconds>.png`
+- All dependencies must be listed in single place: package.json.
+- Application bundle file `bundle.js` **must** be the single build used and tested in `dev.html`.
+    * That bundle then embedded unto UserScript file on final build!
+    * No other separate dependencies possible to include in any other way, including CDN.
 
 ## Project Overview
 
