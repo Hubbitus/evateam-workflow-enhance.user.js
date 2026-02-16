@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@sveltejs/vite-plugin-svelte': ^4.0.0-next.6
+  '@sveltejs/vite-plugin-svelte': ^4.0.0
 
 importers:
 
@@ -19,7 +19,7 @@ importers:
         version: 5.51.0
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^4.0.0-next.6
+        specifier: ^4.0.0
         version: 4.0.4(svelte@5.51.0)(vite@5.4.21(@types/node@25.2.3)(terser@5.46.0))
       terser:
         specifier: ^5.46.0
@@ -326,7 +326,7 @@ packages:
     resolution: {integrity: sha512-2CKypmj1sM4GE7HjllT7UKmo4Q6L5xFRd7VMGEWhYnZ+wc6AUVU01IBd7yUi6WnFndEwWoMNOd6e8UjoN0nbvQ==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22}
     peerDependencies:
-      '@sveltejs/vite-plugin-svelte': ^4.0.0-next.6
+      '@sveltejs/vite-plugin-svelte': ^4.0.0
       svelte: ^5.0.0-next.96 || ^5.0.0
       vite: ^5.0.0
 

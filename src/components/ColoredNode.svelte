@@ -8,7 +8,7 @@
   const bgColor = $derived(data?.color || '#cccccc');
   const isDark = $derived(isDarkColor(bgColor));
   const textColor = $derived(isDark ? '#ffffff' : '#000000');
-  const borderColor = $derived(isDark ? '#ffffff' : '#000000');
+  const borderColor = $derived(adjustColorLightness(bgColor, -20));
   const isStart = $derived(data?.isStart || false);
 
   // Determine final dimensions
@@ -21,6 +21,39 @@
   const handlePositionBottom = { bottom: 0 };
   const handlePositionLeft = { left: 0 };
   const handlePositionRight = { right: 0 };
+
+  /**
+   * Adjusts the lightness of a hex color.
+   * @param {string} hex - The hex color string.
+   * @param {number} percent - The percentage to adjust lightness by (positive for lighter, negative for darker).
+   * @returns {string|null} The adjusted hex color or null if input is invalid.
+   */
+  function adjustColorLightness(hex, percent) {
+    if (!hex) return '#000000'; // Return black as a fallback
+
+    hex = hex.replace(/^#/, '');
+
+    // Handle 3-digit hex
+    if (hex.length === 3) {
+      hex = hex.split('').map(char => char + char).join('');
+    }
+
+    if (hex.length !== 6) {
+      return '#000000'; // Return black for invalid hex
+    }
+
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    const amount = Math.floor(255 * (percent / 100));
+
+    r = Math.min(255, Math.max(0, r + amount));
+    g = Math.min(255, Math.max(0, g + amount));
+    b = Math.min(255, Math.max(0, b + amount));
+
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
 
   // Helper function to determine if color is dark
   function isDarkColor(hex) {
@@ -79,7 +112,7 @@
       width: 10px;
       height: 10px;
       background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {bgColor};
+      border: 2px solid {borderColor};
       border-radius: 50%;
     "
   />
@@ -93,7 +126,7 @@
       width: 10px;
       height: 10px;
       background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {bgColor};
+      border: 2px solid {borderColor};
       border-radius: 50%;
     "
   />

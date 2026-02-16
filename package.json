@@ -26,13 +26,13 @@
     "svelte": "^5.25.0"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^4.0.0-next.6",
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "terser": "^5.46.0",
     "vite": "^5.0.0"
   },
   "pnpm": {
     "overrides": {
-      "@sveltejs/vite-plugin-svelte": "^4.0.0-next.6"
+      "@sveltejs/vite-plugin-svelte": "^4.0.0"
     }
   },
   "packageManager": "pnpm@9.0.0"

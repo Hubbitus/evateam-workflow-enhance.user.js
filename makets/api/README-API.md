@@ -12,7 +12,7 @@ File named by pattern:
 Where:
 1. {path} is the static URI path like api/.
   * On real server it shoul be like: https://eva.gid.team/api/?
-  * On our mock that will be served at: http://localhost:3000/makets/api/
+  * On our mock that will be served at: http://localhost:3003/makets/api/
 2. {method} - entity and method like: `CmfWorkflow.get`.
 3. {request|responce} - in request prodided example how to call, in sesponce example of server answer
 4. {fileType} - type of file:
@@ -27,7 +27,7 @@ Real API call to https://eva.gid.team/api/?m=CmfStatus.list saved as:
 2. `api?m=CmfStatus.list:request.js` - example how to call it with JavaScript fetch
 3. `api?m=CmfStatus.list:response.json` - example of server answer.
 
-For that example in dev mode that must be called like: http://localhost:3000/makets/api/api__m=CmfStatus.list:response.json
+For that example in dev mode that must be called like: http://localhost:3003/makets/api/api__m=CmfStatus.list:response.json
 
 ## Common sequence invocation
 
