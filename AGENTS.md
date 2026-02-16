@@ -100,7 +100,7 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 - Functionality testing
 
 ##### 4.1. Use for developers
-1. Open http://localhost:3000 in browser (after `pnpm run dev`)
+1. Open http://localhost:3003 in browser (after `pnpm run dev`)
 2. Check functionality in dev mode
 3. Open developer console (F12)
 4. Check logs: "HuEvaFlowEnhancer: ..."
@@ -136,7 +136,7 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 
 * For the development purpose use `pnpm run dev` which starts Vite dev server.
 * All assets must be added from CDN and must not require any build and server!
-* Server run with command: `pnpm run dev`. Once! Do not restart it on file changes! Result will be in http://localhost:3000/
+* Server run with command: `pnpm run dev`. Once! Do not restart it on file changes! Result will be in http://localhost:3003/
 * Server watches changes and automatically performs page reload - no need to refresh page or trigger something on the page.
 
 ```bash
@@ -144,7 +144,7 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 pnpm run dev
 
 # Server will be available at:
-# http://localhost:3000/
+# http://localhost:3003/
 ```
 
 ### Project Build
