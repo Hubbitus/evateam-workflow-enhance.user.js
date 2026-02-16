@@ -50,7 +50,6 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 ├── .qwen/                             # Qwen AI internal files
 ├── AGENTS.md                          # Project analysis (this file)
 ├── evateam-workflow-enhance.user.js   # Main UserScript for Tampermonkey
-├── HuEvaFlowEnhancer.js               # Main handler class
 ├── dist/                              # Build artifacts directory
 │   └── evateam-workflow-enhance.user.js # Built Tampermonkey script
 ├── dev/                               # Development directory
@@ -58,7 +57,6 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 │   └── main.js                        # Development entry point
 ├── src/                               # Source code directory
 │   ├── HuEvaApi.js                    # API interaction class
-│   ├── HuEvaFlowEnhancer.js           # Main workflow enhancer class
 │   └── main.js                        # Production entry point
 ├── plugins/                           # Vite plugins
 │   └── tampermonkey-header-plugin.js  # Plugin to add TM headers
@@ -75,25 +73,19 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 
 ### Main Components
 
-#### 1. **HuEvaFlowEnhancer.js**
-- Central class for workflow data processing
-- HTML parsing and node/edge extraction
-- Application state management
-- Located in `src/` directory as core logic implementation.
-
-#### 2. **HuEvaApi.js**
+#### 1. **HuEvaApi.js**
 - Class for interacting with EvaTeam API
 - Data fetching for workflows, statuses, and transitions
 - Located in `src/` directory as API layer.
 
-#### 3. **evateam-workflow-enhance.user.js**
+#### 2. **evateam-workflow-enhance.user.js**
 - Main UserScript for Tampermonkey
 - Entry point for end users
 - Dependency loading via @require
 - Application initialization on EvaTeam pages
 - Located in `dist/` directory as build artifact.
 
-#### 4. **dev/index.html**
+#### 3. **dev/index.html**
 - Development and debugging page
 - Tampermonkey environment emulation
 - Developer tools
@@ -103,29 +95,28 @@ The project is a **UserScript for Tampermonkey** designed to improve the visuali
 1. Open http://localhost:3003 in browser (after `pnpm run dev`)
 2. Check functionality in dev mode
 3. Open developer console (F12)
-4. Check logs: "HuEvaFlowEnhancer: ..."
 
-#### 5. **vite.config.js**
+#### 4. **vite.config.js**
 - Configuration for development mode
 - Uses 'dev' directory as root for development
 - Runs dev server on port 3003
 - Compiles files to ../dist directory
 - Allows isolated development environment
 
-#### 7. **vite.test.config.mjs**
+#### 5. **vite.test.config.mjs**
 - Configuration for testing
 - Serves files from project root for testing purposes
 - Runs test server on port 3004
 - Uses same output directory (./dist) as main build
 - Enables testing of the final bundle in an isolated environment
 
-#### 8. **vite.build.config.mjs**
+#### 6. **vite.build.config.mjs**
 - Vite configuration for Tampermonkey script build
 - Creates IIFE bundle with Tampermonkey headers
 - Includes Svelte plugin with dev: false
 - Uses terser for minification
 
-#### 9. **plugins/tampermonkey-header-plugin.js**
+#### 7. **plugins/tampermonkey-header-plugin.js**
 - Custom Vite plugin to inject Tampermonkey headers
 - Adds required @match, @name, @namespace, etc. headers
 - Ensures proper Tampermonkey script format

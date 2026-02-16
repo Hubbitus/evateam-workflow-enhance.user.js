@@ -99,7 +99,7 @@
           id: `${fromStatus.id}-${transition.status_to.id}`,
           source: fromStatus.id,
           target: transition.status_to.id,
-          type: 'smoothstep',
+          type: 'bezier',
           label: transition.name.trim(),
           animated: false,
           style: {
