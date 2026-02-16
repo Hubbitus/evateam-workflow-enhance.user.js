@@ -27,7 +27,7 @@ export default defineConfig({
         css: 'external',
         // Svelte 5 component API
         compatibility: {
-          componentApi: 4,
+          componentApi: 5,
         },
       }
     }),

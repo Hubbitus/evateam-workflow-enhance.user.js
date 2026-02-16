@@ -22,10 +22,10 @@ export default defineConfig({
         // Enable run-time checks in development
         dev: true,
         // Don't generate a separate CSS file during component compilation
-        css: false,
+        css: 'external',
         // Svelte 5 component API
         compatibility: {
-          componentApi: 4,
+          componentApi: 5,
         },
       }
     })

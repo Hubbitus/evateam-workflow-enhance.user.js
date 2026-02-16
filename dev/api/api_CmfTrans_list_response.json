@@ -1,100 +1,453 @@
 {
+  "jsonrpc": "2.0",
   "result": [
     {
-      "id": "CmfTrans:trans1",
-      "name": "Взято в работу",
+      "id": "CmfTrans:14213746-cb0d-11f0-b90e-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
+      "name": " Взято в работу",
+      "status_to": {
+        "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": "Завершите работу по задаче и поставьте статус \"Подтверждение закрытия\" или \"Закрыто\"",
+        "status_type": "IN_PROGRESS",
+        "color": "#3f82d8",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "В работе",
+        "code": "in_progress",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001292",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e"
+          "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Начните работать по задаче и поставьте статус \"В работе\"",
+          "status_type": "OPEN",
+          "color": "#60b1bb",
+          "next_alarm": 0,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Открыто",
+          "code": "open",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
-      "status_to": {
-        "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e"
-      }
+      ]
     },
     {
-      "id": "CmfTrans:trans2",
+      "id": "CmfTrans:34af911a-cb0d-11f0-bcb3-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
       "name": "Задача не актуальна",
+      "status_to": {
+        "id": "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": "Работа по задаче отменена",
+        "status_type": "CLOSED",
+        "color": "#a0a0a0",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "Отклонено",
+        "code": "rejected",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001293",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e"
+          "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Начните работать по задаче и поставьте статус \"В работе\"",
+          "status_type": "OPEN",
+          "color": "#60b1bb",
+          "next_alarm": 0,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Открыто",
+          "code": "open",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+        },
+        {
+          "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Завершите работу по задаче и поставьте статус \"Подтверждение закрытия\" или \"Закрыто\"",
+          "status_type": "IN_PROGRESS",
+          "color": "#3f82d8",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "В работе",
+          "code": "in_progress",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
-      "status_to": {
-        "id": "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e"
-      }
+      ]
     },
     {
-      "id": "CmfTrans:trans3",
+      "id": "CmfTrans:511442ba-cb0d-11f0-b90e-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
       "name": "Задача готова",
+      "status_to": {
+        "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": "Работа по задаче окончена",
+        "status_type": "CLOSED",
+        "color": "#23a055",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "Закрыто",
+        "code": "closed",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001294",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e"
+          "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Завершите работу по задаче и поставьте статус \"Подтверждение закрытия\" или \"Закрыто\"",
+          "status_type": "IN_PROGRESS",
+          "color": "#3f82d8",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "В работе",
+          "code": "in_progress",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
-      "status_to": {
-        "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e"
-      }
+      ]
     },
     {
-      "id": "CmfTrans:trans4",
+      "id": "CmfTrans:742fe510-cb0d-11f0-b90e-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
       "name": "Нужны доработки",
+      "status_to": {
+        "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": null,
+        "status_type": "IN_REVIEW",
+        "color": "#a0a0a0",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "Требует проверки",
+        "code": "need-info-or-change",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001295",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e"
+          "id": "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Работа по задаче отменена",
+          "status_type": "CLOSED",
+          "color": "#a0a0a0",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Отклонено",
+          "code": "rejected",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+        },
+        {
+          "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Работа по задаче окончена",
+          "status_type": "CLOSED",
+          "color": "#23a055",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Закрыто",
+          "code": "closed",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
-      "status_to": {
-        "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
-      }
+      ]
     },
     {
-      "id": "CmfTrans:trans5",
+      "id": "CmfTrans:9310d37c-cb0d-11f0-bcb3-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
       "name": "Возврат в работу",
+      "status_to": {
+        "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": "Завершите работу по задаче и поставьте статус \"Подтверждение закрытия\" или \"Закрыто\"",
+        "status_type": "IN_PROGRESS",
+        "color": "#3f82d8",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "В работе",
+        "code": "in_progress",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001296",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
+          "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": null,
+          "status_type": "IN_REVIEW",
+          "color": "#a0a0a0",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Требует проверки",
+          "code": "need-info-or-change",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
-      "status_to": {
-        "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e"
-      }
+      ]
     },
     {
-      "id": "CmfTrans:trans6",
+      "id": "CmfTrans:beecfb6a-cb0d-11f0-9799-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
       "name": "Проверяется",
+      "status_to": {
+        "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": null,
+        "status_type": "OPEN",
+        "color": "#a0a0a0",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "На проверке",
+        "code": "sd_under_review",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001297",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
+          "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": null,
+          "status_type": "IN_REVIEW",
+          "color": "#a0a0a0",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Требует проверки",
+          "code": "need-info-or-change",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
-      "status_to": {
-        "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e"
-      }
+      ]
     },
     {
-      "id": "CmfTrans:trans7",
+      "id": "CmfTrans:d3bcccfa-cb0d-11f0-b90e-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
       "name": "Возврат в доработку",
+      "status_to": {
+        "id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": "Завершите работу по задаче и поставьте статус \"Подтверждение закрытия\" или \"Закрыто\"",
+        "status_type": "IN_PROGRESS",
+        "color": "#3f82d8",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "В работе",
+        "code": "in_progress",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001298",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:f4e6a588-cb06-11f0-9799-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e"
+          "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": null,
+          "status_type": "OPEN",
+          "color": "#a0a0a0",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "На проверке",
+          "code": "sd_under_review",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
-      "status_to": {
-        "id": "CmfStatus:31c53d7e-cb08-11f0-bcb3-eeb7fce6ef9e"
-      }
+      ]
     },
     {
-      "id": "CmfTrans:trans8",
+      "id": "CmfTrans:e610ecc4-cb0d-11f0-b90e-eeb7fce6ef9e",
+      "class_name": "CmfTrans",
       "name": "Задача принята и готова",
+      "status_to": {
+        "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": "Работа по задаче окончена",
+        "status_type": "CLOSED",
+        "color": "#23a055",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "Закрыто",
+        "code": "closed",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001299",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e",
       "status_from": [
         {
-          "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e"
+          "id": "CmfStatus:db3b4548-cb07-11f0-aa1d-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": null,
+          "status_type": "OPEN",
+          "color": "#a0a0a0",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "На проверке",
+          "code": "sd_under_review",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
-      ],
+      ]
+    },
+    {
+      "id": "CmfTrans:708ffd00-e241-11f0-b4f4-029a32f97d49",
+      "class_name": "CmfTrans",
+      "name": "Перенос в другой проект",
       "status_to": {
-        "id": "CmfStatus:f50dc744-cb06-11f0-9799-eeb7fce6ef9e"
-      }
+        "id": "CmfStatus:34ad943e-e23f-11f0-ab06-029a32f97d49",
+        "class_name": "CmfStatus",
+        "text": null,
+        "status_type": "IN_PROGRESS",
+        "color": "#a0a0a0",
+        "next_alarm": null,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:3e9d8ab6-f5ba-11ef-bd13-4613e85b3f4f",
+        "name": "Внешний проект",
+        "code": "ext-project",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001311",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:34ad943e-e23f-11f0-ab06-029a32f97d49",
+      "status_from": [
+        {
+          "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Начните работать по задаче и поставьте статус \"В работе\"",
+          "status_type": "OPEN",
+          "color": "#60b1bb",
+          "next_alarm": 0,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Открыто",
+          "code": "open",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+        }
+      ]
     }
-  ]
+  ],
+  "meta": {},
+  "jsver": "20260205152137215",
+  "callid": "3ad0a41a-a43e-4349-85d6-c86e0b02cf23",
+  "jsurl": "/desk/Task/DQ-7",
+  "profiler_data": {
+    "select_count": {
+      "select": 7,
+      "total": 7
+    },
+    "inmemory_cache_hit": 3,
+    "inmemory_cache_miss": 0,
+    "prepare": 0.407,
+    "call_method_ms": 2.439,
+    "save": 0.001,
+    "commit": 0.284,
+    "acl_check": 330,
+    "acl_check_skip": 0,
+    "acl_check_owner_skip": 0,
+    "acl_check_cache": 327,
+    "acl_check_calc": 3,
+    "acl_check_cache_static": 0,
+    "acl_check_calc_static": 0,
+    "result_to_dict_ms": 5.428,
+    "number_of_objects": 651
+  },
+  "alert": [],
+  "note": [],
+  "abort": null,
+  "version": "02.31.01.4836",
+  "invalidate": [],
+  "redis_id": "1770294115"
 }

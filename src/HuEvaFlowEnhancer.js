@@ -4,6 +4,7 @@
 import { HuEvaApi } from './HuEvaApi.js';
 import { SvelteFlow } from '@xyflow/svelte';
 import { mount } from 'svelte';
+import ColoredNode from './components/ColoredNode.svelte';
 import '@xyflow/svelte/dist/style.css';
 
 export class HuEvaFlowEnhancer {
@@ -98,7 +99,7 @@ export class HuEvaFlowEnhancer {
         this.container = document.createElement('div');
         this.container.id = 'hu-evateam-workflow-enhancer';
         this.container.style.width = '100%';
-        this.container.style.height = '100%';
+        this.container.style.minHeight = '800px';
         this.container.style.display = 'flex';
         this.container.style.flexDirection = 'column';
         this.container.style.position = 'relative';
@@ -117,6 +118,7 @@ export class HuEvaFlowEnhancer {
         tabContainer.className = 'workflow-tabs-container';
         tabContainer.style.display = 'flex';
         tabContainer.style.marginBottom = '10px';
+        tabContainer.style.flexShrink = '0';
 
         const enhancedTab = document.createElement('button');
         enhancedTab.id = 'enhanced-workflow-tab';
@@ -152,15 +154,12 @@ export class HuEvaFlowEnhancer {
         this.container.appendChild(tabContainer);
 
         // Move the original workflow element into our container's original view tab
-        // It will be hidden initially and shown when switching to original view
         const originalViewContainer = document.createElement('div');
         originalViewContainer.id = 'original-workflow-view';
         originalViewContainer.style.display = 'none'; // Hidden by default
-        originalViewContainer.style.width = '100%';
-        originalViewContainer.style.height = 'calc(100% - 50px)';
+        originalViewContainer.style.flex = '1';
         originalViewContainer.style.overflow = 'auto';
         
-        // Append the original workflow element (not a clone) to the original view container
         this.container.appendChild(originalViewContainer);
         originalViewContainer.appendChild(this.originalWorkflowElement);
 
@@ -168,8 +167,8 @@ export class HuEvaFlowEnhancer {
         const enhancedViewContainer = document.createElement('div');
         enhancedViewContainer.id = 'enhanced-workflow-view';
         enhancedViewContainer.style.display = 'block'; // Show by default
-        enhancedViewContainer.style.width = '100%';
-        enhancedViewContainer.style.height = 'calc(100% - 50px)';
+        enhancedViewContainer.style.flex = '1';
+        enhancedViewContainer.style.minHeight = '400px';
         this.container.appendChild(enhancedViewContainer);
 
         this.currentView = 'enhanced';
@@ -353,14 +352,21 @@ export class HuEvaFlowEnhancer {
                 console.log('HuEvaFlowEnhancer: No edges to render');
             }
 
+            // Log all nodes positions and dimensions
+            nodes.forEach((node, idx) => {
+                console.log(`HuEvaFlowEnhancer: Node ${idx}: id=${node.id}, position=${node.position}, size=${node.width}x${node.height}, type=${node.type}`);
+            });
+
             // Create a container for the SvelteFlow component with proper sizing
             const flowContainer = document.createElement('div');
             flowContainer.style.width = '100%';
-            flowContainer.style.height = '100%';
+            flowContainer.style.height = '600px'; // Fixed height instead of 100%
             flowContainer.style.minHeight = '400px';
             flowContainer.style.border = '1px solid #ccc';
             flowContainer.style.borderRadius = '4px';
             flowContainer.style.backgroundColor = '#fff';
+            flowContainer.style.position = 'relative';
+            flowContainer.style.overflow = 'hidden';
             container.appendChild(flowContainer);
 
             console.log('HuEvaFlowEnhancer: Flow container created, mounting SvelteFlow');
@@ -373,19 +379,19 @@ export class HuEvaFlowEnhancer {
                     edges: edges,
                     fitView: true,
                     fitViewOptions: { padding: 0.2 },
-                    // Additional SvelteFlow options
                     defaultEdgeOptions: {
-                        type: 'smoothstep',
-                        animated: false,
-                        style: { stroke: '#456', strokeWidth: 2 },
-                        markerEnd: { type: 'arrowclosed', color: '#456' }
+                        type: 'straight',
+                        markerEnd: { type: 'arrowclosed', color: '#456' },
+                        style: { stroke: '#456', strokeWidth: 3 }
                     },
-                    nodeTypes: {}, // Custom node types can be added here
-                    connectionLineType: 'smoothstep'
+                    nodeTypes: {
+                        coloredNode: ColoredNode
+                    }
                 }
             });
 
             console.log('HuEvaFlowEnhancer: SvelteFlow mounted successfully', flowInstance);
+            console.log('HuEvaFlowEnhancer: flowContainer children:', flowContainer.children.length, flowContainer.innerHTML);
 
             // Store instance reference for cleanup if needed
             if (!this.flowInstances) {
@@ -450,50 +456,23 @@ export class HuEvaFlowEnhancer {
                 };
             }
 
-            const bgColor = this.hexToRgbA(status.color, 0.15) || '#ffffff';
-            const borderColor = this.adjustColorLightness(status.color, -20) || '#000000';
-            const textColor = this.adjustColorLightness(status.color, -80) || '#000000';
+            const bgColor = status.color || '#cccccc';
+            const isStart = status.status_type === 'OPEN' || status.name.toLowerCase().includes('старт') || status.code === 'start';
+
+            console.log(`HuEvaFlowEnhancer: Status "${status.name}" - color: ${bgColor}, isStart: ${isStart}`);
 
             const node = {
                 id: status.id,
-                type: 'default',
+                type: 'coloredNode',
                 position,
+                width: isStart ? 50 : 140,  // Reduced from 200 to 140
+                height: isStart ? 50 : 56,   // Reduced from 80 to 56
                 data: {
                     label: status.name,
-                    description: status.text || '',
-                    color: status.color,
-                    statusType: status.status_type
-                },
-                style: {
-                    backgroundColor: bgColor,
-                    borderColor: borderColor,
-                    color: textColor,
-                    border: `2px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    padding: '10px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    minWidth: '120px',
-                    minHeight: '60px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                },
-                sourcePosition: 'right',
-                targetPosition: 'left',
-                draggable: true
+                    color: bgColor,
+                    isStart: isStart
+                }
             };
-
-            // Special styling for start status
-            if (status.status_type === 'start' || status.name.toLowerCase().includes('старт') || status.code === 'start') {
-                node.style.borderRadius = '50%';
-                node.style.minWidth = '60px';
-                node.style.minHeight = '60px';
-                node.style.width = '60px';
-                node.style.height = '60px';
-            }
 
             nodes.push(node);
         });
@@ -530,24 +509,8 @@ export class HuEvaFlowEnhancer {
                     target: toStatus.id,
                     label: transition.name?.trim() || '',
                     type: 'smoothstep',
-                    animated: false,
-                    style: {
-                        stroke: '#456',
-                        strokeWidth: 2
-                    },
-                    labelStyle: {
-                        fill: '#456',
-                        fontSize: '12px',
-                        fontWeight: 600
-                    },
-                    labelBgStyle: {
-                        fill: 'white',
-                        fillOpacity: 0.8
-                    },
-                    markerEnd: {
-                        type: 'arrowclosed',
-                        color: '#456'
-                    }
+                    markerEnd: { type: 'arrowclosed', color: '#456' },
+                    style: { stroke: '#456', strokeWidth: 2 }
                 };
 
                 edges.push(edge);
@@ -557,51 +520,5 @@ export class HuEvaFlowEnhancer {
         console.log('HuEvaFlowEnhancer: Prepared SvelteFlow data', { nodes: nodes.length, edges: edges.length });
 
         return { nodes, edges };
-    }
-
-    /**
-     * Helper function to convert hex color to RGBA
-     * @param {string} hex - Hex color string
-     * @param {number} alpha - Alpha value (0-1)
-     * @returns {string|null} RGBA color string or null if invalid
-     */
-    hexToRgbA(hex, alpha = 1) {
-        if (!hex) return null;
-
-        const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-        hex = hex.replace(shorthandRegex, (m, r, g, b) => {
-            return r + r + g + g + b + b;
-        });
-
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ?
-            `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})` :
-            null;
-    }
-
-    /**
-     * Helper function to adjust color lightness
-     * @param {string} hex - Hex color string
-     * @param {number} percent - Percentage to adjust (-100 to 100)
-     * @returns {string|null} Adjusted hex color string or null if invalid
-     */
-    adjustColorLightness(hex, percent) {
-        if (!hex) return null;
-
-        hex = hex.replace(/^\s*#|\s*$/g, '');
-
-        let r = parseInt(hex.substr(0, 2), 16);
-        let g = parseInt(hex.substr(2, 2), 16);
-        let b = parseInt(hex.substr(4, 2), 16);
-
-        r = Math.min(255, Math.max(0, r + r * (percent / 100)));
-        g = Math.min(255, Math.max(0, g + g * (percent / 100)));
-        b = Math.min(255, Math.max(0, b + b * (percent / 100)));
-
-        r = Math.round(r).toString(16).padStart(2, '0');
-        g = Math.round(g).toString(16).padStart(2, '0');
-        b = Math.round(b).toString(16).padStart(2, '0');
-
-        return `#${r}${g}${b}`;
     }
 }

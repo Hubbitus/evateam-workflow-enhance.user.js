@@ -1,8 +1,9 @@
 {
+  "jsonrpc": "2.0",
   "result": {
     "id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
-    "name": "Main Workflow",
-    "description": "Main business process workflow",
+    "class_name": "CmfWorkflow",
+    "name": "DQ process",
     "scheme_draw_config": {
       "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e_draw_scheme_item": {
         "x": 271,
@@ -28,6 +29,42 @@
         "x": 1020,
         "y": 715
       }
-    }
-  }
+    },
+    "text": null,
+    "parent_id": null,
+    "project_id": null,
+    "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+    "code": "WF-000130"
+  },
+  "meta": {},
+  "jsver": "20260205152137006",
+  "callid": "900a0bf3-db9b-471d-9dcf-006e97dc63ef",
+  "jsurl": "/desk/Task/DQ-7",
+  "profiler_data": {
+    "select_count": {
+      "select": 9,
+      "total": 9
+    },
+    "inmemory_cache_hit": 3,
+    "inmemory_cache_miss": 0,
+    "prepare": 5.423,
+    "call_method_ms": 1.623,
+    "save": 0.001,
+    "commit": 1.144,
+    "acl_check": 9,
+    "acl_check_skip": 0,
+    "acl_check_owner_skip": 0,
+    "acl_check_cache": 9,
+    "acl_check_calc": 0,
+    "acl_check_cache_static": 0,
+    "acl_check_calc_static": 0,
+    "result_to_dict_ms": 0.464,
+    "number_of_objects": 44
+  },
+  "alert": [],
+  "note": [],
+  "abort": null,
+  "version": "02.31.01.4836",
+  "invalidate": [],
+  "redis_id": "1770294115"
 }
