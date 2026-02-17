@@ -15,8 +15,8 @@
 
   // State - use $state() for Svelte 5 reactivity
   let currentView = $state('enhanced');
-  let workflowNodes = $state([]);
-  let workflowEdges = $state([]);
+  let workflowNodes = $state.raw([]);
+  let workflowEdges = $state.raw([]);
   let showTooltip = $state(false);
   let tooltipContent = $state('');
   let tooltipPosition = $state({ x: 0, y: 0 });

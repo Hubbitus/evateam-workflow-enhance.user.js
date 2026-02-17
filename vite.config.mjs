@@ -44,10 +44,12 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@xyflow/svelte'],
+    esbuildOptions: {
+      sourcemap: false
+    }
   },
-  // Suppress source map warnings in Firefox
   css: {
-    devSourcemap: false
+    devSourcemap: true
   },
   build: {
     outDir: '../dist',
