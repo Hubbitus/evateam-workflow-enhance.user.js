@@ -19,7 +19,7 @@
 
   // Track last node positions to detect changes
   const lastPositions = new Map();
-  
+
   const nodeTypes = {
     colored: ColoredNode,
   };
@@ -106,7 +106,9 @@
             },
             markerEnd: {
               type: 'arrowclosed',
-              color: '#456'
+              color: '#456',
+              width: 25,
+              height: 25
             }
           };
 
