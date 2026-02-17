@@ -204,29 +204,22 @@
     return { sourceHandleId, targetHandleId };
   }
 
-  function handleNodeDragStop(event) {
+  function handleNodeDrag(event) {
     const draggedNode = event.targetNode;
-    console.log('--- handleNodeDragStop ---');
-    console.log('Event:', event);
-    console.log('Dragged Node:', draggedNode.id, 'New Position:', draggedNode.position);
 
     const updatedEdges = workflowEdges.map(edge => {
       if (edge.source === draggedNode.id || edge.target === draggedNode.id) {
-        console.log(`Updating edge ${edge.id}`);
         const sourceNode = workflowNodes.find(n => n.id === edge.source);
         const targetNode = workflowNodes.find(n => n.id === edge.target);
 
         if (sourceNode && targetNode) {
           const { sourceHandleId, targetHandleId } = calculateOptimalHandles(sourceNode, targetNode);
-          console.log(`  Old handles: ${edge.sourceHandle} -> ${edge.targetHandle}`);
-          console.log(`  New handles: ${sourceHandleId} -> ${targetHandleId}`);
           return { ...edge, sourceHandle: sourceHandleId, targetHandle: targetHandleId };
         }
       }
       return edge;
     });
 
-    console.log('Updated Edges:', updatedEdges);
     workflowEdges = updatedEdges;
   }
 
@@ -246,7 +239,7 @@
         bind:nodes={workflowNodes}
         edges={workflowEdges}
         nodeTypes={nodeTypes}
-        onnodedragstop={handleNodeDragStop}
+        onnodedrag={handleNodeDrag}
       >
         <Background />
         <FitViewOnLoad />
