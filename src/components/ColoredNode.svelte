@@ -105,12 +105,10 @@
 
   <!-- Target handles - receives incoming edges -->
   <Handle type="target" position="top" id="target-top" />
-  <Handle type="target" position="bottom" id="target-bottom" />
   <Handle type="target" position="left" id="target-left" />
   <Handle type="target" position="right" id="target-right" />
 
   <!-- Source handles - connects outgoing edges -->
-  <Handle type="source" position="top" id="source-top" />
   <Handle type="source" position="bottom" id="source-bottom" />
   <Handle type="source" position="left" id="source-left" />
   <Handle type="source" position="right" id="source-right" />

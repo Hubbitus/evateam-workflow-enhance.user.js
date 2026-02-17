@@ -22,7 +22,9 @@
   "author": "Pavel Alexeev <Pahan@Hubbitus.info>",
   "license": "MIT",
   "dependencies": {
+    "@types/dagre": "^0.7.53",
     "@xyflow/svelte": "^1.5.0",
+    "dagre": "^0.8.5",
     "svelte": "^5.25.0"
   },
   "devDependencies": {

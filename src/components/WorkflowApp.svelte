@@ -4,27 +4,132 @@
   import ColoredNode from './ColoredNode.svelte';
   import FitViewOnLoad from './FitViewOnLoad.svelte';
   import { onMount } from 'svelte';
+  import dagre from 'dagre';
 
   import '@xyflow/svelte/dist/base.css';
   import '@xyflow/svelte/dist/style.css';
 
-  // Props
-  export let api = null;
-  export let originalWorkflowElement = null;
+  // Props - use $props() for Svelte 5 runes mode
+  let { api = null, originalWorkflowElement = null } = $props();
 
-  // State
-  let currentView = 'enhanced';
-  let workflowNodes = [];
-  let workflowEdges = [];
-  let flowKey = 0; // Key to force re-render
-  let updateTimeout = null; // Debounce timer
+  // State - use $state() for Svelte 5 reactivity
+  let currentView = $state('enhanced');
+  let workflowNodes = $state([]);
+  let workflowEdges = $state([]);
 
+  // Track last node positions to detect changes
+  const lastPositions = new Map();
+  
   const nodeTypes = {
     colored: ColoredNode,
   };
 
   // Store original transitions for recalculation
   let originalTransitions = [];
+
+  function layoutNodesWithDagre(nodes, edges) {
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 100 });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    nodes.forEach((node) => {
+      g.setNode(node.id, { width: node.width, height: node.height });
+    });
+
+    edges.forEach((edge) => {
+      g.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(g);
+
+    return nodes.map((node) => {
+      const nodeWithLayout = g.node(node.id);
+      return {
+        ...node,
+        position: {
+          x: nodeWithLayout.x - nodeWithLayout.width / 2,
+          y: nodeWithLayout.y - nodeWithLayout.height / 2,
+        },
+      };
+    });
+  }
+
+  function prepareSvelteFlowData(data) {
+    if (!data) return { nodes: [], edges: [], transitions: [] };
+
+    const { workflow, statuses, transitions } = data;
+    let nodes = [];
+    const edges = [];
+
+    statuses.forEach((status, index) => {
+      const isStartNode = status.name.toLowerCase().includes('старт') || status.code === 'start';
+
+      const node = {
+        id: status.id,
+        type: 'colored',
+        position: { x: 0, y: 0 }, // Position will be set by dagre
+        data: {
+          label: status.name,
+          description: status.text || '',
+          color: status.color,
+          statusType: status.status_type,
+          isStart: isStartNode,
+        },
+        width: isStartNode ? 50 : 200,
+        height: isStartNode ? 50 : 60,
+      };
+
+      nodes.push(node);
+    });
+
+    transitions.forEach(transition => {
+      transition.status_from.forEach(fromStatus => {
+        const sourceNode = nodes.find(n => n.id === fromStatus.id);
+        const targetNode = nodes.find(n => n.id === transition.status_to.id);
+
+        if (sourceNode && targetNode) {
+          const edge = {
+            id: `${fromStatus.id}-${transition.status_to.id}`,
+            source: fromStatus.id,
+            target: transition.status_to.id,
+            type: 'default',
+            label: transition.name.trim(),
+            animated: false,
+            style: {
+              stroke: '#456',
+              strokeWidth: 2
+            },
+            labelStyle: {
+              fill: '#456',
+              fontWeight: 600,
+              fontSize: '12px'
+            },
+            markerEnd: {
+              type: 'arrowclosed',
+              color: '#456'
+            }
+          };
+
+          edges.push(edge);
+        }
+      });
+    });
+
+    nodes = layoutNodesWithDagre(nodes, edges);
+
+    edges.forEach(edge => {
+        const sourceNode = nodes.find(n => n.id === edge.source);
+        const targetNode = nodes.find(n => n.id === edge.target);
+
+        if (sourceNode && targetNode) {
+          const { sourceHandleId, targetHandleId } = calculateOptimalHandles(sourceNode, targetNode);
+          edge.sourceHandle = sourceHandleId;
+          edge.targetHandle = targetHandleId;
+        }
+    });
+
+    return { nodes, edges, transitions };
+  }
 
   // Initialize when component mounts
   onMount(async () => {
@@ -52,96 +157,6 @@
     }
   });
 
-  function prepareSvelteFlowData(data) {
-    if (!data) return { nodes: [], edges: [], transitions: [] };
-
-    const { workflow, statuses, transitions } = data;
-    const nodes = [];
-    const edges = [];
-
-    statuses.forEach((status, index) => {
-      let position = { x: 100, y: 100 };
-
-      if (workflow.scheme_draw_config) {
-        const configKey = `${status.id}_draw_scheme_item`;
-        const config = workflow.scheme_draw_config[configKey];
-
-        if (config) {
-          position = { x: config.x, y: config.y };
-        }
-      }
-
-      if (position.x === 100 && position.y === 100) {
-        const cols = 4;
-        const row = Math.floor(index / cols);
-        const col = index % cols;
-        position = {
-          x: 200 + col * 250,
-          y: 150 + row * 200
-        };
-      }
-
-      const isStartNode = status.name.toLowerCase().includes('старт') || status.code === 'start';
-
-      const node = {
-        id: status.id,
-        type: 'colored',
-        position,
-        data: {
-          label: status.name,
-          description: status.text || '',
-          color: status.color,
-          statusType: status.status_type,
-          isStart: isStartNode,
-        },
-        width: isStartNode ? 50 : 200,
-        height: isStartNode ? 50 : 60,
-      };
-
-      nodes.push(node);
-    });
-
-    // Create edges with optimal handles based on node positions
-    transitions.forEach(transition => {
-      transition.status_from.forEach(fromStatus => {
-        const sourceNode = nodes.find(n => n.id === fromStatus.id);
-        const targetNode = nodes.find(n => n.id === transition.status_to.id);
-
-        if (sourceNode && targetNode) {
-          const { sourceHandleId, targetHandleId } = calculateOptimalHandles(sourceNode, targetNode);
-
-          const edge = {
-            id: `${fromStatus.id}-${transition.status_to.id}`,
-            source: fromStatus.id,
-            target: transition.status_to.id,
-            sourceHandle: sourceHandleId,
-            targetHandle: targetHandleId,
-            type: 'default',
-            label: transition.name.trim(),
-            animated: false,
-            style: {
-              stroke: '#456',
-              strokeWidth: 2
-            },
-            labelStyle: {
-              fill: '#456',
-              fontWeight: 600,
-              fontSize: '12px'
-            },
-            markerEnd: {
-              type: 'arrowclosed',
-              color: '#456'
-            }
-          };
-
-          edges.push(edge);
-        }
-      });
-    });
-
-    return { nodes, edges, transitions };
-  }
-
   /**
    * Calculate optimal handles for an edge based on node positions
    * This ensures the shortest possible path with minimal crossings
@@ -168,95 +183,51 @@
     let sourceHandleId, targetHandleId;
 
     // Quadrant-based handle selection for optimal routing
-    if (angleDeg >= -22.5 && angleDeg < 22.5) {
+    if (angleDeg >= -45 && angleDeg < 45) {
       // Target is to the right
       sourceHandleId = 'source-right';
       targetHandleId = 'target-left';
-    } else if (angleDeg >= 22.5 && angleDeg < 67.5) {
-      // Target is bottom-right
-      sourceHandleId = 'source-right';
-      targetHandleId = 'target-top';
-    } else if (angleDeg >= 67.5 && angleDeg < 112.5) {
+    } else if (angleDeg >= 45 && angleDeg < 135) {
       // Target is below
       sourceHandleId = 'source-bottom';
       targetHandleId = 'target-top';
-    } else if (angleDeg >= 112.5 && angleDeg < 157.5) {
-      // Target is bottom-left
-      sourceHandleId = 'source-left';
-      targetHandleId = 'target-top';
-    } else if (angleDeg >= 157.5 || angleDeg < -157.5) {
+    } else if (angleDeg >= 135 || angleDeg < -135) {
       // Target is to the left
       sourceHandleId = 'source-left';
       targetHandleId = 'target-right';
-    } else if (angleDeg >= -157.5 && angleDeg < -112.5) {
-      // Target is top-left
-      sourceHandleId = 'source-left';
-      targetHandleId = 'target-bottom';
-    } else if (angleDeg >= -112.5 && angleDeg < -67.5) {
-      // Target is above
-      sourceHandleId = 'source-top';
-      targetHandleId = 'target-bottom';
     } else {
-      // Target is top-right
-      sourceHandleId = 'source-right';
-      targetHandleId = 'target-bottom';
+      // Target is above
+      sourceHandleId = 'source-bottom';
+      targetHandleId = 'target-top';
     }
 
     return { sourceHandleId, targetHandleId };
   }
 
-  /**
-   * Update all edges with optimal handles based on current node positions
-   * SvelteFlow automatically handles this when no explicit handles are specified
-   */
-  function updateEdgeHandles() {
-    console.log('Node positions changed, SvelteFlow will automatically recalculate handles');
-    // SvelteFlow automatically uses the optimal handles based on node positions
-    // when sourceHandle/targetHandle are not specified
-  }
+  function handleNodeDragStop(event) {
+    const draggedNode = event.targetNode;
+    console.log('--- handleNodeDragStop ---');
+    console.log('Event:', event);
+    console.log('Dragged Node:', draggedNode.id, 'New Position:', draggedNode.position);
 
-  /**
-   * Recalculate edge handles when nodes are moved
-   */
-  function recalculateEdgeHandles() {
-    workflowEdges = workflowEdges.map(edge => {
-      const sourceNode = workflowNodes.find(n => n.id === edge.source);
-      const targetNode = workflowNodes.find(n => n.id === edge.target);
+    const updatedEdges = workflowEdges.map(edge => {
+      if (edge.source === draggedNode.id || edge.target === draggedNode.id) {
+        console.log(`Updating edge ${edge.id}`);
+        const sourceNode = workflowNodes.find(n => n.id === edge.source);
+        const targetNode = workflowNodes.find(n => n.id === edge.target);
 
-      if (sourceNode && targetNode) {
-        const { sourceHandleId, targetHandleId } = calculateOptimalHandles(sourceNode, targetNode);
-        return {
-          ...edge,
-          sourceHandle: sourceHandleId,
-          targetHandle: targetHandleId
-        };
-      }
-
-      return edge;
-    });
-  }
-
-  /**
-   * Handle node changes (drag, position update)
-   */
-  function handleNodesChange(changes) {
-    console.log('Nodes changed:', changes);
-    let needsRecalc = false;
-
-    changes.forEach(change => {
-      if (change.type === 'position') {
-        const nodeIndex = workflowNodes.findIndex(n => n.id === change.id);
-        if (nodeIndex !== -1) {
-          workflowNodes[nodeIndex].position = { ...change.position };
-          needsRecalc = true;
+        if (sourceNode && targetNode) {
+          const { sourceHandleId, targetHandleId } = calculateOptimalHandles(sourceNode, targetNode);
+          console.log(`  Old handles: ${edge.sourceHandle} -> ${edge.targetHandle}`);
+          console.log(`  New handles: ${sourceHandleId} -> ${targetHandleId}`);
+          return { ...edge, sourceHandle: sourceHandleId, targetHandle: targetHandleId };
         }
       }
+      return edge;
     });
 
-    // Recalculate edge handles when nodes move
-    if (needsRecalc) {
-      recalculateEdgeHandles();
-    }
+    console.log('Updated Edges:', updatedEdges);
+    workflowEdges = updatedEdges;
   }
 
   function switchView(view) {
@@ -266,16 +237,16 @@
 
 <div class="workflow-app" style="width: 100%; height: 100%;">
   <WorkflowTabs
-    originalWorkflowElement="{originalWorkflowElement}"
-    currentView="{currentView}"
-    on:switchView="{(e) => switchView(e.detail.view)}"
+    originalWorkflowElement={originalWorkflowElement}
+    currentView={currentView}
+    on:switchView={(e) => switchView(e.detail.view)}
   >
     {#if workflowNodes.length > 0 && workflowEdges.length > 0}
       <SvelteFlow
-        nodes="{workflowNodes}"
-        edges="{workflowEdges}"
-        nodeTypes="{nodeTypes}"
-        on:nodeschange="{handleNodesChange}"
+        bind:nodes={workflowNodes}
+        edges={workflowEdges}
+        nodeTypes={nodeTypes}
+        onnodedragstop={handleNodeDragStop}
       >
         <Background />
         <FitViewOnLoad />
