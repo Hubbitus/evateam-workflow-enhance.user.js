@@ -3,6 +3,7 @@
   import WorkflowTabs from './WorkflowTabs.svelte';
   import ColoredNode from './ColoredNode.svelte';
   import FitViewOnLoad from './FitViewOnLoad.svelte';
+  import NodeTooltip from './NodeTooltip.svelte';
   import { onMount } from 'svelte';
   import dagre from 'dagre';
 
@@ -16,6 +17,12 @@
   let currentView = $state('enhanced');
   let workflowNodes = $state([]);
   let workflowEdges = $state([]);
+  let showTooltip = $state(false);
+  let tooltipContent = $state('');
+  let tooltipPosition = $state({ x: 0, y: 0 });
+  let tooltipMaxWidth = $state(300);
+  let tooltipNodeRef;
+  let containerEl;
 
   // Track last node positions to detect changes
   const lastPositions = new Map();
@@ -225,12 +232,53 @@
     workflowEdges = updatedEdges;
   }
 
+  function handleNodeClick(event) {
+    const clickedNode = event.node;
+    if (clickedNode && clickedNode.data.description) {
+      tooltipContent = clickedNode.data.description;
+      
+      const nodeRect = event.event.target.getBoundingClientRect();
+      const containerRect = containerEl.getBoundingClientRect();
+
+      tooltipPosition = {
+        x: nodeRect.right - containerRect.left,
+        y: nodeRect.top - containerRect.top,
+      };
+
+      tooltipMaxWidth = containerRect.width - (nodeRect.right - containerRect.left) - 20; // 20px padding
+      
+      showTooltip = true;
+      tooltipNodeRef = event.event.target;
+    }
+  }
+
+  $effect(() => {
+    if (showTooltip) {
+      const handleClickOutside = (event) => {
+        // Check if click is outside the tooltip and not on the node that triggered it
+        if (tooltipNodeRef && !tooltipNodeRef.contains(event.target)) {
+          showTooltip = false;
+        }
+      };
+
+      // Delay adding the listener to prevent the current click from immediately closing the tooltip
+      const timer = setTimeout(() => {
+        window.addEventListener('click', handleClickOutside, true);
+      }, 0);
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('click', handleClickOutside, true);
+      };
+    }
+  });
+
   function switchView(view) {
     currentView = view;
   }
 </script>
 
-<div class="workflow-app" style="width: 100%; height: 100%;">
+<div class="workflow-app" style="width: 100%; height: 100%; position: relative;" bind:this={containerEl}>
   <WorkflowTabs
     originalWorkflowElement={originalWorkflowElement}
     currentView={currentView}
@@ -242,6 +290,8 @@
         edges={workflowEdges}
         nodeTypes={nodeTypes}
         onnodedrag={handleNodeDrag}
+        onnodeclick={handleNodeClick}
+        nodeDragThreshold={1}
       >
         <Background />
         <FitViewOnLoad />
@@ -250,4 +300,8 @@
       <p>Loading enhanced workflow...</p>
     {/if}
   </WorkflowTabs>
+
+  {#if showTooltip}
+    <NodeTooltip description={tooltipContent} position={tooltipPosition} maxWidth={tooltipMaxWidth} />
+  {/if}
 </div>

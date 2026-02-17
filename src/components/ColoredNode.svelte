@@ -103,6 +103,10 @@
     </svg>
   {/if}
 
+  {#if data.description}
+    <div class="description-indicator">?</div>
+  {/if}
+
   <!-- Target handles - receives incoming edges -->
   <Handle type="target" position="top" id="target-top" />
   <Handle type="target" position="left" id="target-left" />
@@ -113,3 +117,24 @@
   <Handle type="source" position="left" id="source-left" />
   <Handle type="source" position="right" id="source-right" />
 </div>
+
+<style>
+.description-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px white;
+  z-index: 10;
+}
+</style>
