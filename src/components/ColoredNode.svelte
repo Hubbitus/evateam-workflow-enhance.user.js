@@ -104,78 +104,14 @@
   {/if}
 
   <!-- Target handles - receives incoming edges -->
-  <Handle
-    type="target"
-    position="top"
-    id="top-target"
-    style="
-      width: 10px;
-      height: 10px;
-      background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {borderColor};
-      border-radius: 50%;
-    "
-  />
-  <Handle
-    type="target"
-    position="left"
-    id="left-target"
-    style="
-      width: 10px;
-      height: 10px;
-      background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {borderColor};
-      border-radius: 50%;
-    "
-  />
-  <Handle
-    type="target"
-    position="right"
-    id="right-target"
-    style="
-      width: 10px;
-      height: 10px;
-      background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {borderColor};
-      border-radius: 50%;
-    "
-  />
+  <Handle type="target" position="top" id="target-top" />
+  <Handle type="target" position="bottom" id="target-bottom" />
+  <Handle type="target" position="left" id="target-left" />
+  <Handle type="target" position="right" id="target-right" />
 
   <!-- Source handles - connects outgoing edges -->
-  <Handle
-    type="source"
-    position="bottom"
-    id="bottom-source"
-    style="
-      width: 10px;
-      height: 10px;
-      background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {borderColor};
-      border-radius: 50%;
-    "
-  />
-  <Handle
-    type="source"
-    position="left"
-    id="left-source"
-    style="
-      width: 10px;
-      height: 10px;
-      background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {borderColor};
-      border-radius: 50%;
-    "
-  />
-  <Handle
-    type="source"
-    position="right"
-    id="right-source"
-    style="
-      width: 10px;
-      height: 10px;
-      background: {isDark ? '#fff' : '#000'};
-      border: 2px solid {borderColor};
-      border-radius: 50%;
-    "
-  />
+  <Handle type="source" position="top" id="source-top" />
+  <Handle type="source" position="bottom" id="source-bottom" />
+  <Handle type="source" position="left" id="source-left" />
+  <Handle type="source" position="right" id="source-right" />
 </div>
