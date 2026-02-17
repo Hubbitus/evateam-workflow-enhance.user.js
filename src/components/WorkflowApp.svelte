@@ -86,8 +86,9 @@
           statusType: status.status_type,
           isStart: isStartNode,
         },
-        sourcePosition: 'bottom',
-        targetPosition: 'top',
+        width: isStartNode ? 50 : 200, // Default width from ColoredNode.svelte
+        height: isStartNode ? 50 : 60, // Default height from ColoredNode.svelte
+
       };
 
       nodes.push(node);
@@ -95,10 +96,56 @@
 
     transitions.forEach(transition => {
       transition.status_from.forEach(fromStatus => {
+        const sourceNode = nodes.find(n => n.id === fromStatus.id);
+        const targetNode = nodes.find(n => n.id === transition.status_to.id);
+
+        let sourceHandleId = 'bottom-source';
+        let targetHandleId = 'top-target';
+
+        if (sourceNode && targetNode) {
+          // Определяем центр узла, чтобы точнее рассчитать относительное положение
+          const sourceNodeWidth = sourceNode.width || 200; // Default to 200 if undefined
+          const sourceNodeHeight = sourceNode.height || 60; // Default to 60 if undefined
+          const targetNodeWidth = targetNode.width || 200; // Default to 200 if undefined
+          const targetNodeHeight = targetNode.height || 60; // Default to 60 if undefined
+
+          const sourceCenterX = sourceNode.position.x + sourceNodeWidth / 2;
+          const sourceCenterY = sourceNode.position.y + sourceNodeHeight / 2;
+          const targetCenterX = targetNode.position.x + targetNodeWidth / 2;
+          const targetCenterY = targetNode.position.y + targetNodeHeight / 2;
+
+          const deltaX = targetCenterX - sourceCenterX;
+          const deltaY = targetCenterY - sourceCenterY;
+
+          // Используем пороги для определения основной ориентации
+          // Приоритет отдаем горизонтальному, если разница по X значительна
+          if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5) { // если горизонтальное смещение значительно больше вертикального
+            if (deltaX > 0) { // Целевой узел справа
+              sourceHandleId = 'right-source';
+              targetHandleId = 'left-target';
+            } else { // Целевой узел слева
+              sourceHandleId = 'left-source';
+              targetHandleId = 'right-target';
+            }
+          } else { // Если вертикальное смещение больше или примерно равно горизонтальному
+            if (deltaY > 0) { // Целевой узел снизу
+              sourceHandleId = 'bottom-source';
+              targetHandleId = 'top-target';
+            } else { // Целевой узел сверху (в этом случае source будет снизу, а target сверху)
+              // Это случай, когда target находится над source.
+              // source (исходящий) не может быть сверху.
+              sourceHandleId = 'bottom-source';
+              targetHandleId = 'top-target';
+            }
+          }
+        }
+
         const edge = {
           id: `${fromStatus.id}-${transition.status_to.id}`,
           source: fromStatus.id,
+          sourceHandle: sourceHandleId, // Добавляем sourceHandle
           target: transition.status_to.id,
+          targetHandle: targetHandleId, // Добавляем targetHandle
           type: 'bezier',
           label: transition.name.trim(),
           animated: false,

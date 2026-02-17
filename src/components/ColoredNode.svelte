@@ -103,11 +103,35 @@
     </svg>
   {/if}
 
-  <!-- Target handle (top) - receives incoming edges -->
+  <!-- Target handles - receives incoming edges -->
   <Handle
     type="target"
     position="top"
-    id="target"
+    id="top-target"
+    style="
+      width: 10px;
+      height: 10px;
+      background: {isDark ? '#fff' : '#000'};
+      border: 2px solid {borderColor};
+      border-radius: 50%;
+    "
+  />
+  <Handle
+    type="target"
+    position="left"
+    id="left-target"
+    style="
+      width: 10px;
+      height: 10px;
+      background: {isDark ? '#fff' : '#000'};
+      border: 2px solid {borderColor};
+      border-radius: 50%;
+    "
+  />
+  <Handle
+    type="target"
+    position="right"
+    id="right-target"
     style="
       width: 10px;
       height: 10px;
@@ -117,11 +141,35 @@
     "
   />
 
-  <!-- Source handle (bottom) - connects outgoing edges -->
+  <!-- Source handles - connects outgoing edges -->
   <Handle
     type="source"
     position="bottom"
-    id="source"
+    id="bottom-source"
+    style="
+      width: 10px;
+      height: 10px;
+      background: {isDark ? '#fff' : '#000'};
+      border: 2px solid {borderColor};
+      border-radius: 50%;
+    "
+  />
+  <Handle
+    type="source"
+    position="left"
+    id="left-source"
+    style="
+      width: 10px;
+      height: 10px;
+      background: {isDark ? '#fff' : '#000'};
+      border: 2px solid {borderColor};
+      border-radius: 50%;
+    "
+  />
+  <Handle
+    type="source"
+    position="right"
+    id="right-source"
     style="
       width: 10px;
       height: 10px;
