@@ -1,20 +1,69 @@
 <script>
   // Svelte 5: Use $props() for reactive props
   import { Handle } from '@xyflow/svelte';
+  import { onMount } from 'svelte';
 
   let { data, selected, dragging, zIndex, width = 200, height = 60 } = $props();
+
+  let nodeEl;
+
+  // Log when component mounts
+  onMount(() => {
+    console.log('ColoredNode mounted:', {
+      label: data?.label,
+      statusType: data?.statusType,
+      isStart: data?.isStart,
+      width: width,
+      height: height
+    });
+
+    // Force set dimensions for special nodes on the parent node element
+    if (data?.statusType === 'ALL' || data?.statusType === 'START') {
+      const size = 100;
+      console.log('Setting special node size:', size);
+      // Find parent node element (svelte-flow__node)
+      let parentEl = nodeEl?.closest('.svelte-flow__node');
+      if (parentEl) {
+        parentEl.style.width = `${size}px`;
+        parentEl.style.height = `${size}px`;
+        parentEl.style.minWidth = `${size}px`;
+        parentEl.style.minHeight = `${size}px`;
+        console.log('Parent node element styled:', parentEl);
+      } else {
+        console.log('Parent node element not found');
+      }
+    }
+  });
 
   // Derived reactive values from data
   const bgColor = $derived(data?.color || '#cccccc');
   const isDark = $derived(isDarkColor(bgColor));
   const textColor = $derived(isDark ? '#ffffff' : '#000000');
-  const borderColor = $derived(adjustColorLightness(bgColor, -20));
+  const isSpecialNode = $derived(data?.statusType === 'ALL' || data?.statusType === 'START');
+  const borderColor = $derived(data?.statusType === 'START' ? '#334455' : (data?.statusType === 'ALL' ? '#999999' : adjustColorLightness(bgColor, -20)));
   const isStart = $derived(data?.isStart || false);
+  const isAllNode = $derived(data?.statusType === 'ALL');
+  const isStartNode = $derived(data?.statusType === 'START');
 
   // Determine final dimensions
-  const finalWidth = $derived(isStart ? 50 : width);
-  const finalHeight = $derived(isStart ? 50 : height);
-  const borderRadius = $derived(isStart ? '50%' : '6px');
+  const specialNodeSize = 70;
+  const finalWidth = $derived(isSpecialNode ? specialNodeSize : width);
+  const finalHeight = $derived(isSpecialNode ? specialNodeSize : height);
+  const borderRadius = $derived(isSpecialNode ? '50%' : '6px');
+
+  // Log dimensions for special nodes
+  $effect(() => {
+    if (isSpecialNode) {
+      console.log('Special node dimensions:', {
+        label: data?.label,
+        statusType: data?.statusType,
+        isSpecialNode,
+        finalWidth,
+        finalHeight,
+        specialNodeSize
+      });
+    }
+  });
 
   // Handle position helpers
   const handlePositionTop = { top: 0 };
@@ -71,12 +120,14 @@
 </script>
 
 <div
+  bind:this={nodeEl}
+  class:is-special-node={isSpecialNode}
   style="
     background-color: {bgColor};
     color: {textColor};
     border: 3px solid {borderColor};
     border-radius: {borderRadius};
-    padding: {isStart ? '0' : '8px 10px'};
+    padding: {isSpecialNode ? '0' : '8px 10px'};
     font-size: 13px;
     font-weight: 600;
     text-align: center;
@@ -87,20 +138,18 @@
     overflow: hidden;
     box-sizing: border-box;
     outline: none !important;
-    width: {finalWidth}px;
-    height: {finalHeight}px;
-    min-width: {isStart ? '50px' : '120px'};
-    min-height: {isStart ? '50px' : '40px'};
+    width: {finalWidth}px !important;
+    height: {finalHeight}px !important;
+    min-width: {isSpecialNode ? specialNodeSize + 'px !important' : '120px'};
+    min-height: {isSpecialNode ? specialNodeSize + 'px !important' : '40px'};
     position: relative;
     background-clip: padding-box;
   "
 >
-  {#if !isStart}
+  {#if !isSpecialNode}
     <span style="pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{data.label}</span>
   {:else}
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="pointer-events: none;">
-      <circle cx="12" cy="12" r="10" />
-    </svg>
+    <span style="pointer-events: none; font-size: 13px;">{data.label}</span>
   {/if}
 
   {#if data.description}
@@ -136,5 +185,12 @@
   cursor: pointer;
   box-shadow: 0 0 0 2px white;
   z-index: 10;
+}
+
+:global(.svelte-flow__node.is-special-node) {
+  width: 100px !important;
+  height: 100px !important;
+  min-width: 100px !important;
+  min-height: 100px !important;
 }
 </style>

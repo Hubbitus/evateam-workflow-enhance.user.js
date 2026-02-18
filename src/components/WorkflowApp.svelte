@@ -91,39 +91,136 @@
       nodes.push(node);
     });
 
+    // Check if any transition has empty status_from (from "All" node)
+    const hasAllTransitions = transitions.some(t => {
+      const fromStatuses = Array.isArray(t.status_from) ? t.status_from : (t.status_from ? [t.status_from] : []);
+      return fromStatuses.length === 0;
+    });
+
+    // Find start statuses (no incoming transitions within current workflow)
+    const statusIds = statuses.map(s => s.id);
+    const incomingTransitions = new Set();
+    transitions.forEach(t => {
+      const fromStatuses = Array.isArray(t.status_from) ? t.status_from : (t.status_from ? [t.status_from] : []);
+      fromStatuses.forEach(fs => {
+        if (fs && fs.id) {
+          incomingTransitions.add(fs.id);
+        }
+      });
+    });
+
+    // Also track which statuses have incoming transitions to them
+    const statusIdsWithIncoming = new Set();
+    transitions.forEach(t => {
+      if (t.status_to && t.status_to.id) {
+        statusIdsWithIncoming.add(t.status_to.id);
+      }
+    });
+
+    console.log('HuEvaFlowEnhancer: Status IDs:', statusIds);
+    console.log('HuEvaFlowEnhancer: Status IDs with incoming transitions:', Array.from(statusIdsWithIncoming));
+
+    // Start statuses are those that:
+    // 1. Have no incoming transitions TO them (within current statuses)
+    // 2. Are part of the current workflow's statuses
+    const startStatuses = statuses.filter(s =>
+      !statusIdsWithIncoming.has(s.id)
+    );
+
+    console.log('HuEvaFlowEnhancer: Start statuses:', startStatuses.map(s => s.name));
+
+    // Create "Start" node if there are start statuses
+    const hasStartNode = startStatuses.length > 0;
+    if (hasStartNode) {
+      nodes.push({
+        id: 'start',
+        type: 'colored',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Старт',
+          description: 'Начало бизнес-процесса',
+          color: '#445566',
+          statusType: 'START',
+          isStart: true,
+        },
+        width: 100,
+        height: 100,
+      });
+    }
+
+    // Create "All" node if needed
+    if (hasAllTransitions) {
+      nodes.push({
+        id: 'all',
+        type: 'colored',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Все',
+          description: 'Переход возможен из любого статуса',
+          color: '#ffffff',
+          statusType: 'ALL',
+          isStart: true,
+        },
+        width: 100,
+        height: 100,
+      });
+    }
+
+    // Create edges from "Start" node to start statuses
+    if (hasStartNode) {
+      startStatuses.forEach(status => {
+        edges.push({
+          id: `start-${status.id}`,
+          source: 'start',
+          target: status.id,
+          type: 'default',
+          label: '',
+          animated: false,
+          style: {
+            stroke: '#445566',
+            strokeWidth: 2
+          },
+          markerEnd: {
+            type: 'arrowclosed',
+            color: '#445566',
+            width: 25,
+            height: 25
+          }
+        });
+      });
+    }
+
     transitions.forEach(transition => {
       // Handle status_from as array or single object
       const fromStatuses = Array.isArray(transition.status_from)
         ? transition.status_from
         : transition.status_from ? [transition.status_from] : [];
 
-      fromStatuses.forEach(fromStatus => {
-        // Skip if fromStatus is null or doesn't have an id
-        if (!fromStatus || !fromStatus.id) return;
-
-        const sourceNode = nodes.find(n => n.id === fromStatus.id);
+      // If status_from is empty, use the "All" node
+      if (fromStatuses.length === 0) {
+        const sourceNode = nodes.find(n => n.id === 'all');
         const targetNode = nodes.find(n => n.id === transition.status_to.id);
 
         if (sourceNode && targetNode) {
           const edge = {
-            id: `${fromStatus.id}-${transition.status_to.id}`,
-            source: fromStatus.id,
+            id: `all-${transition.status_to.id}`,
+            source: 'all',
             target: transition.status_to.id,
             type: 'default',
             label: transition.name.trim(),
             animated: false,
             style: {
-              stroke: '#456',
+              stroke: '#999999',
               strokeWidth: 2
             },
             labelStyle: {
-              fill: '#456',
+              fill: '#999999',
               fontWeight: 600,
               fontSize: '12px'
             },
             markerEnd: {
               type: 'arrowclosed',
-              color: '#456',
+              color: '#999999',
               width: 25,
               height: 25
             }
@@ -131,7 +228,43 @@
 
           edges.push(edge);
         }
-      });
+      } else {
+        fromStatuses.forEach(fromStatus => {
+          // Skip if fromStatus is null or doesn't have an id
+          if (!fromStatus || !fromStatus.id) return;
+
+          const sourceNode = nodes.find(n => n.id === fromStatus.id);
+          const targetNode = nodes.find(n => n.id === transition.status_to.id);
+
+          if (sourceNode && targetNode) {
+            const edge = {
+              id: `${fromStatus.id}-${transition.status_to.id}`,
+              source: fromStatus.id,
+              target: transition.status_to.id,
+              type: 'default',
+              label: transition.name.trim(),
+              animated: false,
+              style: {
+                stroke: '#456',
+                strokeWidth: 2
+              },
+              labelStyle: {
+                fill: '#456',
+                fontWeight: 600,
+                fontSize: '12px'
+              },
+              markerEnd: {
+                type: 'arrowclosed',
+                color: '#456',
+                width: 25,
+                height: 25
+              }
+            };
+
+            edges.push(edge);
+          }
+        });
+      }
     });
 
     nodes = layoutNodesWithDagre(nodes, edges);
@@ -268,7 +401,7 @@
     const clickedNode = event.node;
     if (clickedNode && clickedNode.data.description) {
       tooltipContent = clickedNode.data.description;
-      
+
       const nodeRect = event.event.target.getBoundingClientRect();
       const containerRect = containerEl.getBoundingClientRect();
 
@@ -278,7 +411,7 @@
       };
 
       tooltipMaxWidth = containerRect.width - (nodeRect.right - containerRect.left) - 20; // 20px padding
-      
+
       showTooltip = true;
       tooltipNodeRef = event.event.target;
     }
