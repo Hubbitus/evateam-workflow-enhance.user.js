@@ -132,6 +132,12 @@ jobs:
     if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '/release')
     runs-on: ubuntu-latest
     steps:
+      - name: Debug event
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Issue has PR: ${{ github.event.issue.pull_request }}"
+          echo "Comment body: ${{ github.event.comment.body }}"
+
       - name: Checkout
         uses: actions/checkout@v4
 
