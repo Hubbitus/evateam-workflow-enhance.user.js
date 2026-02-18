@@ -33,6 +33,15 @@ Just follow the [link](https://github.com/Hubbitus/evateam-workflow-enhance.user
 
 > **TIP** Script configured for auto-updates, just allow that in extension settings!
 
+# CI/CD
+
+| Trigger | Version | Release | Description |
+|---------|---------|---------|-------------|
+| Push to main | `vYYYYMMDDHHmmss` | Yes | Automated release |
+| Push tag `v*` | Tag name (e.g., `v1.2.3`) | Yes | Release from tag |
+| Workflow **manual** dispatch with PR | `vYYYYMMDDHHmmss.pr.{N}` | Pre-release | Manual pre-release with PR link |
+| Push to other branches / PR | `0.1.0-dev` | No | Build only |
+
 # Development
 
 ### Setup

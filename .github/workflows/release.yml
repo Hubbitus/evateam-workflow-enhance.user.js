@@ -4,9 +4,17 @@ on:
   push:
     branches:
       - '**'
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - '**'
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number for pre-release (optional)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -33,12 +41,27 @@ jobs:
       - name: Generate version
         id: version
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.pr_number }}" ]]; then
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            VERSION="v$(date -u +'%Y%m%d%H%M%S').pr.${PR_NUMBER}"
+            IS_PRERELEASE="true"
+            PR_LINK="https://github.com/${{ github.repository }}/pull/${PR_NUMBER}"
+          elif [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            IS_PRERELEASE="false"
+            PR_LINK=""
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             VERSION="v$(date -u +'%Y%m%d%H%M%S')"
+            IS_PRERELEASE="false"
+            PR_LINK=""
           else
             VERSION="0.1.0-dev"
+            IS_PRERELEASE="false"
+            PR_LINK=""
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "pr_link=$PR_LINK" >> $GITHUB_OUTPUT
           echo "Generated version: $VERSION"
 
       - name: Build userscript
@@ -61,12 +84,14 @@ jobs:
           path: dist/evateam-workflow-enhance.user.js
           retention-days: 30
 
-      - name: Create Release (main branch only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      - name: Create Release
+        if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          IS_PRERELEASE="${{ steps.version.outputs.is_prerelease }}"
+          PR_LINK="${{ steps.version.outputs.pr_link }}"
 
           # Check if release already exists
           if gh release view "$VERSION" &>/dev/null; then
@@ -74,10 +99,27 @@ jobs:
             exit 0
           fi
 
-          # Create release
-          gh release create "$VERSION" \
-            --title "EvaTeam Workflow Enhancer $VERSION" \
-            --notes "Automated release from main branch" \
-            dist/evateam-workflow-enhance.user.js
+          # Generate release notes
+          if [[ -n "$PR_LINK" ]]; then
+            NOTES="Pre-release from Pull Request: $PR_LINK"
+          elif [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            NOTES="Release from tag $VERSION"
+          else
+            NOTES="Automated release from main branch"
+          fi
+
+          # Create release with prerelease flag if needed
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            gh release create "$VERSION" \
+              --title "EvaTeam Workflow Enhancer $VERSION" \
+              --notes "$NOTES" \
+              --prerelease \
+              dist/evateam-workflow-enhance.user.js
+          else
+            gh release create "$VERSION" \
+              --title "EvaTeam Workflow Enhancer $VERSION" \
+              --notes "$NOTES" \
+              dist/evateam-workflow-enhance.user.js
+          fi
 
           echo "Release $VERSION created successfully"
