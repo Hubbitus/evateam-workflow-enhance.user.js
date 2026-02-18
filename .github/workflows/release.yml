@@ -190,11 +190,10 @@ jobs:
           fi
 
           # Create pre-release
+          NOTES="Pre-release from Pull Request: $PR_LINK\n\nTriggered by comment from @${{ github.event.comment.user.login }}"
           gh release create "$VERSION" \
             --title "EvaTeam Workflow Enhancer $VERSION" \
-            --notes "Pre-release from Pull Request: $PR_LINK
-
-Triggered by comment from @${{ github.event.comment.user.login }}" \
+            --notes "$NOTES" \
             --prerelease \
             dist/evateam-workflow-enhance.user.js
 
