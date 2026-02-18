@@ -32,27 +32,42 @@ export class HuEvaApi {
     async call(method, params = {}) {
         try {
             let url;
-            if (this.config.useMock && this.config.mockUrls[method]) {
-                url = this.config.mockUrls[method];
-            } else {
-                url = `${this.config.baseUrl}?m=${method}`;
+            let fetchOptions;
 
-                const queryParams = new URLSearchParams({ m: method });
-                for (const [key, value] of Object.entries(params)) {
-                    queryParams.append(key, value);
-                }
-                url = `${this.config.baseUrl}?${queryParams.toString()}`;
+            if (this.config.useMock && this.config.mockUrls[method]) {
+                // Mock mode - GET request to local JSON file
+                url = this.config.mockUrls[method];
+                fetchOptions = {
+                    method: 'GET',
+                    credentials: 'include'
+                };
+            } else {
+                // Real API mode - POST request with JSON-RPC 2.2
+                const callid = crypto.randomUUID?.() || Math.random().toString(36).substring(7);
+                const jshash = `jshash:${method}:tampermonkey:${callid}`;
+
+                const bodyParams = {
+                    jsonrpc: '2.2',
+                    callid: callid,
+                    method: method,
+                    kwargs: params,
+                    no_meta: true,
+                    jshash: jshash
+                };
+                url = `${this.config.baseUrl}?m=${method}`;
+                fetchOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bodyParams),
+                    credentials: 'include'
+                };
             }
 
             console.log(`HuEvaFlowEnhancer: Calling API method ${method} with URL: ${url}`);
 
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include'
-            });
+            const response = await fetch(url, fetchOptions);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -60,9 +75,16 @@ export class HuEvaApi {
 
             const data = await response.json();
 
+            // JSON-RPC 2.0 response format
+            if (data.error) {
+                console.error(`HuEvaFlowEnhancer: API error for ${method}:`, data.error);
+                throw new Error(`API error: ${JSON.stringify(data.error)}`);
+            }
+
             console.log(`HuEvaFlowEnhancer: API call ${method} successful`, data);
 
-            return data;
+            // Return the 'result' field for JSON-RPC 2.0
+            return data.result || data;
         } catch (error) {
             console.error(`HuEvaFlowEnhancer: Error calling API method ${method}:`, error);
             throw error;
@@ -77,11 +99,24 @@ export class HuEvaApi {
     async getWorkflow(workflowId) {
         const params = {};
         if (workflowId) {
-            params.id = workflowId;
+            params.filter = ['id', '=', workflowId];
         }
 
-        const response = await this.call('CmfWorkflow.get', params);
-        return response.result;
+        return await this.call('CmfWorkflow.get', params);
+    }
+
+    /**
+     * Gets workflow data by name
+     * @param {string} workflowName - Name of the workflow to retrieve
+     * @returns {Promise<Object>} Workflow data
+     */
+    async getWorkflowByName(workflowName) {
+        const params = {};
+        if (workflowName) {
+            params.filter = ['name', '=', workflowName];
+        }
+
+        return await this.call('CmfWorkflow.get', params);
     }
 
     /**
@@ -92,11 +127,12 @@ export class HuEvaApi {
     async getTransitions(workflowId) {
         const params = {};
         if (workflowId) {
-            params.workflow_id = workflowId;
+            params.filter = ['workflow_id', '=', workflowId];
         }
+        // Request fields needed for visualization
+        params.fields = ['id', 'name', 'status_from', 'status_to', 'workflow_id'];
 
-        const response = await this.call('CmfTrans.list', params);
-        return response.result;
+        return await this.call('CmfTrans.list', params);
     }
 
     /**
@@ -107,11 +143,12 @@ export class HuEvaApi {
     async getStatuses(workflowId) {
         const params = {};
         if (workflowId) {
-            params.workflow_id = workflowId;
+            params.filter = ['workflow_id', '=', workflowId];
         }
+        // Request fields needed for visualization
+        params.fields = ['id', 'name', 'text', 'color', 'status_type', 'code', 'workflow_id'];
 
-        const response = await this.call('CmfStatus.list', params);
-        return response.result;
+        return await this.call('CmfStatus.list', params);
     }
 
     /**
@@ -136,6 +173,41 @@ export class HuEvaApi {
             };
         } catch (error) {
             console.error(`HuEvaFlowEnhancer: Error getting complete workflow data:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Gets complete workflow data by workflow name
+     * @param {string} workflowName - Name of the workflow
+     * @returns {Promise<Object>} Complete workflow data
+     */
+    async getCompleteWorkflowDataByName(workflowName) {
+        try {
+            console.log(`HuEvaFlowEnhancer: Getting complete workflow data for workflow name: ${workflowName}`);
+
+            // First get workflow by name
+            const workflow = await this.getWorkflowByName(workflowName);
+
+            if (!workflow || !workflow.id) {
+                throw new Error(`Workflow not found with name: ${workflowName}`);
+            }
+
+            const workflowId = workflow.id;
+
+            // Then get statuses and transitions using the workflow ID
+            const [statuses, transitions] = await Promise.all([
+                this.getStatuses(workflowId),
+                this.getTransitions(workflowId)
+            ]);
+
+            return {
+                workflow,
+                statuses,
+                transitions
+            };
+        } catch (error) {
+            console.error(`HuEvaFlowEnhancer: Error getting complete workflow data by name:`, error);
             throw error;
         }
     }

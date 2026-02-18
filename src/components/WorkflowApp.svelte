@@ -68,6 +68,8 @@
     let nodes = [];
     const edges = [];
 
+    console.log('HuEvaFlowEnhancer: prepareSvelteFlowData - transitions:', transitions);
+
     statuses.forEach((status, index) => {
       const isStartNode = status.name.toLowerCase().includes('старт') || status.code === 'start';
 
@@ -90,7 +92,15 @@
     });
 
     transitions.forEach(transition => {
-      transition.status_from.forEach(fromStatus => {
+      // Handle status_from as array or single object
+      const fromStatuses = Array.isArray(transition.status_from)
+        ? transition.status_from
+        : transition.status_from ? [transition.status_from] : [];
+
+      fromStatuses.forEach(fromStatus => {
+        // Skip if fromStatus is null or doesn't have an id
+        if (!fromStatus || !fromStatus.id) return;
+
         const sourceNode = nodes.find(n => n.id === fromStatus.id);
         const targetNode = nodes.find(n => n.id === transition.status_to.id);
 
@@ -142,14 +152,36 @@
 
   // Initialize when component mounts
   onMount(async () => {
-    console.log('WorkflowApp mounted');
+    console.log('HuEvaFlowEnhancer: WorkflowApp mounted');
 
     // Load workflow data if available
     if (api) {
       try {
-        // Extract workflow ID and load data
-        const workflowId = 'CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e'; // Mock ID
-        const workflowData = await api.getCompleteWorkflowData(workflowId);
+        // Extract workflow name from original dialog header
+        let workflowName = null;
+        if (originalWorkflowElement) {
+          const titleElement = originalWorkflowElement.querySelector('.cmf-dialog__header .title');
+          if (titleElement) {
+            workflowName = titleElement.textContent.trim();
+            // Remove "Бизнес-процесс: " prefix if present
+            workflowName = workflowName.replace(/^Бизнес-процесс:\s*/, '');
+            console.log('HuEvaFlowEnhancer: Extracted workflow name:', workflowName);
+          }
+        }
+
+        let workflowData;
+        if (api.config.useMock) {
+          // In dev mode, use mock data directly
+          // The mock file already contains the workflow data
+          workflowData = await api.getCompleteWorkflowData(null);
+          console.log('HuEvaFlowEnhancer: Using mock workflow data');
+        } else if (workflowName) {
+          // In production, get workflow by name
+          workflowData = await api.getCompleteWorkflowDataByName(workflowName);
+          console.log('HuEvaFlowEnhancer: Loaded workflow data by name:', workflowName);
+        } else {
+          throw new Error('Could not extract workflow name from dialog header');
+        }
 
         // Prepare nodes and edges for SvelteFlow
         if (workflowData) {
@@ -158,10 +190,10 @@
           workflowEdges = edges;
           // Store transitions for dynamic recalculation
           window.workflowTransitions = transitions;
-          console.log('Workflow data loaded, edges:', edges.length);
+          console.log('HuEvaFlowEnhancer: Workflow data loaded, edges:', edges.length);
         }
       } catch (error) {
-        console.error('Error loading workflow data:', error);
+        console.error('HuEvaFlowEnhancer: Error loading workflow data:', error);
       }
     }
   });

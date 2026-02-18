@@ -18,6 +18,7 @@ function tampermonkeyHeaders() {
 // @description  Replaces the built-in process view in EvaTeam with an advanced visualization using SvelteFlow
 // @author       Pavel Alexeev <Pahan@Hubbitus.info>
 // @match        https://eva.gid.team/project/Task/*
+// @match        https://eva.gid.team/desk/Task/*
 // @grant        none
 // ==/UserScript==
 

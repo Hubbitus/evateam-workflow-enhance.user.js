@@ -7,7 +7,7 @@
   onMount(() => {
     // Call fitView on the next tick to ensure nodes are rendered
     setTimeout(() => {
-      console.log('FitViewOnLoad: Calling fitView()');
+      console.log('HuEvaFlowEnhancer: FitViewOnLoad calling fitView()');
       fitView({ padding: 0.2, duration: 200 });
     }, 0);
   });

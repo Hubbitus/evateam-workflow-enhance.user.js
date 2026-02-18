@@ -4,10 +4,16 @@ import { mount } from 'svelte';
 import WorkflowApp from './components/WorkflowApp.svelte';
 import { HuEvaApi } from './HuEvaApi.js';
 
+console.log('HuEvaFlowEnhancer: script loaded');
+
 function initializeApp(originalWorkflowElement) {
-    if (document.getElementById('hu-workflow-enhancer-container')) {
+    // Check if this element is already enhanced
+    if (originalWorkflowElement.dataset.huEnhanced === 'true') {
         return;
     }
+
+    // Mark this element as enhanced
+    originalWorkflowElement.dataset.huEnhanced = 'true';
 
     const appContainer = document.createElement('div');
     appContainer.id = 'hu-workflow-enhancer-container';
@@ -28,12 +34,7 @@ function initializeApp(originalWorkflowElement) {
     originalWorkflowElement.style.display = 'none';
 
     const api = new HuEvaApi({
-        useMock: true, // Use mock for development
-        mockUrls: {
-            'CmfWorkflow.get': '/api/api_CmfWorkflow_get_response.json',
-            'CmfTrans.list': '/api/api_CmfTrans_list_response.json',
-            'CmfStatus.list': '/api/api_CmfStatus_list_response.json'
-        }
+        useMock: false, // Use real API for production
     });
 
     mount(WorkflowApp, {
@@ -43,39 +44,42 @@ function initializeApp(originalWorkflowElement) {
             originalWorkflowElement: originalWorkflowElement
         }
     });
+
+    console.log('HuEvaFlowEnhancer: App initialized for element', originalWorkflowElement);
 }
 
-const observer = new MutationObserver((mutations, obs) => {
-    const workflowElement = document.querySelector('.cdk-global-overlay-wrapper .cmf-dialog.dialog__body');
-    
-    if (workflowElement) {
-        initializeApp(workflowElement);
-        obs.disconnect();
-    }
-});
+const observer = new MutationObserver((mutations) => {
+    // Look for all workflow dialog elements that are not yet enhanced
+    const workflowElements = document.querySelectorAll('.cdk-global-overlay-wrapper .cmf-dialog.dialog__body');
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        const existingElement = document.querySelector('.cdk-global-overlay-wrapper .cmf-dialog.dialog__body');
-        if (existingElement) {
-            setTimeout(() => initializeApp(existingElement), 100);
-            observer.disconnect();
-        } else {
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
+    workflowElements.forEach(element => {
+        if (element.dataset.huEnhanced !== 'true') {
+            initializeApp(element);
         }
     });
-} else {
-    const existingElement = document.querySelector('.cdk-global-overlay-wrapper .cmf-dialog.dialog__body');
-    if (existingElement) {
-        setTimeout(() => initializeApp(existingElement), 100);
-        observer.disconnect();
-    } else {
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
+});
+
+// Start observing immediately
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
+// Check for existing elements on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const existingElements = document.querySelectorAll('.cdk-global-overlay-wrapper .cmf-dialog.dialog__body');
+        existingElements.forEach(element => {
+            if (element.dataset.huEnhanced !== 'true') {
+                setTimeout(() => initializeApp(element), 100);
+            }
         });
-    }
+    });
+} else {
+    const existingElements = document.querySelectorAll('.cdk-global-overlay-wrapper .cmf-dialog.dialog__body');
+    existingElements.forEach(element => {
+        if (element.dataset.huEnhanced !== 'true') {
+            setTimeout(() => initializeApp(element), 100);
+        }
+    });
 }

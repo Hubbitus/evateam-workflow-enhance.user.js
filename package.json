@@ -4,7 +4,7 @@
   "description": "Replaces the built-in process view in EvaTeam with an advanced visualization using SvelteFlow",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --config vite.build.config.mjs",
     "build-userscript": "vite build --config vite.build.config.mjs",
     "preview": "vite preview",
     "clean": "rm -rf dist/*",
