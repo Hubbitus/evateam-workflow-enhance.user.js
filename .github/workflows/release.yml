@@ -1,0 +1,85 @@
+name: release
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            VERSION="v$(date -u +'%Y%m%d%H%M%S')"
+          else
+            VERSION="0.1.0-dev"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+      - name: Build userscript
+        env:
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
+        run: pnpm run build-userscript
+
+      - name: Verify build
+        run: |
+          if [ ! -f dist/evateam-workflow-enhance.user.js ]; then
+            echo "Build failed: output file not found"
+            exit 1
+          fi
+          echo "Build successful: dist/evateam-workflow-enhance.user.js exists"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: evateam-workflow-enhance.user.js
+          path: dist/evateam-workflow-enhance.user.js
+          retention-days: 30
+
+      - name: Create Release (main branch only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Check if release already exists
+          if gh release view "$VERSION" &>/dev/null; then
+            echo "Release $VERSION already exists, skipping..."
+            exit 0
+          fi
+
+          # Create release
+          gh release create "$VERSION" \
+            --title "EvaTeam Workflow Enhancer $VERSION" \
+            --notes "Automated release from main branch" \
+            dist/evateam-workflow-enhance.user.js
+
+          echo "Release $VERSION created successfully"
