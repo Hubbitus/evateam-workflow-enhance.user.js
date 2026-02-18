@@ -9,10 +9,35 @@ permissions:
 
 jobs:
   release_from_pr_comment:
-    if: contains(github.event.comment.body, '/release') && github.event.issue.pull_request != ''
     runs-on: ubuntu-latest
     steps:
+      - name: Debug event
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Action: ${{ github.event.action }}"
+          echo "Comment body: ${{ github.event.comment.body }}"
+          echo "Issue number: ${{ github.event.issue.number }}"
+          echo "Issue is PR: ${{ github.event.issue.pull_request }}"
+          echo "Contains /release: ${{ contains(github.event.comment.body, '/release') }}"
+
+      - name: Check if should proceed
+        id: check
+        run: |
+          if ! echo "${{ github.event.comment.body }}" | grep -q "/release"; then
+            echo "Skipping - no /release command"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          if [[ -z "${{ github.event.issue.pull_request }}" ]]; then
+            echo "Skipping - not a pull request"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "should_run=true" >> $GITHUB_OUTPUT
+          echo "Proceeding with release"
+
       - name: Checkout
+        if: steps.check.outputs.should_run == 'true'
         uses: actions/checkout@v4
 
       - name: Setup pnpm
