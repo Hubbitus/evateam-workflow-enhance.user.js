@@ -129,7 +129,7 @@ jobs:
 
   # Handle PR comment trigger for manual release
   release_from_pr_comment:
-    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '/release')
+    if: github.event_name == 'issue_comment'
     runs-on: ubuntu-latest
     steps:
       - name: Debug event
@@ -137,11 +137,29 @@ jobs:
           echo "Event name: ${{ github.event_name }}"
           echo "Issue has PR: ${{ github.event.issue.pull_request }}"
           echo "Comment body: ${{ github.event.comment.body }}"
+          echo "Contains /release: ${{ contains(github.event.comment.body, '/release') }}"
+
+      - name: Check if /release command
+        id: check
+        run: |
+          if ! echo "${{ github.event.comment.body }}" | grep -q "/release"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping - no /release command found"
+            exit 0
+          fi
+          if [[ -z "${{ github.event.issue.pull_request }}" ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping - not a pull request"
+            exit 0
+          fi
+          echo "skip=false" >> $GITHUB_OUTPUT
 
       - name: Checkout
+        if: steps.check.outputs.skip != 'true'
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        if: steps.check.outputs.skip != 'true'
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
