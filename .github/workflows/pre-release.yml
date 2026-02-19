@@ -1,4 +1,4 @@
-name: Comment Trigger
+name: Pre-release
 
 on:
   issue_comment:
@@ -13,7 +13,7 @@ on:
 permissions:
   contents: write
   issues: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   release_from_pr_comment:
