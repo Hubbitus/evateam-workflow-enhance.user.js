@@ -1,10 +1,9 @@
 <script>
-  import { onMount, createEventDispatcher, tick } from 'svelte';
+  import { onMount, tick } from 'svelte';
 
   export let originalWorkflowElement = null;
   export let currentView = 'enhanced';
-
-  const dispatch = createEventDispatcher();
+  export let onSwitchView = (view) => {};
   let originalViewContainer; // This will be the div where we place the original element
   let closeButton;
   let dialogElement;
@@ -128,21 +127,21 @@
         dialogContent.style.height = '100%';
         dialogContent.style.maxHeight = 'none';
       }
-      dispatch('switchView', { view: 'original' });
+      onSwitchView('original');
     } else {
       // Hide the original element. We don't need to move it back,
       // it can stay in our container, just hidden.
       originalWorkflowElement.style.display = 'none';
-      dispatch('switchView', { view: 'enhanced' });
+      onSwitchView('enhanced');
     }
   }
 </script>
 
 <div class="workflow-tabs-wrapper" style="display: flex; flex-direction: column; height: 100%; width: 100%;">
   <div class="workflow-tabs-container" style="display: flex; flex-shrink: 0; align-items: center;">
-    <button 
+    <button
       id="enhanced-workflow-tab"
-      on:click={() => switchView('enhanced')}
+      onclick={() => switchView('enhanced')}
       class:active={currentView === 'enhanced'}
       style="
         flex: 1;
@@ -157,9 +156,9 @@
     >
       Улучшенная схема
     </button>
-    <button 
+    <button
       id="original-workflow-tab"
-      on:click={() => switchView('original')}
+      onclick={() => switchView('original')}
       class:active={currentView === 'original'}
       style="
         flex: 1;
@@ -177,7 +176,7 @@
     </button>
     <button
       id="close-workflow-button"
-      on:click={closeDialog}
+      onclick={closeDialog}
       style="
         padding: 8px 12px;
         border: 1px solid #ccc;

@@ -29,14 +29,27 @@ function tampermonkeyHeaders() {
 // @downloadURL  ${repoUrl}/releases/latest/download/evateam-workflow-enhance.user.js
 // @match        https://eva.gid.team/project/Task/*
 // @match        https://eva.gid.team/desk/Task/*
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
 
 `;
 
           // Add the header to the beginning of the code
           if (chunk.type === 'chunk') {
-            chunk.code = tampermonkeyHeader + chunk.code;
+            let code = tampermonkeyHeader + chunk.code;
+
+            // Replace Svelte's style injection with GM_addStyle
+            // Pattern: (function() { const style = document.createElement('style'); style.textContent = "CSS"; (document.head || document.documentElement).appendChild(style); })();
+            const styleInjectionPattern = /\(function\(\)\s*\{\s*const style\s*=\s*document\.createElement\(['"]style['"]\);\s*style\.textContent\s*=\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*');\s*\(\s*document\.head\s*\|\|\s*document\.documentElement\s*\)\.appendChild\(style\);\s*\}\)\(\);/gs;
+
+            code = code.replace(styleInjectionPattern, (match, cssContent) => {
+              // Extract CSS from the string (removing quotes and escaping)
+              const css = cssContent.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"');
+              // Return GM_addStyle call with multiline CSS
+              return `GM_addStyle(\`${css}\`);`;
+            });
+
+            chunk.code = code;
           }
         }
       }

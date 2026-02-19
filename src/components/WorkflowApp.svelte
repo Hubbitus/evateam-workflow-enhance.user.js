@@ -4,8 +4,10 @@
   import ColoredNode from './ColoredNode.svelte';
   import FitViewOnLoad from './FitViewOnLoad.svelte';
   import NodeTooltip from './NodeTooltip.svelte';
+  import Modal from './Modal.svelte';
   import { onMount } from 'svelte';
   import dagre from 'dagre';
+  import { localStorageManager } from '../utils.js';
 
   import '@xyflow/svelte/dist/base.css';
   import '@xyflow/svelte/dist/style.css';
@@ -23,6 +25,10 @@
   let tooltipMaxWidth = $state(300);
   let tooltipNodeRef;
   let containerEl;
+  let workflowData = $state(null);
+  let showModal = $state(false);
+  let modalTitle = $state('');
+  let modalMessage = $state('');
 
   // Track last node positions to detect changes
   const lastPositions = new Map();
@@ -61,7 +67,7 @@
     });
   }
 
-  function prepareSvelteFlowData(data) {
+  function prepareSvelteFlowData(data, savedLayout = null) {
     if (!data) return { nodes: [], edges: [], transitions: [] };
 
     const { workflow, statuses, transitions } = data;
@@ -267,7 +273,16 @@
       }
     });
 
-    nodes = layoutNodesWithDagre(nodes, edges);
+    if (savedLayout) {
+      nodes.forEach((node) => {
+        const savedNode = savedLayout.nodes.find((n) => n.id === node.id);
+        if (savedNode) {
+          node.position = savedNode.position;
+        }
+      });
+    } else {
+      nodes = layoutNodesWithDagre(nodes, edges);
+    }
 
     edges.forEach(edge => {
         const sourceNode = nodes.find(n => n.id === edge.source);
@@ -302,14 +317,10 @@
           }
         }
 
-        let workflowData;
         if (api.config.useMock) {
-          // In dev mode, use mock data directly
-          // The mock file already contains the workflow data
           workflowData = await api.getCompleteWorkflowData(null);
           console.log('HuEvaFlowEnhancer: Using mock workflow data');
         } else if (workflowName) {
-          // In production, get workflow by name
           workflowData = await api.getCompleteWorkflowDataByName(workflowName);
           console.log('HuEvaFlowEnhancer: Loaded workflow data by name:', workflowName);
         } else {
@@ -318,15 +329,84 @@
 
         // Prepare nodes and edges for SvelteFlow
         if (workflowData) {
-          const { nodes, edges, transitions } = prepareSvelteFlowData(workflowData);
-          workflowNodes = nodes;
-          workflowEdges = edges;
-          // Store transitions for dynamic recalculation
-          window.workflowTransitions = transitions;
-          console.log('HuEvaFlowEnhancer: Workflow data loaded, edges:', edges.length);
+          const workflowId = workflowData.workflow.id;
+          const savedKey = localStorageManager._getKey(workflowId);
+          const hasSavedData = localStorage.getItem(savedKey) !== null;
+
+          // Check for hash mismatch before loading layout
+          if (hasSavedData) {
+            const savedLayout = localStorageManager.loadLayout(workflowId, workflowData);
+
+            if (savedLayout) {
+              // Hash matches, apply saved layout
+              console.log('HuEvaFlowEnhancer: Applying saved layout', savedLayout);
+              const { nodes, edges } = prepareSvelteFlowData(workflowData, savedLayout.layout);
+              workflowNodes = nodes;
+              workflowEdges = edges;
+            } else {
+              // Hash mismatch - apply auto layout AND show notification
+              console.log('HuEvaFlowEnhancer: Hash mismatch detected');
+              localStorageManager.clearLayout(workflowId);
+              // Apply auto layout first so the UI is visible
+              autoLayout();
+              // Then show notification
+              modalTitle = 'Процесс изменился';
+              modalMessage =
+                'Процесс изменился с момента сохранения раскладки. Расположение элементов было сброшено в автоматическое размещение.';
+              showModal = true;
+            }
+          } else {
+            // First time opening - apply auto layout
+            console.log('HuEvaFlowEnhancer: First time opening, applying auto layout');
+            autoLayout();
+          }
+
+          window.workflowTransitions = workflowData.transitions;
+          console.log('HuEvaFlowEnhancer: Workflow data loaded, edges:', workflowEdges.length);
         }
       } catch (error) {
         console.error('HuEvaFlowEnhancer: Error loading workflow data:', error);
+      }
+    }
+  });
+
+  function autoLayout() {
+    console.log('HuEvaFlowEnhancer: autoLayout called, workflowData:', !!workflowData);
+    if (!workflowData) {
+      console.error('HuEvaFlowEnhancer: autoLayout called but workflowData is null');
+      return;
+    }
+    const { nodes, edges } = prepareSvelteFlowData(workflowData);
+    workflowNodes = nodes;
+    workflowEdges = edges;
+    console.log('HuEvaFlowEnhancer: autoLayout applied, nodes:', nodes.length, 'edges:', edges.length);
+  }
+
+  function handleAutoLayout() {
+    if (workflowData) {
+      localStorageManager.clearLayout(workflowData.workflow.id);
+      autoLayout();
+    }
+  }
+
+  // Track last saved positions to avoid excessive localStorage writes
+  let lastSavedPositions = $state({});
+
+  // Save layout when node positions change
+  $effect(() => {
+    if (workflowData && workflowNodes.length > 0) {
+      const currentPositions = JSON.stringify(
+        workflowNodes.map((n) => ({ id: n.id, position: n.position }))
+      );
+
+      // Only save if positions changed
+      if (currentPositions !== lastSavedPositions[workflowData.workflow.id]) {
+        console.log('HuEvaFlowEnhancer: Node positions changed, saving layout');
+        const layoutData = {
+          nodes: workflowNodes.map((n) => ({ id: n.id, position: n.position })),
+        };
+        localStorageManager.saveLayout(workflowData.workflow.id, workflowData.workflow.name, workflowData, layoutData);
+        lastSavedPositions[workflowData.workflow.id] = currentPositions;
       }
     }
   });
@@ -379,7 +459,7 @@
   }
 
   function handleNodeDrag(event) {
-    const draggedNode = event.targetNode;
+    const draggedNode = event;
 
     const updatedEdges = workflowEdges.map(edge => {
       if (edge.source === draggedNode.id || edge.target === draggedNode.id) {
@@ -398,7 +478,9 @@
   }
 
   function handleNodeClick(event) {
+    console.log('HuEvaFlowEnhancer: handleNodeClick event:', event);
     const clickedNode = event.node;
+    console.log('HuEvaFlowEnhancer: clickedNode:', clickedNode);
     if (clickedNode && clickedNode.data.description) {
       tooltipContent = clickedNode.data.description;
 
@@ -410,10 +492,12 @@
         y: nodeRect.top - containerRect.top,
       };
 
-      tooltipMaxWidth = containerRect.width - (nodeRect.right - containerRect.left) - 20; // 20px padding
+      tooltipMaxWidth = containerEl.width - (nodeRect.right - containerRect.left) - 20; // 20px padding
 
       showTooltip = true;
       tooltipNodeRef = event.event.target;
+    } else {
+      console.log('HuEvaFlowEnhancer: No description for node', clickedNode?.id);
     }
   }
 
@@ -447,8 +531,11 @@
   <WorkflowTabs
     originalWorkflowElement={originalWorkflowElement}
     currentView={currentView}
-    on:switchView={(e) => switchView(e.detail.view)}
+    onSwitchView={switchView}
   >
+    <div class="controls">
+      <button onclick={handleAutoLayout}>Разместить автоматически</button>
+    </div>
     {#if workflowNodes.length > 0 && workflowEdges.length > 0}
       <SvelteFlow
         bind:nodes={workflowNodes}
@@ -469,4 +556,19 @@
   {#if showTooltip}
     <NodeTooltip description={tooltipContent} position={tooltipPosition} maxWidth={tooltipMaxWidth} />
   {/if}
+
+  <Modal
+    bind:showModal
+    title={modalTitle}
+    message={modalMessage}
+  />
 </div>
+
+<style>
+  .controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+  }
+</style>
