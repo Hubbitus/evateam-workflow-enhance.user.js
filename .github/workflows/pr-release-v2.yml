@@ -3,6 +3,12 @@ name: PR Release v2
 on:
   issue_comment:
     types: [created, edited]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number for pre-release'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -15,47 +21,66 @@ jobs:
         run: |
           echo "Event name: ${{ github.event_name }}"
           echo "Action: ${{ github.event.action }}"
-          echo "Comment body: ${{ github.event.comment.body }}"
-          echo "Issue number: ${{ github.event.issue.number }}"
-          echo "Issue is PR: ${{ github.event.issue.pull_request }}"
-          echo "Contains /release: ${{ contains(github.event.comment.body, '/release') }}"
+          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            echo "Comment body: ${{ github.event.comment.body }}"
+            echo "Issue number: ${{ github.event.issue.number }}"
+            echo "Issue is PR: ${{ github.event.issue.pull_request }}"
+            echo "Contains /release: ${{ contains(github.event.comment.body, '/release') }}"
+          fi
 
       - name: Check if should proceed
         id: check
         run: |
-          if ! echo "${{ github.event.comment.body }}" | grep -q "/release"; then
-            echo "Skipping - no /release command"
+          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            if ! echo "${{ github.event.comment.body }}" | grep -q "/release"; then
+              echo "Skipping - no /release command"
+              echo "should_run=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            if [[ -z "${{ github.event.issue.pull_request }}" ]]; then
+              echo "Skipping - not a pull request"
+              echo "should_run=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "Proceeding with release from comment"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "Proceeding with release from workflow_dispatch"
+          else
+            echo "Skipping - unsupported event"
             echo "should_run=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-          if [[ -z "${{ github.event.issue.pull_request }}" ]]; then
-            echo "Skipping - not a pull request"
-            echo "should_run=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "should_run=true" >> $GITHUB_OUTPUT
-          echo "Proceeding with release"
 
       - name: Checkout
         if: steps.check.outputs.should_run == 'true'
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        if: steps.check.outputs.should_run == 'true'
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
+        if: steps.check.outputs.should_run == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
       - name: Install dependencies
+        if: steps.check.outputs.should_run == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Get PR number
         id: pr
+        if: steps.check.outputs.should_run == 'true'
         run: |
-          PR_NUMBER="${{ github.event.issue.number }}"
+          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            PR_NUMBER="${{ github.event.issue.number }}"
+          else
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          fi
           echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "PR number: $PR_NUMBER"
 
@@ -82,6 +107,7 @@ jobs:
           fi
 
       - name: Create Pre-release
+        if: steps.check.outputs.should_run == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -95,7 +121,11 @@ jobs:
           fi
 
           # Create pre-release
-          NOTES="Pre-release from Pull Request: $PR_LINK\n\nTriggered by comment from @${{ github.event.comment.user.login }}"
+          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            NOTES="Pre-release from Pull Request: $PR_LINK\n\nTriggered by comment from @${{ github.event.comment.user.login }}"
+          else
+            NOTES="Pre-release from Pull Request: $PR_LINK\n\nTriggered by workflow_dispatch"
+          fi
           gh release create "$VERSION" \
             --title "EvaTeam Workflow Enhancer $VERSION" \
             --notes "$NOTES" \
