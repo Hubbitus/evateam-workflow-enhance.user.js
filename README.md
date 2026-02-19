@@ -1,100 +1,69 @@
 # EvaTeam Workflow Enhancer
 
-Этот пользовательский скрипт (UserScript) для Tampermonkey улучшает визуализацию диаграмм workflow в системе управления проектами EvaTeam. Заменяет стандартное отображение бизнес-процесса на более современное и интерактивное решение с использованием SvelteFlow.
+EvaTeam workflow visualization is static and lacks interactivity. This [userscript](http://kb.mozillazine.org/User.js_file) replaces the built-in process view with an advanced interactive visualization using SvelteFlow.
 
-## Особенности
+## Features
 
-- **Современный UI**: Преобразует статические диаграммы workflow в интерактивные
-- **Улучшенный UX**: Добавляет функциональность перетаскивания элементов
-- **Сохранение настроек**: Сохраняет пользовательские настройки в localStorage
-- **Совместимость**: Поддерживает переключение между старой и новой версиями
-- **Правильное отображение стилей**: Использует Shadow DOM для корректного отображения оригинального workflow со всеми стилями
+- **Interactive Diagrams**: Transform static workflow diagrams into interactive graphs with drag-and-drop
+- **Modern UI**: Clean and modern interface using SvelteFlow
+- **Settings Persistence**: User preferences saved in localStorage
+- **Compatibility**: Toggle between original and enhanced views
+- **Real-time Updates**: Automatically detects workflow dialog changes via MutationObserver
 
-## Технологии
+## Technologies
 
-- **JavaScript/ES6+**: Язык программирования
-- **SvelteFlow**: Библиотека для интерактивных диаграмм
-- **Svelte 5**: Фреймворк для построения пользовательских интерфейсов
-- **Vite**: Инструмент сборки для разработки и продакшена
-- **pnpm**: Менеджер пакетов для быстрой и эффективной установки зависимостей
-- **DOM API**: Для взаимодействия с существующим DOM EvaTeam
-- **localStorage**: Для сохранения пользовательских настроек
-- **MutationObserver**: Для отслеживания изменений DOM
+- **JavaScript/ES6+**
+- **SvelteFlow**: Interactive graph library
+- **Svelte 5**: UI framework
+- **Vite**: Build tool
+- **pnpm**: Package manager
 
-## Установка
+Installation [link](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.user.js) for the impatient (please read section [installation](#installation) for the prerequisites and detailed instructions).
 
-1. Установите расширение Tampermonkey в вашем браузере
-2. Скопируйте содержимое файла `dist/evateam-workflow-enhance.user.js` в новый скрипт Tampermonkey
-3. Сохраните скрипт
+# Installation
 
-## Разработка
+## Prerequisites
 
-### Режим разработки
+### Requires browser extension like `tampermonkey`
+- [Chrome, chromium](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en)
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
 
-Для целей разработки используйте Vite сервер:
+## Script installation
+Just follow the [link](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.user.js).
 
-1. Установите pnpm: `npm install -g pnpm` (если не установлен)
-2. Установите зависимости: `pnpm install`
-3. Запустите сервер разработки: `pnpm run dev`
-4. Откройте http://localhost:3003 в браузере
-5. Проверьте функциональность в режиме разработки
-6. Откройте консоль разработчика (F12)
-7. Проверьте логи: "HuEvaFlowEnhancer: ..."
+> **TIP** Script configured for auto-updates, just allow that in extension settings!
 
-### Сборка
+# CI/CD
 
-Для окончательной сборки UserScript используйте команду:
+| Trigger | Version | Release | Description |
+|---------|---------|---------|-------------|
+| Push to main | `vYYYYMMDDHHmmss` | Yes | Automated release |
+| Push tag `v*` | Tag name (e.g., `v1.2.3`) | Yes | Release from tag |
+| Comment `/release` in PR | `vYYYYMMDDHHmmss.pr.{N}` | Pre-release | Manual pre-release from PR comment |
+| Workflow dispatch with PR | `vYYYYMMDDHHmmss.pr.{N}` | Pre-release | Manual pre-release with PR link |
+| Push to other branches / PR | `0.1.0-dev` | No | Build only |
 
+# Development
+
+### Setup
 ```bash
-pnpm run build-userscript
+pnpm install
 ```
 
-Результат: dist/evateam-workflow-enhance.user.js (готов к установке)
-
-Для сборки веб-приложения используйте команду:
-
+### Dev server
 ```bash
-pnpm run build
+pnpm dev
 ```
+Open http://localhost:3003
 
-Результат: файлы в директории dist/
+### Build
+```bash
+pnpm build
+```
+Output: dist/evateam-workflow-enhance.user.js
 
-## Архитектура
+# Ideas and bug-reports are welcome!
 
-### src/HuEvaApi.js
-Класс для взаимодействия с API EvaTeam, обеспечивает получение данных workflow, статусов и переходов.
+Please report issues in this repository and ping me directly for any bugreports or needed enhancements!
 
-### src/main.js
-Точка входа для приложения, объединяет все компоненты.
-
-### dev/index.html
-Файл для разработки и тестирования функциональности без установки Tampermonkey.
-
-### dev/main.js
-Точка входа для разработки, загружает mock-данные и инициализирует enhancer.
-
-### dev/api/
-Директория с mock-файлами API для разработки.
-
-### dist/evateam-workflow-enhance.user.js
-Финальный Tampermonkey-скрипт, результат сборки, готов к установке.
-
-
-### vite.config.js
-Конфигурация Vite для режима разработки, использует директорию 'dev' как корневую для разработки, что позволяет изолировать разработку от остальной части проекта. Запускает сервер на порту 3003 и компилирует файлы в директорию ../dist.
-
-### vite.test.config.mjs
-Конфигурация Vite для тестирования, используется для проверки работоспособности собранного проекта перед его использованием в реальных условиях. Запускает сервер на порту 3004 и использует ту же директорию вывода (./dist), что и основная сборка.
-
-### vite.build.config.mjs
-Конфигурация Vite для сборки Tampermonkey-скрипта, создает единый бандл в dist/ с Tampermonkey заголовками и динамической загрузкой SvelteFlow.
-
-
-## Требования к коду
-
-- Все комментарии в коде и документации должны быть на английском языке
-- Русский язык допускается только в интерфейсе
-- Подробные логи с префиксом "HuEvaFlowEnhancer:"
-- Использование camelCase для переменных и функций
-- Объектно-ориентированный подход с модульной организацией
-- Проверка исключений и подробные сообщения об ошибках
+# Licensed under MIT License

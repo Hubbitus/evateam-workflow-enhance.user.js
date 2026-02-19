@@ -119,7 +119,7 @@ export default defineConfig({
         globals: {}
       }
     },
-    minify: false,
+    minify: 'terser',
     // Отключаем CSS-хеширование и отдельные файлы
     cssCodeSplit: false,
   },
