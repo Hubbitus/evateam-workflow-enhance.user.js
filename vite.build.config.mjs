@@ -54,11 +54,7 @@ function cssInlinePlugin() {
         const jsPath = path.join(outDir, 'evateam-workflow-enhance.user.js');
         if (fs.existsSync(jsPath)) {
           let jsContent = fs.readFileSync(jsPath, 'utf-8');
-          const cssCode = `(function() {
-            const style = document.createElement('style');
-            style.textContent = ${JSON.stringify(cssContent)};
-            (document.head || document.documentElement).appendChild(style);
-          })();\n\n`;
+          const cssCode = `GM_addStyle(${JSON.stringify(cssContent)});\n\n`;
 
           // Вставляем CSS после Tampermonkey заголовков
           const lines = jsContent.split('\n');

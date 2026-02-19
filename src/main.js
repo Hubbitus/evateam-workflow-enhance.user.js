@@ -6,6 +6,24 @@ import { HuEvaApi } from './HuEvaApi.js';
 
 console.log('HuEvaFlowEnhancer: script loaded');
 
+// Add global styles using GM_addStyle
+GM_addStyle(`
+  #hu-workflow-enhancer-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-sizing: border-box;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    background-color: #fafafa;
+    z-index: auto;
+  }
+`);
+
 function initializeApp(originalWorkflowElement) {
     // Check if this element is already enhanced
     if (originalWorkflowElement.dataset.huEnhanced === 'true') {
@@ -17,20 +35,8 @@ function initializeApp(originalWorkflowElement) {
 
     const appContainer = document.createElement('div');
     appContainer.id = 'hu-workflow-enhancer-container';
-    appContainer.style.width = '100%';
-    appContainer.style.height = '100%';
-    appContainer.style.display = 'flex';
-    appContainer.style.flexDirection = 'column';
-    appContainer.style.position = 'relative';
-    appContainer.style.boxSizing = 'border-box';
-    appContainer.style.border = '2px solid #ddd'; // Возвращаем исходную рамку
-    appContainer.style.borderRadius = '8px';
-    appContainer.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-    appContainer.style.overflow = 'hidden';
-    appContainer.style.backgroundColor = '#fafafa';
-    appContainer.style.zIndex = 'auto'; // Возвращаем исходный z-index
 
-    originalWorkflowElement.parentNode.insertBefore(appContainer, originalWorkflowElement); // Возвращаем вставку перед оригинальным элементом
+    originalWorkflowElement.parentNode.insertBefore(appContainer, originalWorkflowElement);
     originalWorkflowElement.style.display = 'none';
 
     const api = new HuEvaApi({

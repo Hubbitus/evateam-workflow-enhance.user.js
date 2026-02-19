@@ -10,6 +10,18 @@ EvaTeam workflow visualization is static and lacks interactivity. This [userscri
 - **Compatibility**: Toggle between original and enhanced views
 - **Real-time Updates**: Automatically detects workflow dialog changes via MutationObserver
 
+### Workflow layout save in LocalStorage
+- When user opens workflow first time - auto layout applied.
+- When user drag and rearrange items positions of nodes should be saved automatically into LocalStorage
+- Next time user returned to existing workflow - saved layout must be restored transparently
+- On the enhanced tab, added button: "Разместить автоматически" - that should clear saved state and trigger auto-layout.
+- Saved layout must contain object with items: {id, name, hash, update_date):
+  - Hash must be calculated on full CmfWorkflow object + list of CmfStatus + list of CmfTrans.
+  - If on loading we see hash changed:
+    - Local hash must be cleared and auto layout applied
+    - User must mbe informed by popup notification: "Процесс изменился с момента сохранения раскладки. Расположение элементов будет сброшено в автоматическое размещение".
+    - User should explicitly close this popup by pressing "ok" button in the modal popup notification.
+
 ## Technologies
 
 - **JavaScript/ES6+**
