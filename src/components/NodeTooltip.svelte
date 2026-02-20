@@ -12,7 +12,7 @@
 <style>
   .node-tooltip {
     position: absolute;
-    background-color: rgb(45, 126, 136);
+    background-color: rgb(117, 179, 187);
     color: white;
     padding: 10px 15px;
     border-radius: 6px;

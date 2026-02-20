@@ -66,8 +66,8 @@
     const width = Math.max(60, label.length * 7 + 16);
     const x = (sourceX + targetX) / 2 - width / 2;
     const y = (sourceY + targetY) / 2 - 12 + (data?.labelOffset || 0);
-    // Добавляем запас под тень: +/- 20px по ширине и +/- 20px по высоте
-    return { width: width + 20, x: x - 10, y: y - 10 };
+    // Добавляем запас под тень
+    return { width: width + 5, x: x - 5, y: y - 5 };
   });
 </script>
 
