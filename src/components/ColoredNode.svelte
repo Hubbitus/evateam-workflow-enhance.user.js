@@ -2,6 +2,7 @@
   // Svelte 5: Use $props() for reactive props
   import { Handle } from '@xyflow/svelte';
   import { onMount } from 'svelte';
+  import { Logger } from '../logger.js';
 
   let { data, selected, dragging, zIndex, width = 200, height = 60 } = $props();
 
@@ -9,7 +10,7 @@
 
   // Log when component mounts
   onMount(() => {
-    console.log('ColoredNode mounted:', {
+    Logger.log('ColoredNode mounted:', {
       label: data?.label,
       statusType: data?.statusType,
       isStart: data?.isStart,
@@ -20,7 +21,7 @@
     // Force set dimensions for special nodes on the parent node element
     if (data?.statusType === 'ALL' || data?.statusType === 'START') {
       const size = 100;
-      console.log('Setting special node size:', size);
+      Logger.log('Setting special node size:', size);
       // Find parent node element (svelte-flow__node)
       let parentEl = nodeEl?.closest('.svelte-flow__node');
       if (parentEl) {
@@ -28,9 +29,9 @@
         parentEl.style.height = `${size}px`;
         parentEl.style.minWidth = `${size}px`;
         parentEl.style.minHeight = `${size}px`;
-        console.log('Parent node element styled:', parentEl);
+        Logger.log('Parent node element styled:', parentEl);
       } else {
-        console.log('Parent node element not found');
+        Logger.log('Parent node element not found');
       }
     }
   });
@@ -54,7 +55,7 @@
   // Log dimensions for special nodes
   $effect(() => {
     if (isSpecialNode) {
-      console.log('Special node dimensions:', {
+      Logger.log('Special node dimensions:', {
         label: data?.label,
         statusType: data?.statusType,
         isSpecialNode,
@@ -170,8 +171,8 @@
 <style>
 .description-indicator {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -2px;
+  right: -2px;
   width: 16px;
   height: 16px;
   background-color: #3b82f6;

@@ -1,5 +1,6 @@
 
 import { sha256 } from 'js-sha256';
+import { Logger } from './logger.js';
 
 /**
  * @typedef {Object} WorkflowData
@@ -69,7 +70,7 @@ class LocalStorageManager {
         };
 
         localStorage.setItem(key, JSON.stringify(dataToSave));
-        console.log('HuEvaFlowEnhancer: Layout saved for workflow', id);
+        Logger.log('HuEvaFlowEnhancer: Layout saved for workflow', id);
     }
 
     /**
@@ -82,7 +83,7 @@ class LocalStorageManager {
         const savedData = localStorage.getItem(key);
 
         if (!savedData) {
-            console.log('HuEvaFlowEnhancer: No saved layout found for workflow', id);
+            Logger.log('HuEvaFlowEnhancer: No saved layout found for workflow', id);
             return null;
         }
 
@@ -91,12 +92,12 @@ class LocalStorageManager {
         const currentHash = this._calculateHash(workflowData);
 
         if (parsedData.hash !== currentHash) {
-            console.warn('HuEvaFlowEnhancer: Workflow data has changed. Clearing saved layout.');
+            Logger.warn('HuEvaFlowEnhancer: Workflow data has changed. Clearing saved layout.');
             this.clearLayout(id);
             return null;
         }
 
-        console.log('HuEvaFlowEnhancer: Saved layout loaded for workflow', id);
+        Logger.log('HuEvaFlowEnhancer: Saved layout loaded for workflow', id);
         return parsedData;
     }
 
@@ -106,7 +107,7 @@ class LocalStorageManager {
     clearLayout(id) {
         const key = this._getKey(id);
         localStorage.removeItem(key);
-        console.log('HuEvaFlowEnhancer: Cleared saved layout for workflow', id);
+        Logger.log('HuEvaFlowEnhancer: Cleared saved layout for workflow', id);
     }
 }
 
