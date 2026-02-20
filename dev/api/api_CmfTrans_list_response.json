@@ -417,6 +417,49 @@
           "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
         }
       ]
+    },
+    {
+      "id": "CmfTrans:reopen-transition",
+      "class_name": "CmfTrans",
+      "name": "Переоткрытие",
+      "status_to": {
+        "id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e",
+        "class_name": "CmfStatus",
+        "text": "Начните работать по задаче и поставьте статус \"В работе\"",
+        "status_type": "OPEN",
+        "color": "#60b1bb",
+        "next_alarm": 0,
+        "card_name": null,
+        "parent_id": null,
+        "project_id": null,
+        "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+        "name": "Открыто",
+        "code": "open",
+        "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+      },
+      "parent_id": null,
+      "project_id": null,
+      "cmf_owner_id": "CmfPerson:8a2c2664-f5b9-11ef-bd13-4613e85b3f4f",
+      "code": "WST-001312",
+      "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_to_id": "CmfStatus:f499b958-cb06-11f0-9799-eeb7fce6ef9e",
+      "status_from": [
+        {
+          "id": "CmfStatus:6b4f6d2c-cb07-11f0-aa1d-eeb7fce6ef9e",
+          "class_name": "CmfStatus",
+          "text": "Работа по задаче отменена",
+          "status_type": "CLOSED",
+          "color": "#a0a0a0",
+          "next_alarm": null,
+          "card_name": null,
+          "parent_id": null,
+          "project_id": null,
+          "cmf_owner_id": "CmfPerson:5c24a01c-a805-11f0-a989-b60dc972a83a",
+          "name": "Отклонено",
+          "code": "rejected",
+          "workflow_id": "CmfWorkflow:f3d3e174-cb06-11f0-9799-eeb7fce6ef9e"
+        }
+      ]
     }
   ],
   "meta": {},

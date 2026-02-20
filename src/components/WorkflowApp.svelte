@@ -5,6 +5,7 @@
   import FitViewOnLoad from './FitViewOnLoad.svelte';
   import NodeTooltip from './NodeTooltip.svelte';
   import Modal from './Modal.svelte';
+  import CustomEdge from './CustomEdge.svelte';
   import { onMount } from 'svelte';
   import dagre from 'dagre';
   import { localStorageManager } from '../utils.js';
@@ -34,8 +35,88 @@
   // Track last node positions to detect changes
   const lastPositions = new Map();
 
+  // Calculate label offsets to avoid overlapping
+  function calculateLabelOffsets(edges, nodes) {
+    const labeledEdges = edges.filter(e => e.label && e.label.trim());
+    if (labeledEdges.length === 0) return {};
+
+    // Calculate label centers and dimensions
+    const labelRects = labeledEdges.map(edge => {
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      const targetNode = nodes.find(n => n.id === edge.target);
+      if (!sourceNode || !targetNode) return null;
+
+      const sourceCenterX = sourceNode.position.x + (sourceNode.width || 200) / 2;
+      const sourceCenterY = sourceNode.position.y + (sourceNode.height || 60) / 2;
+      const targetCenterX = targetNode.position.x + (targetNode.width || 200) / 2;
+      const targetCenterY = targetNode.position.y + (targetNode.height || 60) / 2;
+
+      const centerX = (sourceCenterX + targetCenterX) / 2;
+      const centerY = (sourceCenterY + targetCenterY) / 2;
+
+      const labelWidth = Math.max(60, edge.label.length * 7 + 16);
+      const labelHeight = 24;
+
+      return {
+        id: edge.id,
+        x: centerX - labelWidth / 2,
+        y: centerY - labelHeight / 2,
+        width: labelWidth,
+        height: labelHeight,
+        centerX,
+        centerY,
+      };
+    }).filter(Boolean);
+
+    // Detect overlaps and calculate offsets
+    const offsets = {};
+    const processed = new Set();
+
+    labelRects.forEach((rect, i) => {
+      if (processed.has(i)) return;
+
+      const overlapping = [i];
+      let maxOffset = 0;
+
+      for (let j = i + 1; j < labelRects.length; j++) {
+        if (processed.has(j)) continue;
+
+        const other = labelRects[j];
+        const distance = Math.sqrt(
+          Math.pow(rect.centerX - other.centerX, 2) +
+          Math.pow(rect.centerY - other.centerY, 2)
+        );
+
+        // If labels are close (within 40px), they overlap
+        if (distance < 40) {
+          overlapping.push(j);
+        }
+      }
+
+      // Distribute overlapping labels vertically
+      if (overlapping.length > 1) {
+        const totalHeight = overlapping.length * 30; // 30px spacing
+        const startY = -(overlapping.length - 1) * 15;
+
+        overlapping.forEach((idx, pos) => {
+          offsets[labelRects[idx].id] = startY + pos * 30;
+          processed.add(idx);
+        });
+      } else {
+        offsets[rect.id] = 0;
+        processed.add(i);
+      }
+    });
+
+    return offsets;
+  }
+
   const nodeTypes = {
     colored: ColoredNode,
+  };
+
+  const edgeTypes = {
+    custom: CustomEdge,
   };
 
   // Store original transitions for recalculation
@@ -68,7 +149,7 @@
     });
   }
 
-  function prepareSvelteFlowData(data, savedLayout = null) {
+  function prepareSvelteFlowData(data, savedLayout = null, calculateOffsets = true) {
     if (!data) return { nodes: [], edges: [], transitions: [] };
 
     const { workflow, statuses, transitions } = data;
@@ -180,7 +261,7 @@
           id: `start-${status.id}`,
           source: 'start',
           target: status.id,
-          type: 'default',
+          type: 'custom',
           label: '',
           animated: false,
           style: {
@@ -213,7 +294,7 @@
             id: `all-${transition.status_to.id}`,
             source: 'all',
             target: transition.status_to.id,
-            type: 'default',
+            type: 'custom',
             label: transition.name.trim(),
             animated: false,
             style: {
@@ -248,7 +329,7 @@
               id: `${fromStatus.id}-${transition.status_to.id}`,
               source: fromStatus.id,
               target: transition.status_to.id,
-              type: 'default',
+              type: 'custom',
               label: transition.name.trim(),
               animated: false,
               style: {
@@ -296,6 +377,16 @@
         }
     });
 
+    // Calculate label offsets if requested
+    if (calculateOffsets) {
+      const labelOffsets = calculateLabelOffsets(edges, nodes);
+      edges.forEach(edge => {
+        if (edge.id in labelOffsets) {
+          edge.data = { labelOffset: labelOffsets[edge.id] };
+        }
+      });
+    }
+
     return { nodes, edges, transitions };
   }
 
@@ -341,7 +432,7 @@
             if (savedLayout) {
               // Hash matches, apply saved layout
               Logger.log('HuEvaFlowEnhancer: Applying saved layout', savedLayout);
-              const { nodes, edges } = prepareSvelteFlowData(workflowData, savedLayout.layout);
+              const { nodes, edges } = prepareSvelteFlowData(workflowData, savedLayout.layout, true);
               workflowNodes = nodes;
               workflowEdges = edges;
             } else {
@@ -462,7 +553,8 @@
   function handleNodeDrag(event) {
     const draggedNode = event.targetNode;
 
-    const updatedEdges = workflowEdges.map(edge => {
+    // Recalculate handles for edges connected to dragged node
+    let updatedEdges = workflowEdges.map(edge => {
       if (edge.source === draggedNode.id || edge.target === draggedNode.id) {
         const sourceNode = workflowNodes.find(n => n.id === edge.source);
         const targetNode = workflowNodes.find(n => n.id === edge.target);
@@ -471,6 +563,15 @@
           const { sourceHandleId, targetHandleId } = calculateOptimalHandles(sourceNode, targetNode);
           return { ...edge, sourceHandle: sourceHandleId, targetHandle: targetHandleId };
         }
+      }
+      return edge;
+    });
+
+    // Recalculate label offsets for all edges (since positions changed)
+    const labelOffsets = calculateLabelOffsets(updatedEdges, workflowNodes);
+    updatedEdges = updatedEdges.map(edge => {
+      if (edge.id in labelOffsets) {
+        return { ...edge, data: { labelOffset: labelOffsets[edge.id] } };
       }
       return edge;
     });
@@ -542,6 +643,7 @@
         bind:nodes={workflowNodes}
         edges={workflowEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onnodedrag={handleNodeDrag}
         onnodeclick={handleNodeClick}
         nodeDragThreshold={1}
