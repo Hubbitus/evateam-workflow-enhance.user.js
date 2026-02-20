@@ -9,7 +9,6 @@ function tampermonkeyHeaders() {
       // Get version from environment variable or use default
       const version = process.env.BUILD_VERSION || '0.1.0';
       const repoUrl = 'https://github.com/Hubbitus/evateam-workflow-enhance.user.js';
-      const rawUrl = 'https://raw.githubusercontent.com/Hubbitus/evateam-workflow-enhance.user.js/main/dist/evateam-workflow-enhance.user.js';
 
       // Process each JS file in the bundle
       for (const fileName in bundle) {
@@ -27,8 +26,7 @@ function tampermonkeyHeaders() {
 // @supportURL   ${repoUrl}/issues
 // @updateURL    ${repoUrl}/releases/latest/download/evateam-workflow-enhance.user.js
 // @downloadURL  ${repoUrl}/releases/latest/download/evateam-workflow-enhance.user.js
-// @match        https://eva.gid.team/project/Task/*
-// @match        https://eva.gid.team/desk/Task/*
+// @include      /^https:\/\/eva[-\\w]*\.[^/]+\/.*$/
 // @grant        GM_addStyle
 // ==/UserScript==
 

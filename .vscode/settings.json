@@ -4,5 +4,11 @@
     "html.format.extraLiners": "head, body, /html",
     "[html]": {
         "editor.defaultFormatter": "vscode.html-language-features"
-    }
+    },
+    "cSpell.words": [
+        "Alexeev",
+        "evateam",
+        "Pavel",
+        "Tampermonkey"
+    ]
 }
