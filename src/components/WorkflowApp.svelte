@@ -8,6 +8,7 @@
   import { onMount } from 'svelte';
   import dagre from 'dagre';
   import { localStorageManager } from '../utils.js';
+  import { Logger } from '../logger.js';
 
   import '@xyflow/svelte/dist/base.css';
   import '@xyflow/svelte/dist/style.css';
@@ -18,7 +19,7 @@
   // State - use $state() for Svelte 5 reactivity
   let currentView = $state('enhanced');
   let workflowNodes = $state.raw([]);
-  let workflowEdges = $state.raw([]);
+  let workflowEdges = $state([]);
   let showTooltip = $state(false);
   let tooltipContent = $state('');
   let tooltipPosition = $state({ x: 0, y: 0 });
@@ -74,7 +75,7 @@
     let nodes = [];
     const edges = [];
 
-    console.log('HuEvaFlowEnhancer: prepareSvelteFlowData - transitions:', transitions);
+    Logger.log('HuEvaFlowEnhancer: prepareSvelteFlowData - transitions:', transitions);
 
     statuses.forEach((status, index) => {
       const isStartNode = status.name.toLowerCase().includes('старт') || status.code === 'start';
@@ -123,8 +124,8 @@
       }
     });
 
-    console.log('HuEvaFlowEnhancer: Status IDs:', statusIds);
-    console.log('HuEvaFlowEnhancer: Status IDs with incoming transitions:', Array.from(statusIdsWithIncoming));
+    Logger.log('HuEvaFlowEnhancer: Status IDs:', statusIds);
+    Logger.log('HuEvaFlowEnhancer: Status IDs with incoming transitions:', Array.from(statusIdsWithIncoming));
 
     // Start statuses are those that:
     // 1. Have no incoming transitions TO them (within current statuses)
@@ -133,7 +134,7 @@
       !statusIdsWithIncoming.has(s.id)
     );
 
-    console.log('HuEvaFlowEnhancer: Start statuses:', startStatuses.map(s => s.name));
+    Logger.log('HuEvaFlowEnhancer: Start statuses:', startStatuses.map(s => s.name));
 
     // Create "Start" node if there are start statuses
     const hasStartNode = startStatuses.length > 0;
@@ -300,7 +301,7 @@
 
   // Initialize when component mounts
   onMount(async () => {
-    console.log('HuEvaFlowEnhancer: WorkflowApp mounted');
+    Logger.log('HuEvaFlowEnhancer: WorkflowApp mounted');
 
     // Load workflow data if available
     if (api) {
@@ -313,16 +314,16 @@
             workflowName = titleElement.textContent.trim();
             // Remove "Бизнес-процесс: " prefix if present
             workflowName = workflowName.replace(/^Бизнес-процесс:\s*/, '');
-            console.log('HuEvaFlowEnhancer: Extracted workflow name:', workflowName);
+            Logger.log('HuEvaFlowEnhancer: Extracted workflow name:', workflowName);
           }
         }
 
         if (api.config.useMock) {
           workflowData = await api.getCompleteWorkflowData(null);
-          console.log('HuEvaFlowEnhancer: Using mock workflow data');
+          Logger.log('HuEvaFlowEnhancer: Using mock workflow data');
         } else if (workflowName) {
           workflowData = await api.getCompleteWorkflowDataByName(workflowName);
-          console.log('HuEvaFlowEnhancer: Loaded workflow data by name:', workflowName);
+          Logger.log('HuEvaFlowEnhancer: Loaded workflow data by name:', workflowName);
         } else {
           throw new Error('Could not extract workflow name from dialog header');
         }
@@ -339,13 +340,13 @@
 
             if (savedLayout) {
               // Hash matches, apply saved layout
-              console.log('HuEvaFlowEnhancer: Applying saved layout', savedLayout);
+              Logger.log('HuEvaFlowEnhancer: Applying saved layout', savedLayout);
               const { nodes, edges } = prepareSvelteFlowData(workflowData, savedLayout.layout);
               workflowNodes = nodes;
               workflowEdges = edges;
             } else {
               // Hash mismatch - apply auto layout AND show notification
-              console.log('HuEvaFlowEnhancer: Hash mismatch detected');
+              Logger.log('HuEvaFlowEnhancer: Hash mismatch detected');
               localStorageManager.clearLayout(workflowId);
               // Apply auto layout first so the UI is visible
               autoLayout();
@@ -357,29 +358,29 @@
             }
           } else {
             // First time opening - apply auto layout
-            console.log('HuEvaFlowEnhancer: First time opening, applying auto layout');
+            Logger.log('HuEvaFlowEnhancer: First time opening, applying auto layout');
             autoLayout();
           }
 
           window.workflowTransitions = workflowData.transitions;
-          console.log('HuEvaFlowEnhancer: Workflow data loaded, edges:', workflowEdges.length);
+          Logger.log('HuEvaFlowEnhancer: Workflow data loaded, edges:', workflowEdges.length);
         }
       } catch (error) {
-        console.error('HuEvaFlowEnhancer: Error loading workflow data:', error);
+        Logger.error('HuEvaFlowEnhancer: Error loading workflow data:', error);
       }
     }
   });
 
   function autoLayout() {
-    console.log('HuEvaFlowEnhancer: autoLayout called, workflowData:', !!workflowData);
+    Logger.log('HuEvaFlowEnhancer: autoLayout called, workflowData:', !!workflowData);
     if (!workflowData) {
-      console.error('HuEvaFlowEnhancer: autoLayout called but workflowData is null');
+      Logger.error('HuEvaFlowEnhancer: autoLayout called but workflowData is null');
       return;
     }
     const { nodes, edges } = prepareSvelteFlowData(workflowData);
     workflowNodes = nodes;
     workflowEdges = edges;
-    console.log('HuEvaFlowEnhancer: autoLayout applied, nodes:', nodes.length, 'edges:', edges.length);
+    Logger.log('HuEvaFlowEnhancer: autoLayout applied, nodes:', nodes.length, 'edges:', edges.length);
   }
 
   function handleAutoLayout() {
@@ -401,7 +402,7 @@
 
       // Only save if positions changed
       if (currentPositions !== lastSavedPositions[workflowData.workflow.id]) {
-        console.log('HuEvaFlowEnhancer: Node positions changed, saving layout');
+        Logger.log('HuEvaFlowEnhancer: Node positions changed, saving layout');
         const layoutData = {
           nodes: workflowNodes.map((n) => ({ id: n.id, position: n.position })),
         };
@@ -459,7 +460,7 @@
   }
 
   function handleNodeDrag(event) {
-    const draggedNode = event;
+    const draggedNode = event.targetNode;
 
     const updatedEdges = workflowEdges.map(edge => {
       if (edge.source === draggedNode.id || edge.target === draggedNode.id) {
@@ -478,9 +479,9 @@
   }
 
   function handleNodeClick(event) {
-    console.log('HuEvaFlowEnhancer: handleNodeClick event:', event);
+    Logger.log('HuEvaFlowEnhancer: handleNodeClick event:', event);
     const clickedNode = event.node;
-    console.log('HuEvaFlowEnhancer: clickedNode:', clickedNode);
+    Logger.log('HuEvaFlowEnhancer: clickedNode:', clickedNode);
     if (clickedNode && clickedNode.data.description) {
       tooltipContent = clickedNode.data.description;
 
@@ -497,7 +498,7 @@
       showTooltip = true;
       tooltipNodeRef = event.event.target;
     } else {
-      console.log('HuEvaFlowEnhancer: No description for node', clickedNode?.id);
+      Logger.log('HuEvaFlowEnhancer: No description for node', clickedNode?.id);
     }
   }
 

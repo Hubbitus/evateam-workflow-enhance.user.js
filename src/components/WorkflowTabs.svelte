@@ -1,5 +1,6 @@
 <script>
   import { onMount, tick } from 'svelte';
+  import { Logger } from '../logger.js';
 
   export let originalWorkflowElement = null;
   export let currentView = 'enhanced';
@@ -17,17 +18,17 @@
                      originalWorkflowElement.closest('.mat-mdc-dialog-container') ||
                      originalWorkflowElement.parentElement;
 
-      console.log('HuEvaFlowEnhancer: Dialog element found:', !!dialogElement);
+      Logger.log('HuEvaFlowEnhancer: Dialog element found:', !!dialogElement);
 
       // Try to find the "Закрыть" button (cmf-button__basic)
       if (originalWorkflowElement) {
         const allButtons = originalWorkflowElement.querySelectorAll('button');
-        console.log('HuEvaFlowEnhancer: All buttons in original workflow element:', allButtons.length);
+        Logger.log('HuEvaFlowEnhancer: All buttons in original workflow element:', allButtons.length);
         allButtons.forEach((btn, i) => {
-          console.log(`HuEvaFlowEnhancer: Button ${i}:`, btn.className, btn.textContent.trim());
+          Logger.log(`HuEvaFlowEnhancer: Button ${i}:`, btn.className, btn.textContent.trim());
           // Check if this is the "Закрыть" button
           if (btn.textContent.trim() === 'Закрыть' || btn.classList.contains('cmf-button__basic')) {
-            console.log('HuEvaFlowEnhancer: Found Закрыть button:', btn);
+            Logger.log('HuEvaFlowEnhancer: Found Закрыть button:', btn);
             closeButton = btn;
           }
         });
@@ -38,29 +39,29 @@
         const allButtons = dialogElement.querySelectorAll('button');
         allButtons.forEach((btn) => {
           if (btn.textContent.trim() === 'Закрыть' || btn.classList.contains('cmf-button__basic')) {
-            console.log('HuEvaFlowEnhancer: Found Закрыть button in dialog:', btn);
+            Logger.log('HuEvaFlowEnhancer: Found Закрыть button in dialog:', btn);
             closeButton = btn;
           }
         });
       }
 
       if (closeButton) {
-        console.log('HuEvaFlowEnhancer: Using Закрыть button:', closeButton);
+        Logger.log('HuEvaFlowEnhancer: Using Закрыть button:', closeButton);
       } else {
-        console.warn('HuEvaFlowEnhancer: Закрыть button not found');
+        Logger.warn('HuEvaFlowEnhancer: Закрыть button not found');
       }
     }
   });
 
   function closeDialog() {
-    console.log('HuEvaFlowEnhancer: Close button clicked, closeButton:', !!closeButton);
+    Logger.log('HuEvaFlowEnhancer: Close button clicked, closeButton:', !!closeButton);
 
     // Try to find the "Закрыть" button again if not found
     if (!closeButton && originalWorkflowElement) {
       const allButtons = originalWorkflowElement.querySelectorAll('button');
       allButtons.forEach((btn) => {
         if (btn.textContent.trim() === 'Закрыть' || btn.classList.contains('cmf-button__basic')) {
-          console.log('HuEvaFlowEnhancer: Found Закрыть button on click:', btn);
+          Logger.log('HuEvaFlowEnhancer: Found Закрыть button on click:', btn);
           closeButton = btn;
         }
       });
@@ -70,7 +71,7 @@
       const allButtons = dialogElement.querySelectorAll('button');
       allButtons.forEach((btn) => {
         if (btn.textContent.trim() === 'Закрыть' || btn.classList.contains('cmf-button__basic')) {
-          console.log('HuEvaFlowEnhancer: Found Закрыть button in dialog on click:', btn);
+          Logger.log('HuEvaFlowEnhancer: Found Закрыть button in dialog on click:', btn);
           closeButton = btn;
         }
       });
@@ -79,7 +80,7 @@
     if (closeButton) {
       // Try to click the "Закрыть" button with proper event dispatching
       try {
-        console.log('HuEvaFlowEnhancer: Attempting to close dialog with Закрыть button...');
+        Logger.log('HuEvaFlowEnhancer: Attempting to close dialog with Закрыть button...');
 
         // Method 1: Direct click
         closeButton.click();
@@ -100,15 +101,15 @@
 
         // Method 4: Try to get the Angular event handler and call it
         if (closeButton._ngElementListeners) {
-          console.log('HuEvaFlowEnhancer: Found Angular listeners');
+          Logger.log('HuEvaFlowEnhancer: Found Angular listeners');
         }
 
-        console.log('HuEvaFlowEnhancer: Close button clicked successfully');
+        Logger.log('HuEvaFlowEnhancer: Close button clicked successfully');
       } catch (e) {
-        console.error('HuEvaFlowEnhancer: Error clicking close button:', e);
+        Logger.error('HuEvaFlowEnhancer: Error clicking close button:', e);
       }
     } else {
-      console.warn('HuEvaFlowEnhancer: Закрыть button not found, cannot close dialog');
+      Logger.warn('HuEvaFlowEnhancer: Закрыть button not found, cannot close dialog');
     }
   }
 

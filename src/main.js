@@ -3,8 +3,9 @@
 import { mount } from 'svelte';
 import WorkflowApp from './components/WorkflowApp.svelte';
 import { HuEvaApi } from './HuEvaApi.js';
+import { Logger } from './logger.js';
 
-console.log('HuEvaFlowEnhancer: script loaded');
+Logger.log('HuEvaFlowEnhancer: script loaded');
 
 // Add global styles using GM_addStyle
 GM_addStyle(`
@@ -51,7 +52,7 @@ function initializeApp(originalWorkflowElement) {
         }
     });
 
-    console.log('HuEvaFlowEnhancer: App initialized for element', originalWorkflowElement);
+    Logger.log('HuEvaFlowEnhancer: App initialized for element', originalWorkflowElement);
 }
 
 const observer = new MutationObserver((mutations) => {

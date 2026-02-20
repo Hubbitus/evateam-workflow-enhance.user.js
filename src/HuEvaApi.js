@@ -1,3 +1,5 @@
+import { Logger } from './logger.js';
+
 /**
  * Class for interacting with EvaTeam API
  * Provides methods to get workflow data, statuses, and transitions
@@ -65,7 +67,7 @@ export class HuEvaApi {
                 };
             }
 
-            console.log(`HuEvaFlowEnhancer: Calling API method ${method} with URL: ${url}`);
+            Logger.log(`HuEvaFlowEnhancer: Calling API method ${method} with URL: ${url}`);
 
             const response = await fetch(url, fetchOptions);
 
@@ -77,16 +79,16 @@ export class HuEvaApi {
 
             // JSON-RPC 2.0 response format
             if (data.error) {
-                console.error(`HuEvaFlowEnhancer: API error for ${method}:`, data.error);
+                Logger.error(`HuEvaFlowEnhancer: API error for ${method}:`, data.error);
                 throw new Error(`API error: ${JSON.stringify(data.error)}`);
             }
 
-            console.log(`HuEvaFlowEnhancer: API call ${method} successful`, data);
+            Logger.log(`HuEvaFlowEnhancer: API call ${method} successful`, data);
 
             // Return the 'result' field for JSON-RPC 2.0
             return data.result || data;
         } catch (error) {
-            console.error(`HuEvaFlowEnhancer: Error calling API method ${method}:`, error);
+            Logger.error(`HuEvaFlowEnhancer: Error calling API method ${method}:`, error);
             throw error;
         }
     }
@@ -158,7 +160,7 @@ export class HuEvaApi {
      */
     async getCompleteWorkflowData(workflowId) {
         try {
-            console.log(`HuEvaFlowEnhancer: Getting complete workflow data for workflow ID: ${workflowId}`);
+            Logger.log(`HuEvaFlowEnhancer: Getting complete workflow data for workflow ID: ${workflowId}`);
 
             const [workflow, statuses, transitions] = await Promise.all([
                 this.getWorkflow(workflowId),
@@ -172,7 +174,7 @@ export class HuEvaApi {
                 transitions
             };
         } catch (error) {
-            console.error(`HuEvaFlowEnhancer: Error getting complete workflow data:`, error);
+            Logger.error(`HuEvaFlowEnhancer: Error getting complete workflow data:`, error);
             throw error;
         }
     }
@@ -184,7 +186,7 @@ export class HuEvaApi {
      */
     async getCompleteWorkflowDataByName(workflowName) {
         try {
-            console.log(`HuEvaFlowEnhancer: Getting complete workflow data for workflow name: ${workflowName}`);
+            Logger.log(`HuEvaFlowEnhancer: Getting complete workflow data for workflow name: ${workflowName}`);
 
             // First get workflow by name
             const workflow = await this.getWorkflowByName(workflowName);
@@ -207,7 +209,7 @@ export class HuEvaApi {
                 transitions
             };
         } catch (error) {
-            console.error(`HuEvaFlowEnhancer: Error getting complete workflow data by name:`, error);
+            Logger.error(`HuEvaFlowEnhancer: Error getting complete workflow data by name:`, error);
             throw error;
         }
     }
