@@ -66,7 +66,8 @@
     const width = Math.max(60, label.length * 7 + 16);
     const x = (sourceX + targetX) / 2 - width / 2;
     const y = (sourceY + targetY) / 2 - 12 + (data?.labelOffset || 0);
-    return { width, x, y };
+    // Добавляем запас под тень: +/- 20px по ширине и +/- 20px по высоте
+    return { width: width + 20, x: x - 10, y: y - 10 };
   });
 </script>
 
@@ -74,10 +75,25 @@
   <BaseEdge {id} {path} {style} {markerEnd} />
 
   {#if label}
-    <foreignObject x={labelMetrics.x} y={labelMetrics.y} width={labelMetrics.width} height="24">
+    <foreignObject x={labelMetrics.x} y={labelMetrics.y} width={labelMetrics.width} height="50" style="pointer-events: none;">
       <div
-        style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #456; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"
-      >
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: white;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #456;
+          white-space: nowrap;
+          box-shadow: rgba(0, 0, 0, 0.20) 0px 3px 7px;
+          pointer-events: auto;
+          position: relative;
+          z-index: 1;
+          margin: 5px;
+          ">
         {label}
       </div>
     </foreignObject>
