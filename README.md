@@ -2,6 +2,11 @@
 
 EvaTeam workflow visualization is static and lacks interactivity. This [userscript](http://kb.mozillazine.org/User.js_file) replaces the built-in process view with an advanced interactive visualization using SvelteFlow.
 
+## Just compare on example:
+
+* Original workflow ![Original workflow screenshot](images/original-workflow.png)
+* Enhanced representation: ![Enhanced representation](images/enhanced-workflow.png)
+
 ## Features
 
 - **Interactive Diagrams**: Transform static workflow diagrams into interactive graphs with drag-and-drop
@@ -15,7 +20,7 @@ EvaTeam workflow visualization is static and lacks interactivity. This [userscri
 - When user drag and rearrange items positions of nodes should be saved automatically into LocalStorage
 - Next time user returned to existing workflow - saved layout must be restored transparently
 - On the enhanced tab, added button: "Разместить автоматически" - that should clear saved state and trigger auto-layout.
-- Saved layout must contain object with items: {id, name, hash, update_date):
+- Saved layout must contain object with items: `{id, name, hash, update_date}`:
   - Hash must be calculated on full CmfWorkflow object + list of CmfStatus + list of CmfTrans.
   - If on loading we see hash changed:
     - Local hash must be cleared and auto layout applied
@@ -76,6 +81,6 @@ Output: dist/evateam-workflow-enhance.user.js
 
 # Ideas and bug-reports are welcome!
 
-Please report issues in this repository and ping me directly for any bugreports or needed enhancements!
+Please report issues in this repository and ping me directly for any bug reports or needed enhancements!
 
 # Licensed under MIT License
