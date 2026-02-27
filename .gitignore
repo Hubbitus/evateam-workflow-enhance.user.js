@@ -2,3 +2,7 @@
 /dist/
 /node_modules/
 /_screenshots/
+/.chrome-testing/chrome
+/.chrome-testing/chrome-test-profile
+/.chrome-testing/tampermonkey.unpacked
+/.chrome-testing/tampermonkey_stable.crx
