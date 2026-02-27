@@ -1,0 +1,94 @@
+{
+  "security": {
+    "auth": {
+      "selectedType": "qwen-oauth"
+    }
+  },
+  "tools": {
+    "allowed": [
+      "run_shell_command(git status)",
+      "run_shell_command(git diff)",
+      "run_shell_command(git log)",
+      "run_shell_command(git branch)",
+      "run_shell_command(git remote)",
+      "run_shell_command(git show)",
+      "run_shell_command(git describe)",
+      "run_shell_command(git blame)",
+      "run_shell_command(ls)",
+      "run_shell_command(timeout)",
+      "run_shell_command(tree)",
+      "run_shell_command(pwd)",
+      "run_shell_command(cat)",
+      "run_shell_command(cut)",
+      "run_shell_command(cd)",
+      "run_shell_command(phpunit)",
+      "run_shell_command(head)",
+      "run_shell_command(tail)",
+      "run_shell_command(wc)",
+      "run_shell_command(file)",
+      "run_shell_command(stat)",
+      "run_shell_command(du)",
+      "run_shell_command(df)",
+      "run_shell_command(grep)",
+      "run_shell_command(ug)",
+      "run_shell_command(find)",
+      "run_shell_command(echo)",
+      "run_shell_command(sleep)",
+      "run_shell_command(date)",
+      "run_shell_command(ps)",
+      "run_shell_command(netstat)",
+      "run_shell_command(ss)",
+      "run_shell_command(ping)",
+      "run_shell_command(curl)",
+      "run_shell_command(uname)",
+      "run_shell_command(whoami)",
+      "run_shell_command(which)",
+      "run_shell_command(sort)",
+      "run_shell_command(uniq)",
+      "run_shell_command(jq)",
+      "run_shell_command(./_dev/curl.admin.sh)",
+      "run_shell_command(npm list)",
+      "run_shell_command(npm view)",
+      "run_shell_command(pip list)",
+      "run_shell_command(pip show)",
+      "run_shell_command(cargo tree)",
+      "run_shell_command(go list)",
+      "run_shell_command(bundler list)",
+      "run_shell_command(podman exec -it prestashop_web php -d xdebug.mode=off bin/console cache:clear)",
+      "new_page",
+      "list_pages",
+      "navigate_page",
+      "list_console_messages"
+    ],
+    "approvalMode": "auto-edit"
+  },
+  "model": {
+    "name": "coder-model"
+  },
+  "$version": 3,
+  "ui": {
+    "feedbackLastShownTimestamp": 1769681723408
+  },
+  "context": {
+    "fileName": [
+      "AGENTS.md",
+      "QWEN.md"
+    ]
+  },
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest",
+        "--executable-path", "/usr/bin/chromium-browser",
+        "--user-data-dir", ".chrome-testing/chrome-test-profile",
+        "--chromeArg=--load-extension=.chrome-testing/tampermonkey.unpacked",
+        "--chromeArg=--disable-extensions-except=.chrome-testing/tampermonkey.unpacked"
+      ]
+    }
+  },
+  "ide": {
+    "enabled": true,
+    "hasSeenNudge": true
+  }
+}

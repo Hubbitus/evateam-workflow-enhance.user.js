@@ -1,27 +1,42 @@
 // src/main.js - Entry point for the Tampermonkey script
 
+// Immediate console log to verify script execution
+console.log('HuEvaFlowEnhancer: Script loaded on', window.location.href);
+
 import { mount } from 'svelte';
 import WorkflowApp from './components/WorkflowApp.svelte';
 import { HuEvaApi } from './HuEvaApi.js';
 import { Logger } from './logger.js';
 
-Logger.log('HuEvaFlowEnhancer: script loaded');
+Logger.log('script loaded');
+
+// Add menu command for script management (required for @grant GM_registerMenuCommand)
+if (typeof GM_registerMenuCommand !== 'undefined') {
+    GM_registerMenuCommand('🔄 Reload Workflow Enhancer', () => {
+        Logger.log('HuEvaFlowEnhancer: Manual reload requested');
+        location.reload();
+    });
+}
 
 // Add global styles using GM_addStyle
 GM_addStyle(`
   #hu-workflow-enhancer-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-sizing: border-box;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-    background-color: #fafafa;
-    z-index: auto;
+    width: calc(100% - 2rem) !important;
+    height: calc(100% - 2rem) !important;
+    min-height: 400px !important;
+    min-width: 600px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    top: 1rem !important;
+    left: 1rem !important;
+    box-sizing: border-box !important;
+    border: 2px solid #ddd !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden !important;
+    background-color: #fafafa !important;
+    z-index: 1000 !important;
   }
 `);
 
