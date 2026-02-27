@@ -1,11 +1,22 @@
 // src/main.js - Entry point for the Tampermonkey script
 
+// Immediate console log to verify script execution
+console.log('HuEvaFlowEnhancer: Script loaded on', window.location.href);
+
 import { mount } from 'svelte';
 import WorkflowApp from './components/WorkflowApp.svelte';
 import { HuEvaApi } from './HuEvaApi.js';
 import { Logger } from './logger.js';
 
-Logger.log('HuEvaFlowEnhancer: script loaded');
+Logger.log('script loaded');
+
+// Add menu command for script management (required for @grant GM_registerMenuCommand)
+if (typeof GM_registerMenuCommand !== 'undefined') {
+    GM_registerMenuCommand('🔄 Reload Workflow Enhancer', () => {
+        Logger.log('HuEvaFlowEnhancer: Manual reload requested');
+        location.reload();
+    });
+}
 
 // Add global styles using GM_addStyle
 GM_addStyle(`

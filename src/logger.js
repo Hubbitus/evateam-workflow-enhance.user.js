@@ -1,36 +1,32 @@
 /**
- * Logging utility with ability to disable in production
+ * Logging utility for HuEvaFlowEnhancer
+ * Always logs to console for debugging in production
  */
 class LoggerClass {
-  // In dev mode import.meta.env.DEV = true, in prod = false
-  #debug = import.meta.env.DEV;
+  #prefix = 'HuEvaFlowEnhancer:';
 
   /**
-   * Logs a message only if DEBUG mode is enabled
+   * Logs a message to console
    * @param {...any} args - Arguments to output to console
    */
   log(...args) {
-    if (this.#debug) {
-      console.log('[DEBUG]', ...args);
-    }
+    console.log(this.#prefix, ...args);
   }
 
   /**
-   * Logs a warning only if DEBUG mode is enabled
+   * Logs a warning to console
    * @param {...any} args - Arguments to output to console
    */
   warn(...args) {
-    if (this.#debug) {
-      console.warn('[DEBUG]', ...args);
-    }
+    console.warn(this.#prefix, ...args);
   }
 
   /**
-   * Logs an error always (regardless of DEBUG)
+   * Logs an error to console
    * @param {...any} args - Arguments to output to console
    */
   error(...args) {
-    console.error('[ERROR]', ...args);
+    console.error(this.#prefix, ...args);
   }
 }
 

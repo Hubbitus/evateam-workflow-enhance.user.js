@@ -26,10 +26,11 @@ function tampermonkeyHeaders() {
 // @supportURL   ${repoUrl}/issues
 // @updateURL    ${repoUrl}/releases/latest/download/evateam-workflow-enhance.user.js
 // @downloadURL  ${repoUrl}/releases/latest/download/evateam-workflow-enhance.user.js
-// @include      /^https:\/\/eva[-\\w]*\.[^/]+\/.*$/
+// @include      /^https://eva[-\\w]*\\.[^/]+/.*$/
 // @grant        GM_addStyle
+// @grant        GM_registerMenuCommand
+// @run-at       document-idle
 // ==/UserScript==
-
 `;
 
           // Add the header to the beginning of the code
