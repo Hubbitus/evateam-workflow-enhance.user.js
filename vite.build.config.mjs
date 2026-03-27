@@ -23,6 +23,9 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const isMinify = process.env.MINIFY === 'true';
+const fileName = isMinify ? 'evateam-workflow-enhance.min.user.js' : 'evateam-workflow-enhance.user.js';
+
 // Плагин для встраивания CSS в JS-бандл
 function cssInlinePlugin() {
   return {
@@ -51,7 +54,7 @@ function cssInlinePlugin() {
 
       // Если есть CSS, добавляем его в начало JS-файла
       if (cssContent) {
-        const jsPath = path.join(outDir, 'evateam-workflow-enhance.user.js');
+        const jsPath = path.join(outDir, fileName);
         if (fs.existsSync(jsPath)) {
           let jsContent = fs.readFileSync(jsPath, 'utf-8');
           const cssCode = `GM_addStyle(${JSON.stringify(cssContent)});\n\n`;
@@ -70,12 +73,12 @@ function cssInlinePlugin() {
             lines.splice(insertIndex, 0, '', '', ...cssCode.split('\n'));
             jsContent = lines.join('\n');
             fs.writeFileSync(jsPath, jsContent);
-            console.log('[css-inline] Embedded ' + cssFiles.length + ' CSS files into JS bundle');
+            console.log(`[css-inline] Embedded ${cssFiles.length} CSS files into ${fileName}`);
           } else {
             // Если не нашли заголовки, просто добавляем в начало
             jsContent = cssCode + jsContent;
             fs.writeFileSync(jsPath, jsContent);
-            console.log('[css-inline] Embedded ' + cssFiles.length + ' CSS files at the beginning of JS bundle');
+            console.log(`[css-inline] Embedded ${cssFiles.length} CSS files at the beginning of ${fileName}`);
           }
         }
       }
@@ -107,7 +110,7 @@ export default defineConfig({
       entry: './src/main.js',
       name: 'HuEvaFlowEnhancer',
       formats: ['iife'], // Immediately Invoked Function Expression for Tampermonkey
-      fileName: (format) => `evateam-workflow-enhance.user.js`
+      fileName: (format) => fileName
     },
     rollupOptions: {
       external: [],
@@ -115,9 +118,10 @@ export default defineConfig({
         globals: {}
       }
     },
-    minify: 'terser',
+    minify: isMinify ? 'terser' : false,
     // Отключаем CSS-хеширование и отдельные файлы
     cssCodeSplit: false,
+    emptyOutDir: false, // Don't empty outDir because we run multiple builds
   },
   define: {
     // Define constants for build environment
