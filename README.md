@@ -35,7 +35,11 @@ EvaTeam workflow visualization is static and lacks interactivity. This [userscri
 - **Vite**: Build tool
 - **pnpm**: Package manager
 
-Installation [link](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.user.js) for the impatient (please read section [installation](#installation) for the prerequisites and detailed instructions).
+Installation links for the impatient:
+- [Standard version](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.user.js)
+- [Minified version](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.min.user.js)
+
+(Please read section [installation](#installation) for the prerequisites and detailed instructions).
 
 # Installation
 
@@ -46,7 +50,9 @@ Installation [link](https://github.com/Hubbitus/evateam-workflow-enhance.user.js
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
 
 ## Script installation
-Just follow the [link](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.user.js).
+Choose one of the versions to install:
+- [Standard version](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.user.js)
+- [Minified version](https://github.com/Hubbitus/evateam-workflow-enhance.user.js/releases/latest/download/evateam-workflow-enhance.min.user.js)
 
 > **TIP** Script configured for auto-updates, just allow that in extension settings!
 
@@ -77,7 +83,9 @@ Open http://localhost:3003
 ```bash
 pnpm build
 ```
-Output: dist/evateam-workflow-enhance.user.js
+Output:
+- `dist/evateam-workflow-enhance.user.js`
+- `dist/evateam-workflow-enhance.min.user.js`
 
 # Ideas and bug-reports are welcome!
 

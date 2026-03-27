@@ -15,6 +15,9 @@ function tampermonkeyHeaders() {
         if (fileName.endsWith('.js') && !fileName.includes('style')) {
           const chunk = bundle[fileName];
 
+          // Use the actual output filename for update and download URLs
+          const updateUrl = `${repoUrl}/releases/latest/download/${fileName}`;
+
           // Tampermonkey headers
           const tampermonkeyHeader = `// ==UserScript==
 // @name         EvaTeam Workflow Enhancer
@@ -24,8 +27,8 @@ function tampermonkeyHeaders() {
 // @author       Pavel Alexeev <Pahan@Hubbitus.info>
 // @homepageURL  ${repoUrl}
 // @supportURL   ${repoUrl}/issues
-// @updateURL    ${repoUrl}/releases/latest/download/evateam-workflow-enhance.user.js
-// @downloadURL  ${repoUrl}/releases/latest/download/evateam-workflow-enhance.user.js
+// @updateURL    ${updateUrl}
+// @downloadURL  ${updateUrl}
 // @include      /^https://eva[-\\w]*\\.[^/]+/.*$/
 // @grant        GM_addStyle
 // @grant        GM_registerMenuCommand
