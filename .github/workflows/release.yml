@@ -76,13 +76,17 @@ jobs:
             echo "Build failed: output file not found"
             exit 1
           fi
-          echo "Build successful: dist/evateam-workflow-enhance.user.js exists"
+          if [ ! -f dist/evateam-workflow-enhance.min.user.js ]; then
+            echo "Build failed: minified output file not found"
+            exit 1
+          fi
+          echo "Build successful: both userscripts exist"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: evateam-workflow-enhance.user.js
-          path: dist/evateam-workflow-enhance.user.js
+          path: dist/evateam-workflow-enhance*.user.js
           retention-days: 30
 
       - name: Create Release
@@ -100,27 +104,29 @@ jobs:
             exit 0
           fi
 
-          # Generate release notes
+          # Generate release notes to file to handle multi-line content correctly
           if [[ -n "$PR_LINK" ]]; then
-            NOTES="Pre-release from Pull Request: $PR_LINK"
+            echo -e "Pre-release from Pull Request: $PR_LINK" > notes.txt
           elif [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            NOTES="Release from tag $VERSION"
+            echo -e "Release from tag $VERSION" > notes.txt
           else
-            NOTES="Automated release from main branch"
+            echo -e "Automated release from main branch" > notes.txt
           fi
 
           # Create release with prerelease flag if needed
           if [[ "$IS_PRERELEASE" == "true" ]]; then
             gh release create "$VERSION" \
               --title "EvaTeam Workflow Enhancer $VERSION" \
-              --notes "$NOTES" \
+              --notes-file notes.txt \
               --prerelease \
-              dist/evateam-workflow-enhance.user.js
+              dist/evateam-workflow-enhance.user.js \
+              dist/evateam-workflow-enhance.min.user.js
           else
             gh release create "$VERSION" \
               --title "EvaTeam Workflow Enhancer $VERSION" \
-              --notes "$NOTES" \
-              dist/evateam-workflow-enhance.user.js
+              --notes-file notes.txt \
+              dist/evateam-workflow-enhance.user.js \
+              dist/evateam-workflow-enhance.min.user.js
           fi
 
           echo "Release $VERSION created successfully"
