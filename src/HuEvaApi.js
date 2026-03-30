@@ -14,7 +14,7 @@ export class HuEvaApi {
      */
     constructor(config = {}) {
         this.config = {
-            baseUrl: 'https://eva.gid.team/api/',
+            baseUrl: window.location.origin + "/api/",
             mockUrls: {
                 'CmfWorkflow.get': './api/api_CmfWorkflow_get_response.json',
                 'CmfTrans.list': './api/api_CmfTrans_list_response.json',
